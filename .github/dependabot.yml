@@ -5,9 +5,9 @@ updates:
     schedule: { interval: weekly }
     open-pull-requests-limit: 5
     groups:
-      # Routine updates arrive as one PR; anything security-relevant is ungrouped
-      # and immediate.
-      minor-and-patch:
+      # Routine updates arrive as ONE pull request. Anything security-relevant is
+      # ungrouped and immediate.
+      npm-minor-and-patch:
         update-types: [minor, patch]
     ignore:
       # The trust model rests on these. Review every bump by hand, pinned exactly.
@@ -16,4 +16,19 @@ updates:
 
   - package-ecosystem: github-actions
     directory: /
-    schedule: { interval: weekly }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 3
+    groups:
+      # One PR for all action bumps, majors included.
+      #
+      # Without this, each action produces its own PR, each PR touches a file
+      # covered by CODEOWNERS, and each therefore fires a review-request
+      # notification. Three actions meant three PRs and six emails on day one.
+      #
+      # Actions are pinned to full commit SHAs (see docs/17-github-workflow.md
+      # §2), so a hijacked or force-moved tag cannot alter what runs in CI.
+      # Dependabot understands SHA pins and updates the trailing version comment
+      # along with the SHA.
+      github-actions:
+        patterns: ['*']
+        update-types: [minor, patch, major]

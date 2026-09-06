@@ -101,6 +101,24 @@ whole design, and it can be broken by something as innocuous as changing a key n
 Making that failure loud and explicit — with the words "spec version bump" in the error — is what keeps
 a solo founder from shipping it at 1am.
 
+### Action pinning
+
+Every `uses:` is pinned to a **full commit SHA** with the version in a trailing comment:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+A floating tag like `@v7` is mutable: whoever controls the action's repository can move it, and CI
+then runs different code than it did yesterday. For a project whose entire premise is that you should
+verify rather than trust, running unpinned third-party code in the pipeline that guards the test
+vectors is the wrong default. SHA pinning is the CI-side equivalent of pinning `@noble/*` exactly.
+
+Dependabot understands SHA pins, updates the trailing comment alongside the SHA, and — per
+`.github/dependabot.yml` — delivers all action bumps as a **single grouped PR** rather than one per
+action. Group them; an ungrouped `github-actions` ecosystem produces a PR per action, and because
+`.github/workflows/` is covered by `CODEOWNERS`, each one fires a review request.
+
 ### `codeql.yml` — SAST on `main` and weekly (JS/TS).
 
 ### `dependency-review.yml` — blocks PRs introducing known-vulnerable or license-incompatible deps.
