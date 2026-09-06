@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-ledger-entry-v1.schema.json",
+  "title": "PRM Ledger Entry v1",
+  "description": "One entry in an individual's append-only personal hash chain. The chain is the user's own evidence record; only entryHash values are submitted to the global Merkle transparency log, so the log learns nothing about content. Signature domain prefix 'PRM-LEDGER-v1\\x00'.",
+  "type": "object",
+  "required": ["type", "accountId", "sequence", "previousEntryHash", "recorded", "entryType", "subjectHash", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "type": { "const": "prm/LedgerEntry/v1" },
+    "accountId": { "type": "string", "pattern": "^prm:[a-z2-7]{26,52}$" },
+    "sequence": { "type": "integer", "minimum": 0 },
+    "previousEntryHash": { "oneOf": [{ "$ref": "#/$defs/multihash" }, { "type": "null" }] },
+    "recorded": { "$ref": "#/$defs/utcInstant" },
+
+    "entryType": {
+      "enum": [
+        "policy.published",
+        "policy.superseded",
+        "key.event",
+        "authorization.granted",
+        "authorization.revoked",
+        "notice.sent",
+        "notice.delivered",
+        "request.deletion",
+        "request.access",
+        "acknowledgment.received",
+        "dispute.raised",
+        "dispute.resolved"
+      ]
+    },
+
+    "subjectHash": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the object this entry is about (policy, authorization, notice, acknowledgment...). The object itself is NOT in the entry."
+    },
+
+    "counterparty": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "OPTIONAL and local-only. Omit from anything published; it is the single most correlating field in the system.",
+      "properties": {
+        "name": { "type": "string", "maxLength": 256 },
+        "id": { "type": "string" },
+        "channel": { "enum": ["api", "email", "webform", "postal", "in-person", "qr", "nfc"] }
+      }
+    },
+
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "digest"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "enum": ["smtp-receipt", "http-response", "usps-tracking", "pdf", "screenshot", "signed-receipt", "tsa-token", "certified-mail-receipt"] },
+          "digest": { "$ref": "#/$defs/multihash" },
+          "storedAt": { "type": "string", "format": "uri", "description": "Where the artifact lives. Ciphertext if server-side." },
+          "note": { "type": "string", "maxLength": 1000 }
+        }
+      }
+    },
+
+    "logInclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Populated after the entry hash is included in the global transparency log.",
+      "properties": {
+        "logId": { "type": "string" },
+        "leafIndex": { "type": "integer", "minimum": 0 },
+        "treeSize": { "type": "integer", "minimum": 1 },
+        "rootHash": { "$ref": "#/$defs/multihash" },
+        "inclusionProof": { "type": "array", "items": { "$ref": "#/$defs/multihash" } },
+        "signedTreeHead": { "type": "string", "description": "Detached JWS over {logId, treeSize, rootHash, timestamp} by the log key." },
+        "timestampToken": { "type": "string", "description": "base64 RFC 3161 TimeStampToken over rootHash." }
+      }
+    },
+
+    "proof": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
+  },
+  "$defs": {
+    "multihash": { "type": "string", "pattern": "^u[A-Za-z0-9_-]{40,}$" },
+    "utcInstant": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$" }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://prm.dev/ns/policy/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "PRMAuthorization"
+  ],
+  "policyChainId": "urn:prm:chain:uEiAffJNBCpI9ao1XMxfFfASWJOX-aeXQW0maf_c1blRhmg",
+  "boundPolicyHash": "uEiDdn7WAetqrv8OmeKOCC64lGqvxR79xWzmDiO27di1Dtg",
+  "grantee": {
+    "name": "City of Breezy Point Police Department",
+    "id": "did:web:breezypointmn.gov",
+    "did": "did:web:breezypointmn.gov",
+    "domain": "breezypointmn.gov",
+    "contact": "records@breezypointmn.gov"
+  },
+  "subjectRef": {
+    "pairwiseId": "uuig4ezebkdha5sh",
+    "disclosedIdentifiers": [
+      {
+        "namespace": "us-license-plate",
+        "value": "US-MN-ABC123",
+        "salt": "vBGkuGNuPzSoxUM7tEhVaA"
+      }
+    ]
+  },
+  "purposes": [
+    "prm:active-investigation"
+  ],
+  "categories": [
+    "prm:retention",
+    "prm:correlation"
+  ],
+  "dataCategories": [
+    "plate-read",
+    "location"
+  ],
+  "issued": "2026-11-20T00:00:00Z",
+  "expires": "2027-02-18T00:00:00Z",
+  "maxRetention": "P90D",
+  "onwardSharing": "prohibited",
+  "revocation": {
+    "statusListCredential": "https://prm.app/status/1",
+    "statusListIndex": 4211,
+    "statusPurpose": "revocation"
+  },
+  "receiptRequested": true,
+  "note": "Granted for case 26-114 only. Does not extend to the regional sharing network.",
+  "id": "urn:prm:authz:uEiAPbdcRV2F9Hppdue32ERrIq1gkBqBWOK83NryR-R4HRw",
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-jcs-2022",
+    "created": "2026-11-20T00:00:00Z",
+    "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z5mwck9wjUPUdJTtu4Fn7QG3J4qw4JhRRYgJFdCCM9myPHEUriJsHfM5fTkbRnoNW52CJiXbd5ofitmToZqmpcPcS"
+  }
+}

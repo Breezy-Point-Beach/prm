@@ -1,0 +1,28 @@
+{
+  "name": "prm",
+  "private": true,
+  "version": "0.0.0",
+  "description": "PRM \u2014 Personal Rights Management. A person remains the root authority over the persistent digital representation of themselves.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Breezy-Point-Beach/prm.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "spec:generate": "node spec/test-vectors/generate.mjs",
+    "spec:verify": "node spec/test-vectors/verify.mjs",
+    "spec:schemas": "node spec/test-vectors/validate-schemas.mjs",
+    "spec:check": "npm run spec:verify && npm run spec:schemas && npm run spec:reproducible",
+    "spec:reproducible": "node spec/test-vectors/check-reproducible.mjs",
+    "test": "npm run spec:check"
+  },
+  "devDependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
+  }
+}

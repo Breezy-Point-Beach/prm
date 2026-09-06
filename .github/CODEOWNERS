@@ -1,0 +1,19 @@
+# Default owner.
+*                       @Breezy-Point-Beach
+
+# Signature-breaking surface. Changes here can retroactively invalidate every
+# signature ever produced, so they get a deliberate second look even when the
+# author is the only committer. See docs/17-github-workflow.md §4.
+/spec/                  @Breezy-Point-Beach
+/packages/crypto/       @Breezy-Point-Beach
+/packages/verify/       @Breezy-Point-Beach
+/packages/ledger/       @Breezy-Point-Beach
+/packages/schema/       @Breezy-Point-Beach
+
+# Architectural record — must be updated in the same PR as any decision it covers.
+/docs/decisions.md      @Breezy-Point-Beach
+
+# Environment contract and security posture.
+/.env.example           @Breezy-Point-Beach
+/SECURITY.md            @Breezy-Point-Beach
+/.github/workflows/     @Breezy-Point-Beach

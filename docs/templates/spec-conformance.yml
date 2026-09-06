@@ -1,0 +1,53 @@
+# Copy to .github/workflows/spec-conformance.yml
+#
+# Guards the signature-breaking surface. Canonicalization, hashing, and schema
+# shape are load-bearing: a change to any of them retroactively invalidates every
+# signature ever produced. This workflow makes that failure loud and explicit.
+name: Spec conformance
+
+on:
+  pull_request:
+    paths:
+      - 'spec/**'
+      - 'packages/crypto/**'
+      - 'packages/verify/**'
+      - 'packages/ledger/**'
+      - 'packages/schema/**'
+
+permissions:
+  contents: read
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+
+      - name: Test vectors
+        run: node spec/test-vectors/verify.mjs
+      - name: Schema conformance
+        run: node spec/test-vectors/validate-schemas.mjs
+      - name: Deterministic generation
+        run: node spec/test-vectors/check-reproducible.mjs
+
+      - name: Assert published digests are unchanged
+        run: |
+          git fetch origin ${{ github.base_ref }} --depth=1
+          if ! git diff --quiet origin/${{ github.base_ref }} -- \
+               spec/examples spec/test-vectors/vectors.json; then
+            echo "::error title=Canonical digests changed::A committed example digest or test vector changed."
+            echo ""
+            echo "This invalidates every signature ever produced under the current spec version."
+            echo "If the change is intentional, it is a SPEC VERSION BUMP (v1 -> v2), not an edit:"
+            echo "  1. add new schemas alongside the existing ones (do not modify v1)"
+            echo "  2. keep the v1 vectors so historical documents stay verifiable"
+            echo "  3. document the migration in docs/decisions.md"
+            echo "  4. apply the 'spec-version-bump' label to acknowledge this check"
+            exit 1
+          fi
+        if: ${{ !contains(github.event.pull_request.labels.*.name, 'spec-version-bump') }}

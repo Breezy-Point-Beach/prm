@@ -1,0 +1,42 @@
+{
+  "type": "prm/KeyEvent/v1",
+  "eventType": "genesis",
+  "sequence": 0,
+  "previousEventHash": null,
+  "created": "2026-09-06T14:02:11Z",
+  "keys": [
+    {
+      "id": "#k0",
+      "alg": "Ed25519",
+      "publicKeyMultibase": "z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
+      "use": [
+        "assertion",
+        "authentication"
+      ],
+      "device": "laptop"
+    }
+  ],
+  "nextKeyDigests": [
+    "uEiDsdox-1fldhS7P-FTmnFQm79qpkYb-HmUzq_clkydkMg"
+  ],
+  "recoveryKeyDigests": [
+    "uEiAPoEpq_H2t76OX_fxALg_ORF1jMHxANV_qGi30FacsAg"
+  ],
+  "threshold": 1,
+  "services": [
+    {
+      "type": "PRMPublisher",
+      "endpoint": "https://prm.app/u/ab12cd"
+    }
+  ],
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "created": "2026-09-06T14:02:11Z",
+      "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z8Nr4XpgjYLgwCw4xDdggoTBckn4fuW6V66HPV3g2qMi9dtRYXwZq1nYZJjFFUP7NfTcQvcQmr3LgqTrHbL2ZiSh"
+    }
+  ]
+}

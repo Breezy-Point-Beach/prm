@@ -1,0 +1,98 @@
+# Copy to .github/workflows/ci.yml once apps/ and packages/ exist.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+      - name: Format
+        run: pnpm format:check
+      - name: Types
+        run: pnpm typecheck
+      - name: Package boundaries
+        # @prm/verify must not depend on any network client — this is what keeps
+        # "verification does not require PRM" true.
+        run: pnpm lint:boundaries
+      - name: Unit tests
+        run: pnpm test:unit
+
+      # ── Project-specific gates. These are the checks that stop an innocuous
+      #    refactor from retroactively invalidating every signature. ───────────
+      - name: Crypto test vectors
+        run: node spec/test-vectors/verify.mjs
+      - name: Schema conformance
+        run: node spec/test-vectors/validate-schemas.mjs
+      - name: Deterministic generation
+        run: node spec/test-vectors/check-reproducible.mjs
+      - name: Offline verification (network disabled)
+        run: pnpm --filter @prm/verify test:offline
+
+      - name: Build web
+        run: pnpm build:web
+      - name: No key material in the client bundle
+        run: pnpm check:bundle-secrets
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  e2e:
+    name: E2E (Vercel preview)
+    needs: verify
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - name: Wait for the Vercel preview
+        id: preview
+        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          max_timeout: 600
+
+      - name: Playwright
+        run: pnpm exec playwright test
+        env:
+          BASE_URL: ${{ steps.preview.outputs.url }}
+          # Previews are protection-enabled; this bypasses it for automation only.
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/

@@ -1,0 +1,305 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-policy-v1.schema.json",
+  "title": "PRM Personal Data Policy v1",
+  "description": "A cryptographically signed, versioned statement by a natural person of the terms under which information about them may be processed after initial observation. HASHING NOTE: the canonical digest is SHA-256(JCS(document with 'id' and 'proof' members removed)).",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "policyChainId",
+    "version",
+    "previousPolicyHash",
+    "issuer",
+    "effectiveDate",
+    "jurisdictions",
+    "rules",
+    "proof"
+  ],
+  "additionalProperties": true,
+  "$comment": "additionalProperties is true by design: unknown members are inside the signed bytes and must not break verification. Verifiers MUST surface unknown members to a human and MUST treat unknown rule categories as 'deny' when processing conservatively.",
+  "properties": {
+    "@context": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "type": "string", "format": "uri" },
+      "prefixItems": [
+        { "const": "https://www.w3.org/ns/credentials/v2" },
+        { "const": "https://prm.dev/ns/policy/v1" }
+      ]
+    },
+    "type": {
+      "type": "array",
+      "contains": { "const": "PersonalDataPolicy" },
+      "items": { "type": "string" }
+    },
+    "id": {
+      "$ref": "#/$defs/policyUrn",
+      "description": "Self-referential canonical identifier. EXCLUDED from the hashed bytes."
+    },
+    "policyChainId": {
+      "type": "string",
+      "pattern": "^urn:prm:chain:u[A-Za-z0-9_-]{40,}$",
+      "description": "Digest of version 1 of this chain. Stable across all versions."
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "previousPolicyHash": {
+      "oneOf": [ { "$ref": "#/$defs/multihash" }, { "type": "null" } ],
+      "description": "MUST be null if and only if version == 1."
+    },
+    "supersedes": { "$ref": "#/$defs/multihash" },
+
+    "issuer": {
+      "type": "object",
+      "required": ["id", "did", "keyEventHash"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^prm:[a-z2-7]{26,52}$",
+          "description": "Self-certifying account identifier = base32(SHA-256(JCS(genesis key event)))."
+        },
+        "did": {
+          "type": "string",
+          "pattern": "^did:(key|web):",
+          "description": "Interop alias resolving to the same public key."
+        },
+        "keyEventLog": { "type": "string", "format": "uri" },
+        "keyEventHash": {
+          "$ref": "#/$defs/multihash",
+          "description": "Digest of the KEL head event that authorized the signing key."
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 128,
+          "description": "OPTIONAL and user-chosen. May be a pseudonym. Never required."
+        }
+      }
+    },
+
+    "effectiveDate": { "$ref": "#/$defs/utcInstant" },
+    "expirationDate": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "Absent means: effective until superseded or revoked."
+    },
+
+    "jurisdictions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$|^EU$",
+        "description": "ISO 3166-1 alpha-2, optionally with a 3166-2 subdivision. Declared by the user, not adjudicated by PRM."
+      }
+    },
+
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/rule" }
+    },
+
+    "exceptions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/inlineException" },
+      "description": "Public standing carve-outs. Prefer private Authorization records; inline exceptions leak relationships."
+    },
+
+    "authorizationSetHash": {
+      "$ref": "#/$defs/multihash",
+      "description": "Merkle root over the set of currently valid private Authorization records. Proves grants exist without disclosing grantees."
+    },
+
+    "identifierCommitments": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/identifierCommitment" },
+      "description": "Salted commitments to identifiers this policy covers. Openable only by a party given the salt."
+    },
+
+    "requests": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deletionOnPurposeCompletion": { "type": "boolean" },
+        "doNotSellOrShare": { "type": "boolean" },
+        "globalPrivacyControl": { "type": "boolean" },
+        "accessRequestContact": { "type": "string", "format": "uri" }
+      }
+    },
+
+    "humanReadable": {
+      "type": "object",
+      "required": ["mediaType", "language", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "mediaType": { "enum": ["text/markdown", "text/plain"] },
+        "language": { "type": "string", "pattern": "^[a-z]{2}(-[A-Z]{2})?$" },
+        "text": { "type": "string", "minLength": 1, "maxLength": 20000 }
+      },
+      "description": "Carried INSIDE the signed bytes so prose and rules cannot drift."
+    },
+
+    "legalNotice": { "type": "string", "maxLength": 20000 },
+
+    "distribution": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "canonicalUrl": { "type": "string", "format": "uri" },
+        "machineUrl": { "type": "string", "format": "uri" },
+        "shortUrl": { "type": "string", "format": "uri" },
+        "statusList": { "type": "string", "format": "uri" }
+      }
+    },
+
+    "proof": { "$ref": "#/$defs/dataIntegrityProof" }
+  },
+
+  "allOf": [
+    {
+      "if": { "properties": { "version": { "const": 1 } }, "required": ["version"] },
+      "then": { "properties": { "previousPolicyHash": { "type": "null" } } },
+      "else": { "properties": { "previousPolicyHash": { "$ref": "#/$defs/multihash" } } }
+    }
+  ],
+
+  "$defs": {
+    "multihash": {
+      "type": "string",
+      "pattern": "^u[A-Za-z0-9_-]{40,}$",
+      "description": "Multibase 'u' (base64url, no pad) over a multihash: 0x12 0x20 || SHA-256 digest."
+    },
+    "policyUrn": {
+      "type": "string",
+      "pattern": "^urn:prm:policy:u[A-Za-z0-9_-]{40,}$"
+    },
+    "utcInstant": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "description": "RFC 3339 in UTC with 'Z' and no fractional seconds. Enforced for canonicalization determinism."
+    },
+    "category": {
+      "type": "string",
+      "anyOf": [
+        {
+          "enum": [
+            "prm:observation",
+            "prm:transactional",
+            "prm:retention",
+            "prm:location-history",
+            "prm:correlation",
+            "prm:profiling",
+            "prm:inference",
+            "prm:third-party-sharing",
+            "prm:sale",
+            "prm:commercialization",
+            "prm:advertising",
+            "prm:ai-training",
+            "prm:biometric",
+            "prm:law-enforcement",
+            "prm:emergency",
+            "prm:deletion"
+          ]
+        },
+        { "pattern": "^[a-z][a-z0-9+.-]*:[A-Za-z0-9._~%!$&'()*+,;=:@/-]+$" }
+      ],
+      "description": "A v1 core term or any extension URI. Unknown categories MUST be treated as 'deny' by conservative processors."
+    },
+    "rule": {
+      "type": "object",
+      "required": ["category", "decision"],
+      "additionalProperties": false,
+      "properties": {
+        "category": { "$ref": "#/$defs/category" },
+        "decision": { "enum": ["allow", "deny", "conditional"] },
+        "conditions": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "maxRetention": {
+              "type": "string",
+              "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$",
+              "description": "ISO 8601 duration. 'P0D' means no retention beyond the transaction."
+            },
+            "purposes": { "type": "array", "items": { "type": "string" } },
+            "recipients": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Organization identifiers or classes. 'prm:none' denies all recipients."
+            },
+            "jurisdictions": { "type": "array", "items": { "type": "string" } },
+            "requiresLegalProcess": { "type": "boolean" },
+            "requiresNotice": { "type": "boolean" },
+            "note": { "type": "string", "maxLength": 2000 }
+          }
+        },
+        "basisAcknowledged": {
+          "type": "array",
+          "items": { "enum": ["statutory-override", "court-order", "vital-interest", "contract"] },
+          "description": "Bases the user concedes may lawfully override this rule. Stating them strengthens the rest of the policy."
+        },
+        "note": { "type": "string", "maxLength": 2000 }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "decision": { "const": "conditional" } }, "required": ["decision"] },
+          "then": { "required": ["conditions"] }
+        }
+      ]
+    },
+    "inlineException": {
+      "type": "object",
+      "required": ["organization", "purposes", "categories"],
+      "additionalProperties": false,
+      "properties": {
+        "organization": { "type": "string" },
+        "organizationId": { "type": "string" },
+        "purposes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "categories": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/category" } },
+        "expires": { "$ref": "#/$defs/utcInstant" },
+        "note": { "type": "string", "maxLength": 2000 }
+      }
+    },
+    "identifierCommitment": {
+      "type": "object",
+      "required": ["namespace", "commitment"],
+      "additionalProperties": false,
+      "properties": {
+        "namespace": {
+          "type": "string",
+          "examples": ["email", "phone", "us-license-plate", "device-id", "account-id", "vin"],
+          "description": "Normalization rules are namespace-specific and defined in @prm/schema."
+        },
+        "commitment": {
+          "$ref": "#/$defs/multihash",
+          "description": "SHA-256(namespace || 0x00 || normalize(identifier) || 0x00 || salt). Salt is per-identifier, 16 random bytes, disclosed only to chosen parties."
+        },
+        "hint": {
+          "type": "string",
+          "maxLength": 24,
+          "description": "OPTIONAL low-entropy display hint, e.g. '***1234'. Increases correlation risk; default off."
+        }
+      }
+    },
+    "dataIntegrityProof": {
+      "type": "object",
+      "required": ["type", "cryptosuite", "created", "verificationMethod", "proofPurpose", "proofValue"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "DataIntegrityProof" },
+        "cryptosuite": { "const": "eddsa-jcs-2022" },
+        "created": { "$ref": "#/$defs/utcInstant" },
+        "verificationMethod": { "type": "string" },
+        "proofPurpose": { "const": "assertionMethod" },
+        "proofValue": {
+          "type": "string",
+          "pattern": "^z[1-9A-HJ-NP-Za-km-z]{80,100}$",
+          "description": "Multibase base58btc Ed25519 signature over 'PRM-POLICY-v1\\x00' || SHA-256(JCS(doc minus id, proof))."
+        },
+        "previousProof": { "type": "string" }
+      }
+    }
+  }
+}

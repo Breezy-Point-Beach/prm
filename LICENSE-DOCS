@@ -1,0 +1,22 @@
+Documentation and specification licence
+=======================================
+
+The contents of `docs/` and `spec/` in this repository are licensed under the
+Creative Commons Attribution 4.0 International Public License (CC BY 4.0).
+
+    https://creativecommons.org/licenses/by/4.0/legalcode
+
+You are free to share and adapt this material for any purpose, including
+commercially, provided you give appropriate credit.
+
+This is deliberate. PRM's value depends on the policy format being implementable
+by anyone — including people who never use, and actively distrust, the PRM
+service. A specification that cannot be freely reimplemented cannot support the
+claim that the provider need not be trusted.
+
+Source code in this repository (everything outside `docs/` and `spec/`) is
+licensed under Apache-2.0. See LICENSE.
+
+Note that the executable files under `spec/test-vectors/` are reference
+implementations of the specification; they are dual-available under either
+licence, whichever suits your use.

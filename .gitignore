@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+dist/
+build/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Environment — only .env.example is committed
+.env
+.env.*
+!.env.example
+
+.vercel/
+.DS_Store
+*.log
+playwright-report/
+test-results/
+
+# Never commit key material, even in test fixtures.
+*.pem
+*.key
+*.p12
+*.pfx
+*.prmvault

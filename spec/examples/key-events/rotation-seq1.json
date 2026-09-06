@@ -1,0 +1,50 @@
+{
+  "type": "prm/KeyEvent/v1",
+  "eventType": "rotation",
+  "sequence": 1,
+  "previousEventHash": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g",
+  "created": "2027-09-06T09:00:00Z",
+  "keys": [
+    {
+      "id": "#k1",
+      "alg": "Ed25519",
+      "publicKeyMultibase": "z6Mkm1UPdBHW6PjW7uD6FzPh8Goa2LHtHG3Auztep7gh6aEY",
+      "use": [
+        "assertion",
+        "authentication"
+      ],
+      "device": "laptop"
+    }
+  ],
+  "nextKeyDigests": [
+    "uEiBwYCdb6dWDK1g62aDXJDIldk1cE6qMWj86nsvSCR74uw"
+  ],
+  "recoveryKeyDigests": [
+    "uEiAPoEpq_H2t76OX_fxALg_ORF1jMHxANV_qGi30FacsAg"
+  ],
+  "threshold": 1,
+  "services": [
+    {
+      "type": "PRMPublisher",
+      "endpoint": "https://prm.app/u/ab12cd"
+    }
+  ],
+  "proof": [
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "created": "2027-09-06T09:00:00Z",
+      "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "ztXercH7mXxo8asEiuwhDuu5Z19edy29VTdSjSrD1b3zSDdC9aqZHARCjSruvRyUKRnM8zaPy9XLY69GRJ2MP6tw"
+    },
+    {
+      "type": "DataIntegrityProof",
+      "cryptosuite": "eddsa-jcs-2022",
+      "created": "2027-09-06T09:00:00Z",
+      "verificationMethod": "did:key:z6Mkm1UPdBHW6PjW7uD6FzPh8Goa2LHtHG3Auztep7gh6aEY#z6Mkm1UPdBHW6PjW7uD6FzPh8Goa2LHtHG3Auztep7gh6aEY",
+      "proofPurpose": "assertionMethod",
+      "proofValue": "z4JeTUBv6C2KN2sWCksCuY49ZkbMKGNufmDVHVe5fhW2zg9UQzPttp3GSx5qhk89PTQk8VTmY5HUhjCtBkaxFUCKh"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 5
+    groups:
+      # Routine updates arrive as one PR; anything security-relevant is ungrouped
+      # and immediate.
+      minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # The trust model rests on these. Review every bump by hand, pinned exactly.
+      - dependency-name: '@noble/*'
+      - dependency-name: '@scure/*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
