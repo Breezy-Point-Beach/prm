@@ -19,8 +19,21 @@ Local development needs neither. `pnpm dev` uses a filesystem store that require
 
 ## Database schema
 
+Apply it with the migration script, which reads the SQL from `lib/storage/blob.ts` so there is exactly
+one definition:
+
+```console
+vercel env pull                        # gets DATABASE_URL into .env.local
+node apps/web/scripts/migrate.mjs      # apply; safe to re-run
+node apps/web/scripts/migrate.mjs --check   # report only, change nothing
+```
+
+The script also asserts the D51/D58 invariant after applying: no column may be `jsonb` or otherwise
+able to hold a signed artifact. Artifacts live in blob storage; the database holds only the alias
+layer.
+
 ```sql
--- Also exported as SCHEMA_SQL from lib/storage/blob.ts
+-- Exported as SCHEMA_SQL from lib/storage/blob.ts
 create table if not exists published_policies (
   handle             text        not null,
   version            integer     not null,
@@ -101,7 +114,8 @@ signed today.
 - [ ] Blob store created, `BLOB_READ_WRITE_TOKEN` set for Production and Preview
 - [ ] Neon database created, `DATABASE_URL` set, schema applied
 - [ ] Preview uses a **separate** Neon branch and blob store from production
-- [ ] Publish a policy, then redeploy, then confirm the artifact is byte-identical
+- [x] Publish a policy, then redeploy, then confirm the artifact is byte-identical
+      *(verified 2026-09-07: identical SHA-256 across a fresh production deployment)*
 - [ ] Confirm `/u/{h}/v/1.json` still returns v1 after publishing v2
 - [ ] Confirm no raw identifier appears in logs, the database, or any published artifact
 - [ ] `rightsroot.com` added as a custom domain, with `www` redirecting to the apex
