@@ -11,9 +11,13 @@ name: Spec conformance
 on:
   push:
     branches: [main]
-    paths: ['spec/**', 'package.json', 'pnpm-lock.yaml', '.github/workflows/spec-conformance.yml']
+    paths: ['spec/**', 'packages/schema/**', 'packages/crypto/**', 'packages/verify/**',
+            'packages/ledger/**', 'package.json', 'pnpm-lock.yaml',
+            '.github/workflows/spec-conformance.yml']
   pull_request:
-    paths: ['spec/**', 'package.json', 'pnpm-lock.yaml', '.github/workflows/spec-conformance.yml']
+    paths: ['spec/**', 'packages/schema/**', 'packages/crypto/**', 'packages/verify/**',
+            'packages/ledger/**', 'package.json', 'pnpm-lock.yaml',
+            '.github/workflows/spec-conformance.yml']
   workflow_dispatch:
 
 concurrency:
