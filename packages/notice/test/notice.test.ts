@@ -10,6 +10,7 @@ import {
   encodeMultihash, encodeSalt, hash, normalizeIdentifier as _n
 } from '@prm/crypto'
 import { normalizeIdentifier } from '@prm/schema'
+import { PDFDocument } from 'pdf-lib'
 import { verifyProofBundle } from '@prm/verify'
 import {
   buildNotice, buildDeliveryRecord, buildResponseRecord, buildProofBundle, serializeBundle,
@@ -412,6 +413,23 @@ describe('PDF rendering', () => {
     })
     expect(pdf.length).toBeGreaterThan(2000)
     expect(new TextDecoder().decode(pdf.slice(0, 8))).toMatch(/^%PDF-1\./)
+  })
+
+  it('is three pages, with no page left nearly empty', async () => {
+    // A page holding only one short section reads as content that failed to render. Reviewer
+    // feedback on the first draft was exactly that, and this pins the fix.
+    const { policy, policyJson, notice, bundle } = makeChain()
+    const pdf = await renderNoticePdf({
+      policy, policyJson, notice: notice.document, noticeDigest: notice.digest,
+      policyDigest: notice.document.policyDigest,
+      policyByteDigest: notice.document.policyByteDigest,
+      manifestDigest: bundle.manifestDigest,
+      verificationUrl: 'https://prm.app/u/user0001',
+      includeMatchingIdentifiers: true,
+      generatedAt: LATER
+    })
+    const doc = await PDFDocument.load(pdf)
+    expect(doc.getPageCount()).toBe(3)
   })
 
   it('omits the private identifier unless explicitly included', async () => {

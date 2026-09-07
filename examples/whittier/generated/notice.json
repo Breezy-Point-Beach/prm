@@ -24,7 +24,7 @@
     "department": "Records Division",
     "domain": "whittierpd.org",
     "contact": "records@whittierpd.org",
-    "postalAddress": "Records Division, Whittier Police Department, 13200 Penn St, Whittier, CA 90602",
+    "postalAddress": "13200 Penn St\nWhittier, CA 90602",
     "jurisdiction": "US-CA"
   },
   "purpose": "To place my standing personal data policy on record with the recipient.",
@@ -44,7 +44,7 @@
     "created": "2026-09-16T16:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z57eA4qdq4An8fVYVBCFgr5tZtxTuiRcUo7zUMEXf6vRC4EL9a9Sy7H2hF4ZdgzBx15ur39cCJ3BGYoHqn2h1Kbje"
+    "proofValue": "z4Thj4FN83xN8jq4itJCQuZML1zBRd4cxnStucx4tNtmK6ZFJKmdiktcjerSihnY58STwciXWSzpa33syAfQQWJB7"
   },
-  "id": "urn:prm:notice:uEiChZOKuWZmJ3mynJqdmnjQk5NFRrn07VjGxgvS35A53wQ"
+  "id": "urn:prm:notice:uEiAKIoHiJGaTnhDEQwJsIDlXYgU4Lw_Wd_D1nRNhaX09Ew"
 }

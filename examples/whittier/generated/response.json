@@ -7,8 +7,8 @@
     "VerifiableCredential",
     "PRMResponseRecord"
   ],
-  "noticeDigest": "uEiChZOKuWZmJ3mynJqdmnjQk5NFRrn07VjGxgvS35A53wQ",
-  "deliveryDigest": "uEiATiGNyXmf5d1AjBiLaemWIcfSKkoThu4iX7VAjsMi89A",
+  "noticeDigest": "uEiAKIoHiJGaTnhDEQwJsIDlXYgU4Lw_Wd_D1nRNhaX09Ew",
+  "deliveryDigest": "uEiCMjMThMF54b_oZoGBHOl24KqG2o2lFkX1vJUK1q0wVBA",
   "recipient": {
     "name": "City of Whittier Police Department"
   },
@@ -22,7 +22,7 @@
     "created": "2026-09-24T16:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z3N972y8iVj45ygsehEjWDiMTC9h7uP74KSGdmYQvmP2Wjj6d8hm2ubPuwmr9QMP8TsSp5RX65cdaZG3KxeVD9Bnu"
+    "proofValue": "zPkrnX9Ns1BsY8QuGTo4BKUHbNBNzjiCj9CQTshCNxF2a92TP39PRUwv21MwFYDcR9u4oyEsg3hDXT1FdWTE823C"
   },
-  "id": "urn:prm:response:uEiBKLuPU0aVhsR_mPlJjnWAAxPp0wDmacrj6MDkZE86IRQ"
+  "id": "urn:prm:response:uEiCeDJ9IsIcJKu0dv0qbXQ_Te-KrhXCKfpY02lkJr-mwfQ"
 }

@@ -50,7 +50,7 @@ const AGENCY = {
   domain: 'whittierpd.org',
   id: 'did:web:whittierpd.org',
   contact: 'records@whittierpd.org',
-  postal: 'Records Division, Whittier Police Department, 13200 Penn St, Whittier, CA 90602'
+  postal: '13200 Penn St\nWhittier, CA 90602'
 }
 const VENDOR = {
   name: 'ALPR system vendor (as identified in the agency contract)',

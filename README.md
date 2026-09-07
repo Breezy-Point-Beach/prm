@@ -49,6 +49,7 @@ files, signatures, ledger, and proofs remain independently verifiable.
 | 17 | [GitHub workflow](docs/17-github-workflow.md) | Branch → PR → preview → tests → main → production |
 | 18 | [Implementation roadmap](docs/18-roadmap.md) | Prototype → MVP → public beta → enterprise |
 | — | [Decision register](docs/decisions.md) | Every major decision: why, threat solved, MVP?, standard, simpler alternative |
+| — | [Legal review](docs/legal-review.md) | Two template phrases awaiting an attorney's view, and what is settled |
 | — | [Original brief](docs/brief.md) | The requirements this architecture answers |
 
 ## Normative artifacts

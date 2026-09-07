@@ -70,6 +70,15 @@ export function alprRules (opts: AlprTemplateOptions = {}): Rule[] {
           'This is the use I authorize; it completes when the comparison completes.'
       }
     },
+    // UNDER LEGAL REVIEW — see docs/legal-review.md §1.
+    //
+    // As written this may read as an affirmative grant: "the issuer permits 60-day retention whenever
+    // there is legal process and an active investigation." If the agency already has independent
+    // legal authority, the issuer need not grant anything, and a voluntary grant could be quoted back
+    // as "his own policy expressly authorized 60-day retention."
+    //
+    // The intended position is closer to: that authority governs, and the issuer neither grants nor
+    // withholds. Do not change this without counsel's answer.
     {
       category: 'prm:law-enforcement',
       decision: 'conditional',
@@ -85,6 +94,12 @@ export function alprRules (opts: AlprTemplateOptions = {}): Rule[] {
       },
       basisAcknowledged: ['court-order', 'statutory-override']
     },
+    // UNDER LEGAL REVIEW — see docs/legal-review.md §2.
+    //
+    // An unqualified notice requirement may be infeasible: an emergency can arise where
+    // contemporaneous notice is impossible, or where disclosure is temporarily restricted. Asking for
+    // something the recipient cannot lawfully do invites the rule to be dismissed. A qualified
+    // after-the-fact form may be more defensible.
     {
       category: 'prm:emergency',
       decision: 'conditional',
