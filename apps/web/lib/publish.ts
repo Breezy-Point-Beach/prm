@@ -2,7 +2,9 @@ import type { KeyEvent, Policy } from '@prm/schema'
 import { validatePolicy, validateKeyEvent } from '@prm/schema'
 import { digest, deriveAccountId } from '@prm/crypto'
 import { verifyPolicy, verifyKeyEventLog } from '@prm/verify'
-import { isValidHandle, type PolicyStore, type PublishedPolicy } from './store'
+import { isValidHandle } from './storage'
+import { byteDigestOf, utf8, contentTypeFor } from './storage'
+import type { PolicyRecord, Storage } from './storage'
 
 /**
  * The publish contract.
@@ -26,6 +28,7 @@ export interface PublishSuccess {
   digest: string
   version: number
   policyUrl: string
+  versionUrl: string
   canonicalUrl: string
 }
 
@@ -48,7 +51,7 @@ const fail = (error: string, detail?: string[]): PublishFailure =>
  */
 export async function handlePublish (
   request: PublishRequest,
-  store: PolicyStore,
+  storage: Storage,
   origin: string
 ): Promise<PublishResult> {
   const { handle, policyJson, keyEventLogJson } = request
@@ -100,12 +103,12 @@ export async function handlePublish (
     return fail('Policy did not verify.', verification.errors)
   }
 
-  const owner = await store.handleOwner(handle)
+  const owner = await storage.metadata.handleOwner(handle)
   if (owner !== null && owner !== policy.issuer.id) {
     return fail('That handle belongs to another account.')
   }
 
-  const existing = await store.getCurrent(handle)
+  const existing = await storage.metadata.currentVersion(handle)
   if (existing) {
     if (existing.policyChainId !== policy.policyChainId) {
       return fail('This handle already publishes a different policy chain.')
@@ -113,10 +116,10 @@ export async function handlePublish (
     if (policy.version <= existing.version) {
       return fail(`Version ${policy.version} is not newer than the published version ${existing.version}.`)
     }
-    if (policy.previousPolicyHash !== existing.digest) {
+    if (policy.previousPolicyHash !== existing.policyDigest) {
       return fail(
         'This version does not chain to the currently published one.',
-        [`expected previousPolicyHash ${existing.digest}, got ${String(policy.previousPolicyHash)}`])
+        [`expected previousPolicyHash ${existing.policyDigest}, got ${String(policy.previousPolicyHash)}`])
     }
   } else if (policy.version !== 1) {
     return fail('The first policy published under a handle must be version 1.')
@@ -124,17 +127,37 @@ export async function handlePublish (
 
   const policyDigest = digest(policy, 'policy')
 
-  await store.publish({
+  // Two digests, deliberately distinct (see lib/storage/types.ts):
+  //   policyDigest is the PROTOCOL identity, stable across reserialization
+  //   byteDigest   is the STORAGE address, and changes if a single space moves
+  const policyBytes = utf8(policyJson)
+  const kelBytes = utf8(keyEventLogJson)
+  const policyByteDigest = byteDigestOf(policyBytes)
+  const kelByteDigest = byteDigestOf(kelBytes)
+
+  let policyRef, kelRef
+  try {
+    // Write-once and content-addressed. The store refuses bytes that do not hash to the declared
+    // digest, so a corrupted upload cannot be persisted even if everything above passed.
+    policyRef = await storage.artifacts.put('policy', policyBytes, policyByteDigest)
+    kelRef = await storage.artifacts.put('key-event-log', kelBytes, kelByteDigest)
+  } catch (e) {
+    return fail('Storage refused the artifact.', [(e as Error).message])
+  }
+
+  await storage.metadata.publish({
     handle,
     accountId: policy.issuer.id,
     policyChainId: policy.policyChainId,
     version: policy.version,
-    digest: policyDigest,
-    // VERBATIM. The whole design rests on these two lines not being "improved" into
-    // JSON.stringify(policy).
-    policyJson,
-    keyEventLogJson,
-    publishedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
+    policyDigest,
+    policyByteDigest,
+    policyLocation: policyRef.location,
+    policyByteLength: policyRef.byteLength,
+    kelByteDigest,
+    kelLocation: kelRef.location,
+    publishedAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    contentType: contentTypeFor('policy')
   })
 
   return {
@@ -143,34 +166,57 @@ export async function handlePublish (
     digest: policyDigest,
     version: policy.version,
     policyUrl: `${origin}/u/${handle}/policy.json`,
-    canonicalUrl: `${origin}/u/${handle}`
+    versionUrl: `${origin}/u/${handle}/v/${policy.version}.json`,
+    // The digest travels with the share link, so a recipient can check what they received against
+    // what they were told to expect. See app/u/[handle]/IntegrityCheck.tsx.
+    canonicalUrl: `${origin}/u/${handle}#sha256=${policyDigest}`
   }
 }
 
-/** Serve the stored bytes back untouched. */
-export function policyResponse (record: PublishedPolicy): Response {
-  return new Response(record.policyJson, {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/prm-policy+json; charset=utf-8',
-      // The digest IS the content address, so it is the natural strong ETag.
-      ETag: `"${record.digest}"`,
-      'Cache-Control': 'public, max-age=60, stale-while-revalidate=600',
-      'Access-Control-Allow-Origin': '*',
-      Link: `<${'/u/' + record.handle}>; rel="canonical"`,
-      'X-PRM-Policy-Digest': record.digest,
-      'X-PRM-Policy-Version': String(record.version)
-    }
-  })
+/** Read a published artifact's bytes, verified against its storage digest on the way out. */
+export async function readPolicyBytes (
+  storage: Storage,
+  record: PolicyRecord
+): Promise<string> {
+  const bytes = await storage.artifacts.get(record.policyByteDigest)
+  return new TextDecoder().decode(bytes)
 }
 
-export function keyEventLogResponse (record: PublishedPolicy): Response {
-  return new Response(record.keyEventLogJson, {
+export async function readKelBytes (
+  storage: Storage,
+  record: PolicyRecord
+): Promise<string> {
+  const bytes = await storage.artifacts.get(record.kelByteDigest)
+  return new TextDecoder().decode(bytes)
+}
+
+/**
+ * Serve stored bytes back untouched.
+ *
+ * `immutable` marks a version endpoint, whose content is addressed by version number and can never
+ * change. The current-policy alias must stay short-lived, because it moves when v2 is published.
+ */
+export function artifactResponse (
+  bytes: string,
+  record: PolicyRecord,
+  opts: { immutable?: boolean; contentType?: string } = {}
+): Response {
+  return new Response(bytes, {
     status: 200,
     headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'public, max-age=60, stale-while-revalidate=600',
-      'Access-Control-Allow-Origin': '*'
+      'Content-Type': `${opts.contentType ?? record.contentType}; charset=utf-8`,
+      // The protocol digest is the content address, so it is the natural strong ETag.
+      ETag: `"${record.policyDigest}"`,
+      'Cache-Control': opts.immutable
+        ? 'public, max-age=31536000, immutable'
+        : 'public, max-age=60, stale-while-revalidate=600',
+      'Access-Control-Allow-Origin': '*',
+      'Cross-Origin-Resource-Policy': 'cross-origin',
+      'X-PRM-Policy-Digest': record.policyDigest,
+      'X-PRM-Policy-Version': String(record.version),
+      // The storage address, so a reader can independently confirm the bytes they received are the
+      // bytes that were stored, not merely a document that happens to verify.
+      'X-PRM-Byte-Digest': record.policyByteDigest
     }
   })
 }

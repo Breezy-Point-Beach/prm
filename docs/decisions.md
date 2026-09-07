@@ -97,6 +97,13 @@ Threat IDs reference [12 — Threat Model](12-threat-model.md).
 | D53 | After publishing, the client **fetches the artifact back and compares bytes**; a mismatch is a hard failure | A signature check alone passes a server that reserialized the document, because canonicalization erases formatting | **T4**, T8 | **Yes** | — | Trust the server's success response — the failure would be silent and permanent |
 | D54 | The generated rules summary is appended to the prose **at signing time, always** | Prevents prose/rules drift structurally rather than detecting it heuristically; a stale summary would otherwise carry the same signature authority as the current rules | T5, T7 | **Yes** | — | Warn on divergence only — catches less, and depends on fragile text matching |
 
+| D55 | Artifacts are addressed by the **byte digest**, not the policy digest | The policy digest is stable across reserialization by design, so keying on it would give a reserialized document the same storage address as the original — reopening the exact hole D53 closed | **T4**, T8 | **Yes** | SHA-256 content addressing | Key on the policy digest — silently permits substitution |
+| D56 | Artifact storage is **write-once**; a new version is a new object | Published bytes must remain retrievable forever, and an update path is a rewrite path | T4, T5 | **Yes** | — | Mutable keys — history becomes editable by whoever runs the store |
+| D57 | Every read is verified against the digest it was requested from | A compromised or buggy object store must not be able to serve altered bytes unnoticed | **T4** | **Yes** | — | Trust the backend — the failure is silent |
+| D58 | Signed artifacts never enter the database; Postgres holds only the alias layer | Makes D51 (no jsonb) structurally impossible to violate rather than merely discouraged: there is no column that could hold a policy | T4, T8 | **Yes** | — | A `policy` column — one convenient migration away from breaking the invariant |
+| D59 | The QR code carries the policy digest in the URL fragment | Puts the expectation in the reader's hands, so substitution by the hosting layer is detectable from a printed card. A fragment, not a query, so the server never learns which digest a reader expects | T8 | **Yes** | RFC 3986 fragments | URL only — the hosting layer can swap the document undetected |
+| D60 | Storage adapters must pass a shared conformance contract, including a hostile-backend suite | Storage layers get replaced by people who did not read the PR explaining why bytes matter | **T4**, T8 | **Yes** | — | Per-adapter tests — the next adapter quietly omits the ones that matter |
+
 ---
 
 ## The five load-bearing decisions

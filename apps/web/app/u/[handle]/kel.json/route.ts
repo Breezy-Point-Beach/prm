@@ -1,5 +1,5 @@
-import { keyEventLogResponse } from '../../../../lib/publish'
-import { getStore, isValidHandle } from '../../../../lib/store'
+import { artifactResponse, readKelBytes } from '../../../../lib/publish'
+import { getStorage, isValidHandle } from '../../../../lib/storage'
 
 export const runtime = 'nodejs'
 
@@ -11,7 +11,14 @@ export async function GET (
   const { handle } = await context.params
   if (!isValidHandle(handle)) return new Response('Not found', { status: 404 })
 
-  const record = await getStore().getCurrent(handle)
+  const storage = await getStorage()
+  const record = await storage.metadata.currentVersion(handle)
   if (!record) return new Response('Not found', { status: 404 })
-  return keyEventLogResponse(record)
+
+  try {
+    const bytes = await readKelBytes(storage, record)
+    return artifactResponse(bytes, record, { contentType: 'application/json' })
+  } catch (e) {
+    return new Response(`Artifact integrity check failed: ${(e as Error).message}`, { status: 502 })
+  }
 }

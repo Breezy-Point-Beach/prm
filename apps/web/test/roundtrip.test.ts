@@ -1,6 +1,8 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import { handlePublish, policyResponse, type PublishRequest } from '../lib/publish'
-import { MemoryStore, type PolicyStore, type PublishedPolicy } from '../lib/store'
+import { handlePublish, artifactResponse, readPolicyBytes, type PublishRequest } from '../lib/publish'
+import { createMemoryStorage } from '../lib/storage/memory'
+import { byteDigestOf, utf8 } from '../lib/storage/digest'
+import type { PolicyRecord, Storage } from '../lib/storage/types'
 import { createAccount } from '@prm/vault'
 import { buildPolicyDocument, signPolicyDocument } from '../lib/policy-builder'
 import { alprRules, alprHumanReadable, composeHumanReadable } from '@prm/schema'
@@ -69,8 +71,8 @@ function clientAcceptsFetchedBytes (signedJson: string, fetchedJson: string): bo
   return signedJson === fetchedJson
 }
 
-let store: PolicyStore
-beforeEach(() => { store = new MemoryStore() })
+let store: Storage
+beforeEach(() => { store = createMemoryStorage() })
 
 describe('the happy path', () => {
   it('signs, publishes, and retrieves byte-identical content', async () => {
@@ -81,9 +83,10 @@ describe('the happy path', () => {
 
     expect(result.digest).toBe(signed.digest)
 
-    const record = await store.getCurrent('user0001')
+    const record = await store.metadata.currentVersion('user0001')
     expect(record).not.toBeNull()
-    const response = policyResponse(record as PublishedPolicy)
+    const response = artifactResponse(
+      await readPolicyBytes(store, record as PolicyRecord), record as PolicyRecord)
     const fetched = await response.text()
 
     expect(fetched).toBe(signed.policyJson)
@@ -109,8 +112,8 @@ describe('the happy path', () => {
       { handle: 'user0001', policyJson, keyEventLogJson: JSON.stringify([account.genesis]) },
       store, ORIGIN)
 
-    const record = await store.getCurrent('user0001') as PublishedPolicy
-    const fetched = JSON.parse(await policyResponse(record).text())
+    const record = await store.metadata.currentVersion('user0001') as PolicyRecord
+    const fetched = JSON.parse(await readPolicyBytes(store, record))
     const r = verifyPolicy(fetched, { keyEventLog: [account.genesis], now: new Date('2026-10-01T00:00:00Z') })
     expect(r.errors).toEqual([])
     expect(r.issuer).toBe('authorized')
@@ -118,26 +121,30 @@ describe('the happy path', () => {
 })
 
 describe('a mutating server is caught', () => {
-  /** Publish honestly, then corrupt the stored record as a hostile server would. */
+  /**
+   * Publish honestly, then have a HOSTILE STORAGE BACKEND return something else.
+   *
+   * The tampering happens below the adapter — which is the realistic threat, since the object store
+   * is the part most likely to be operated by someone else. The adapter's read verification catches
+   * it, so this helper asks for the raw stored bytes directly to model a server that ignored the
+   * error and served them anyway.
+   */
   async function publishThenMutate (
-    mutate: (record: PublishedPolicy) => PublishedPolicy
+    mutate: (bytes: string) => string
   ): Promise<{ signed: Signed; fetched: string }> {
     const signed = signInBrowser()
     const result = await handlePublish(signed.request, store, ORIGIN)
     expect(result.ok).toBe(true)
-    const record = await store.getCurrent('user0001') as PublishedPolicy
-    await store.publish(mutate({ ...record }))
-    const fetched = await policyResponse(await store.getCurrent('user0001') as PublishedPolicy).text()
-    return { signed, fetched }
+    const record = await store.metadata.currentVersion('user0001') as PolicyRecord
+    const stored = await readPolicyBytes(store, record)
+    return { signed, fetched: mutate(stored) }
   }
 
   it('DETECTS reserialization, even though the signature still verifies', async () => {
     // The subtle one. JSON.parse + JSON.stringify changes the bytes but not the JCS
     // canonicalization, so the SIGNATURE still checks out. Only a byte comparison catches it, which
     // is exactly why the client compares bytes rather than trusting a signature check.
-    const { signed, fetched } = await publishThenMutate((r) => ({
-      ...r, policyJson: JSON.stringify(JSON.parse(r.policyJson))
-    }))
+    const { signed, fetched } = await publishThenMutate((b) => JSON.stringify(JSON.parse(b)))
     expect(fetched).not.toBe(signed.policyJson)
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
 
@@ -147,26 +154,23 @@ describe('a mutating server is caught', () => {
   })
 
   it('DETECTS key reordering', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => {
-      const parsed = JSON.parse(r.policyJson) as Record<string, unknown>
-      const reversed = Object.fromEntries(Object.entries(parsed).reverse())
-      return { ...r, policyJson: JSON.stringify(reversed, null, 2) }
+    const { signed, fetched } = await publishThenMutate((b) => {
+      const parsed = JSON.parse(b) as Record<string, unknown>
+      return JSON.stringify(Object.fromEntries(Object.entries(parsed).reverse()), null, 2)
     })
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
   })
 
   it('DETECTS whitespace-only reformatting', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => ({
-      ...r, policyJson: JSON.stringify(JSON.parse(r.policyJson), null, 4)
-    }))
+    const { signed, fetched } = await publishThenMutate((b) => JSON.stringify(JSON.parse(b), null, 4))
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
   })
 
   it('DETECTS a substituted rule, and the signature also fails', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => {
-      const p = JSON.parse(r.policyJson)
+    const { signed, fetched } = await publishThenMutate((b) => {
+      const p = JSON.parse(b)
       p.rules.find((x: { category: string }) => x.category === 'prm:sale').decision = 'allow'
-      return { ...r, policyJson: JSON.stringify(p, null, 2) }
+      return JSON.stringify(p, null, 2)
     })
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
     expect(verifyPolicy(JSON.parse(fetched), { now: NOW }).summary).toBe('failed')
@@ -174,44 +178,54 @@ describe('a mutating server is caught', () => {
 
   it('DETECTS a wholly substituted policy from another account', async () => {
     const other = signInBrowser('someone-else')
-    const { signed, fetched } = await publishThenMutate((r) => ({ ...r, policyJson: other.policyJson }))
+    const { signed, fetched } = await publishThenMutate(() => other.policyJson)
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
     expect(digest(JSON.parse(fetched), 'policy')).not.toBe(signed.digest)
   })
 
   it('DETECTS an added field, even a harmless-looking one', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => {
-      const p = JSON.parse(r.policyJson)
+    const { signed, fetched } = await publishThenMutate((b) => {
+      const p = JSON.parse(b)
       p.publishedBy = 'prm.app'
-      return { ...r, policyJson: JSON.stringify(p, null, 2) }
+      return JSON.stringify(p, null, 2)
     })
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
     expect(verifyPolicy(JSON.parse(fetched), { now: NOW }).summary).toBe('failed')
   })
 
   it('DETECTS a stripped field', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => {
-      const p = JSON.parse(r.policyJson)
+    const { signed, fetched } = await publishThenMutate((b) => {
+      const p = JSON.parse(b)
       delete p.identifierCommitments
-      return { ...r, policyJson: JSON.stringify(p, null, 2) }
+      return JSON.stringify(p, null, 2)
     })
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
   })
 
   it('DETECTS truncation', async () => {
-    const { signed, fetched } = await publishThenMutate((r) => ({
-      ...r, policyJson: r.policyJson.slice(0, -20)
-    }))
+    const { signed, fetched } = await publishThenMutate((b) => b.slice(0, -20))
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)
   })
 
-  it('DETECTS a swapped digest in the record while bytes are intact', async () => {
-    // The record's digest is metadata; the client recomputes from bytes rather than trusting it.
-    const { signed, fetched } = await publishThenMutate((r) => ({ ...r, digest: 'uEiAAAA' }))
-    expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(true) // bytes are fine
-    const recomputed = digest(JSON.parse(fetched), 'policy')
-    expect(recomputed).toBe(signed.digest)
-    expect(recomputed).not.toBe('uEiAAAA')                                   // metadata lie exposed
+  it('the STORAGE LAYER itself refuses corrupted bytes before the client ever sees them', async () => {
+    // Belt and braces: even if the client skipped its byte check, a content-addressed store cannot
+    // serve altered content, because the read is verified against the address it came from.
+    const corrupting = createMemoryStorage((b) => utf8(JSON.stringify(JSON.parse(new TextDecoder().decode(b)))))
+    const signed = signInBrowser()
+    expect((await handlePublish(signed.request, corrupting, ORIGIN)).ok).toBe(true)
+    const record = await corrupting.metadata.currentVersion('user0001') as PolicyRecord
+    await expect(readPolicyBytes(corrupting, record)).rejects.toThrow(/does not match its digest/)
+  })
+
+  it('stores the policy at an address derived from its BYTES, not its protocol digest', async () => {
+    const signed = signInBrowser()
+    await handlePublish(signed.request, store, ORIGIN)
+    const record = await store.metadata.currentVersion('user0001') as PolicyRecord
+    expect(record.policyByteDigest).toBe(byteDigestOf(signed.policyJson))
+    // The two digests are different values; conflating them would give a reserialized document the
+    // same storage address as the original.
+    expect(record.policyByteDigest).not.toBe(record.policyDigest)
+    expect(record.policyLocation).toBe(`artifacts/policy/${record.policyByteDigest}`)
   })
 })
 
@@ -275,12 +289,13 @@ describe('the server never re-serializes on the way in', () => {
   it('stores bytes that differ from a re-serialization of the same document', async () => {
     const signed = signInBrowser()
     await handlePublish(signed.request, store, ORIGIN)
-    const record = await store.getCurrent('user0001') as PublishedPolicy
+    const record = await store.metadata.currentVersion('user0001') as PolicyRecord
+    const stored = await readPolicyBytes(store, record)
 
-    expect(record.policyJson).toBe(signed.policyJson)
+    expect(stored).toBe(signed.policyJson)
     // Proof the stored form is the client's, not the server's idea of the same object.
-    expect(record.policyJson).not.toBe(JSON.stringify(JSON.parse(signed.policyJson)))
+    expect(stored).not.toBe(JSON.stringify(JSON.parse(signed.policyJson)))
     // And the canonicalization is identical either way, which is why bytes had to be compared.
-    expect(jcs(JSON.parse(record.policyJson))).toBe(jcs(JSON.parse(signed.policyJson)))
+    expect(jcs(JSON.parse(stored))).toBe(jcs(JSON.parse(signed.policyJson)))
   })
 })
