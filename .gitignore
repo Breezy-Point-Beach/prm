@@ -30,3 +30,8 @@ test-results/
 
 # Whittier example: a --local run writes REAL identifiers here. Never commit them.
 examples/whittier/local/
+
+# Local development artifact store (FileStore) — per-developer state, not source.
+apps/web/.prm-store/
+.next/
+next-env.d.ts

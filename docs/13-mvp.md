@@ -84,7 +84,10 @@ create table policies (
   chain_id        text not null,
   version         int  not null,
   previous_digest text,
-  document        jsonb not null,             -- published by design; contains no PII
+  -- RAW TEXT, not jsonb. jsonb does not preserve key order, whitespace, duplicate keys, or
+  -- numeric formatting, so it cannot return the exact bytes the user signed. See decision D51.
+  -- Add a generated jsonb column alongside if indexing is ever needed; never serve from it.
+  policy_json     text  not null,             -- published by design; contains no PII
   published_at    timestamptz not null default now(),
   unique (chain_id, version)
 );
