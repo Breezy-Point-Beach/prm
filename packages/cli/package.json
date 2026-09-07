@@ -1,0 +1,22 @@
+{
+  "name": "@prm/cli",
+  "version": "0.1.0",
+  "description": "PRM command-line tool: verify policies, key events, ledgers and .prmproof bundles offline, without contacting PRM.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": { "prm": "./dist/cli.js" },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prm/crypto": "workspace:*",
+    "@prm/schema": "workspace:*",
+    "@prm/verify": "workspace:*"
+  },
+  "devDependencies": { "typescript": "^5.7.2", "vitest": "^2.1.8" }
+}

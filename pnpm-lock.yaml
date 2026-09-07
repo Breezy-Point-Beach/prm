@@ -27,6 +27,25 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.1)
 
+  packages/cli:
+    dependencies:
+      '@prm/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@prm/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@prm/verify':
+        specifier: workspace:*
+        version: link:../verify
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)
+
   packages/crypto:
     dependencies:
       '@noble/curves':
@@ -57,6 +76,22 @@ importers:
       ajv-formats:
         specifier: ^3.0.1
         version: 3.0.1(ajv@8.20.0)
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.20.1)
+
+  packages/verify:
+    dependencies:
+      '@prm/crypto':
+        specifier: workspace:*
+        version: link:../crypto
+      '@prm/schema':
+        specifier: workspace:*
+        version: link:../schema
     devDependencies:
       typescript:
         specifier: ^5.7.2
