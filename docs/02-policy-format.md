@@ -86,7 +86,7 @@ Examples: [`spec/examples/policies/`](../spec/examples/policies/)
 ### Canonicalization and hashing — normative
 
 ```
-bytes  = JCS( document with "proof" member removed )          // RFC 8785
+bytes  = JCS( document with "id" AND "proof" members removed ) // RFC 8785, PRM profile
 digest = SHA-256(bytes)                                        // 32 bytes
 id     = "urn:prm:policy:u" + base64url_nopad(0x12 0x20 || digest)   // multihash, "u" multibase
 sig    = Ed25519_sign(K_sign, "PRM-POLICY-v1\x00" || digest)   // domain-separated
@@ -94,9 +94,11 @@ sig    = Ed25519_sign(K_sign, "PRM-POLICY-v1\x00" || digest)   // domain-separat
 
 Two details that matter:
 
-- **`id` is self-referential.** It is computed with `id` *present but set to the placeholder* is a
-  trap. Instead: `id` is omitted from the hashed bytes along with `proof`. The schema marks both
-  `id` and `proof` as non-hashed members. Document this loudly; it is the #1 interop bug.
+- **`id` is self-referential**, so it cannot be inside the bytes it identifies. Computing the digest
+  with `id` present-but-set-to-a-placeholder is a trap that produces a different value in every
+  implementation. The rule is simply: **`id` and `proof` are both omitted from the hashed bytes.**
+  See [`spec/NORMATIVE.md` §2](../spec/NORMATIVE.md) for the full non-hashed-member table covering
+  every document type — `logInclusion` on ledger entries is the one most often missed.
 - **Domain separation.** Sign `"PRM-POLICY-v1\x00" || digest`, not the digest alone, so a policy
   signature can never be replayed as an authorization signature. Each object type has its own prefix.
 

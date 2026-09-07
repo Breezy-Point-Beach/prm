@@ -55,6 +55,7 @@ files, signatures, ledger, and proofs remain independently verifiable.
 
 | Path | What it is |
 |---|---|
+| [spec/NORMATIVE.md](spec/NORMATIVE.md) | **Normative rules.** Canonicalization, non-hashed members, domain separation, derivations. Takes precedence over `docs/`. |
 | [spec/schemas/](spec/schemas/) | JSON Schema (draft 2020-12) for policy, authorization, key event, ledger entry |
 | [spec/examples/](spec/examples/) | Sample signed policies (including the ALPR case), authorizations, ledger entries |
 | [spec/test-vectors/](spec/test-vectors/) | Canonicalization + signature vectors any implementation must reproduce |
