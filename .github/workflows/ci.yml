@@ -43,6 +43,16 @@ jobs:
 
       # @prm/verify must never gain a network-capable dependency. Its whole value is
       # that a recipient can verify with prm.app deleted and its operator hostile.
+      - name: 'Secret-holding packages have no network access'
+        run: |
+          # @prm/vault holds the master seed. A network call in it, or a seed reaching a
+          # request body, would end the project's central claim.
+          if grep -rnE "\bfetch\s*\(|from 'node:https?'|XMLHttpRequest|WebSocket" packages/vault/src; then
+            echo "::error title=Network access in @prm/vault::The package that holds the master seed must never make a network call."
+            exit 1
+          fi
+          echo "OK: @prm/vault contains no network calls."
+
       - name: '@prm/verify has no network dependencies'
         run: |
           deps=$(node -e "const p=require('./packages/verify/package.json');console.log(Object.keys(p.dependencies||{}).join(' '))")
