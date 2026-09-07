@@ -1,0 +1,24 @@
+{
+  "name": "@prm/crypto",
+  "version": "0.1.0",
+  "description": "PRM cryptographic primitives: PRM-JCS canonicalization, SHA-256 digests, Ed25519 signing, multibase/multihash, key derivation, identifier commitments.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@noble/curves": "1.7.0",
+    "@noble/hashes": "1.6.1",
+    "@prm/schema": "workspace:*",
+    "@scure/base": "1.2.1"
+  },
+  "devDependencies": { "typescript": "^5.7.2", "vitest": "^2.1.8" }
+}
