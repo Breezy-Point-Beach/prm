@@ -12,8 +12,8 @@ const load = (p: string) => JSON.parse(readFileSync(resolve(SPEC, p), 'utf8'))
 
 describe('normative examples validate', () => {
   it.each([
-    'examples/policies/alpr-policy-v1.json',
-    'examples/policies/alpr-policy-v2.json'
+    'examples/policies/policy-v1.json',
+    'examples/policies/policy-v2.json'
   ])('%s', (f) => {
     const r = validatePolicy(load(f))
     expect(r.errors).toEqual([])
@@ -29,7 +29,7 @@ describe('normative examples validate', () => {
   })
 
   it('authorization', () => {
-    expect(validateAuthorization(load('examples/authorizations/alpr-investigation-grant.json')).errors)
+    expect(validateAuthorization(load('examples/authorizations/example-grant.json')).errors)
       .toEqual([])
   })
 
@@ -40,13 +40,13 @@ describe('normative examples validate', () => {
   })
 
   it('the normative examples produce no semantic warnings', () => {
-    expect(policyWarnings(load('examples/policies/alpr-policy-v1.json'))).toEqual([])
-    expect(policyWarnings(load('examples/policies/alpr-policy-v2.json'))).toEqual([])
+    expect(policyWarnings(load('examples/policies/policy-v1.json'))).toEqual([])
+    expect(policyWarnings(load('examples/policies/policy-v2.json'))).toEqual([])
   })
 })
 
 describe('invalid documents are rejected', () => {
-  const base = (): Policy => load('examples/policies/alpr-policy-v1.json')
+  const base = (): Policy => load('examples/policies/policy-v1.json')
 
   it('rejects a v1 policy that claims a previous version', () => {
     const p = base(); p.previousPolicyHash = 'uEiBE9fuWQIzOQe08QcgbkYJdl54EKVdIlWi6GC2xmIZmqA'
@@ -90,7 +90,7 @@ describe('invalid documents are rejected', () => {
   })
 
   it('rejects an authorization with no expiry (perpetual grants are inexpressible)', () => {
-    const a = load('examples/authorizations/alpr-investigation-grant.json')
+    const a = load('examples/authorizations/example-grant.json')
     delete a.expires
     expect(validateAuthorization(a).valid).toBe(false)
   })
@@ -113,5 +113,5 @@ describe('extensibility is preserved', () => {
     expect(validatePolicy(p).errors).toEqual([])
   })
 
-  function base2 (): Policy { return load('examples/policies/alpr-policy-v1.json') }
+  function base2 (): Policy { return load('examples/policies/policy-v1.json') }
 })

@@ -81,9 +81,9 @@ function verifyProof (doc, proof, domain) {
 const V = read('test-vectors/vectors.json')
 const genesis = read('examples/key-events/genesis.json')
 const rotation = read('examples/key-events/rotation-seq1.json')
-const v1 = read('examples/policies/alpr-policy-v1.json')
-const v2 = read('examples/policies/alpr-policy-v2.json')
-const authz = read('examples/authorizations/alpr-investigation-grant.json')
+const v1 = read('examples/policies/policy-v1.json')
+const v2 = read('examples/policies/policy-v2.json')
+const authz = read('examples/authorizations/example-grant.json')
 const entries = read('examples/ledger/entries.json')
 const sth = read('examples/ledger/signed-tree-head.json')
 
@@ -132,7 +132,7 @@ check('a stolen current key CANNOT rotate to an attacker key', () => {
 console.log('\nPolicies')
 check('v1: digest matches vector and self-referential id', () => {
   const d = mhOf(digestOf(v1))
-  assert(d === V.documents['policies/alpr-policy-v1.json'].digest, 'vector mismatch')
+  assert(d === V.documents['policies/policy-v1.json'].digest, 'vector mismatch')
   assert(v1.id === 'urn:prm:policy:' + d, 'id is not the canonical digest')
   return d.slice(0, 20) + '…'
 })
@@ -169,7 +169,7 @@ check('domain separation: a policy signature is not valid as an authorization', 
 })
 check('no PII in the published policy', () => {
   const s = JSON.stringify(v1)
-  for (const leak of ['US-MN-ABC123', 'holder@example.org'])
+  for (const leak of ['1HGBH41JXMN109186', 'holder@example.org', 'device-0001-synthetic'])
     assert(!s.includes(leak), `raw identifier "${leak}" leaked into the published policy`)
   return 'only commitments published'
 })
@@ -183,7 +183,7 @@ for (const c of V.identifierCommitments) check(`commitment opens for ${c.namespa
   assert(v1.identifierCommitments.some(x => x.commitment === c.commitment), 'not present in policy')
 })
 check('commitment is NOT brute-forceable without the salt', () => {
-  const bare = mhOf(sha256(Buffer.from('US-MN-ABC123', 'utf8')))
+  const bare = mhOf(sha256(Buffer.from('1HGBH41JXMN109186', 'utf8')))
   assert(!v1.identifierCommitments.some(x => x.commitment === bare),
     'policy contains an unsalted identifier hash — enumerable')
   return '128-bit salt required to open'

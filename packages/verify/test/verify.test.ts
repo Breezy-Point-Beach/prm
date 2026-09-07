@@ -15,9 +15,9 @@ const V = load('test-vectors/vectors.json')
 
 const genesis = () => load('examples/key-events/genesis.json')
 const rotation = () => load('examples/key-events/rotation-seq1.json')
-const v1 = () => load('examples/policies/alpr-policy-v1.json')
-const v2 = () => load('examples/policies/alpr-policy-v2.json')
-const authz = () => load('examples/authorizations/alpr-investigation-grant.json')
+const v1 = () => load('examples/policies/policy-v1.json')
+const v2 = () => load('examples/policies/policy-v2.json')
+const authz = () => load('examples/authorizations/example-grant.json')
 const entries = () => load('examples/ledger/entries.json')
 const sth = () => load('examples/ledger/signed-tree-head.json')
 const NOW = new Date('2026-12-01T00:00:00Z')
@@ -49,7 +49,7 @@ describe('policy verification — the happy path', () => {
     expect(r.signature).toBe('valid')
     expect(r.issuer).toBe('authorized')
     expect(r.checked.accountId).toBe(V.accountId.accountId)
-    expect(r.checked.digest).toBe(V.documents['policies/alpr-policy-v1.json'].digest)
+    expect(r.checked.digest).toBe(V.documents['policies/policy-v1.json'].digest)
   })
 
   it('reports currency when the latest version is supplied', () => {
@@ -87,7 +87,7 @@ describe('policy verification — adversarial', () => {
 
   it('REJECTS a mismatched self-referential id', () => {
     const p = v1()
-    p.id = 'urn:prm:policy:' + V.documents['policies/alpr-policy-v2.json'].digest
+    p.id = 'urn:prm:policy:' + V.documents['policies/policy-v2.json'].digest
     const r = verifyPolicy(p, { keyEventLog: [genesis()], now: NOW })
     expect(r.integrity).toBe('invalid')
     expect(r.summary).toBe('failed')
@@ -319,7 +319,7 @@ describe('authorizations', () => {
     const r = verifyAuthorization(authz(), { boundPolicy: v2(), now: new Date('2026-12-01T00:00:00Z') })
     expect(r.errors).toEqual([])
     expect(r.valid).toBe(true)
-    expect(r.provenIdentifiers).toContain('us-license-plate')
+    expect(r.provenIdentifiers).toContain('vin')
   })
 
   it('REJECTS the grant against a DIFFERENT policy version', () => {
@@ -344,7 +344,9 @@ describe('authorizations', () => {
     // A validly signed grant that discloses an identifier the policy never committed to. This is
     // the realistic attack: the issuer's own key, used to overclaim coverage.
     const base = authz()
-    base.subjectRef.disclosedIdentifiers[0].value = 'US-CA-XYZ999'
+    // A well-formed VIN the policy never committed to — so it fails on the commitment check, not on
+    // normalization. Testing with a malformed value would prove something else entirely.
+    base.subjectRef.disclosedIdentifiers[0].value = '1HGBH41JXMN109187'
     const a = resign(base, 'authorization', '2026-11-20T00:00:00Z')
     const r = verifyAuthorization(a, { boundPolicy: v2(), now: NOW })
     expect(r.valid).toBe(false)

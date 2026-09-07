@@ -3,11 +3,11 @@ import { NormalizationError, normalizeIdentifier } from '../src/normalize.js'
 
 describe('identifier normalization is deterministic', () => {
   it.each([
-    ['us-license-plate', 'US-MN-ABC123', 'US-MN-ABC123'],
-    ['us-license-plate', 'mn abc123', 'US-MN-ABC123'],
-    ['us-license-plate', ' MN-ABC-123 ', 'US-MN-ABC123'],
-    ['us-license-plate', 'us-mn-abc123', 'US-MN-ABC123'],
-    ['us-license-plate', 'CA 7ABC123', 'US-CA-7ABC123'],
+    ['us-license-plate', 'US-CA-7ABC123', 'US-CA-7ABC123'],
+    ['us-license-plate', 'ca 7abc123', 'US-CA-7ABC123'],
+    ['us-license-plate', ' CA-7ABC-123 ', 'US-CA-7ABC123'],
+    ['us-license-plate', 'us-ca-7abc123', 'US-CA-7ABC123'],
+    ['us-license-plate', 'TX ABC123', 'US-TX-ABC123'],
     ['email', 'Holder@Example.ORG', 'holder@example.org'],
     ['email', '  holder@example.org  ', 'holder@example.org'],
     ['phone', '+1 (555) 123-4567', '+15551234567'],
@@ -20,7 +20,7 @@ describe('identifier normalization is deterministic', () => {
   })
 
   it('every spelling of one plate collapses to a single commitment input', () => {
-    const forms = ['US-MN-ABC123', 'mn abc123', 'MN ABC 123', 'us-MN-abc-123']
+    const forms = ['US-CA-7ABC123', 'ca 7abc123', 'CA 7ABC 123', 'us-CA-7abc-123']
     const set = new Set(forms.map((f) => normalizeIdentifier('us-license-plate', f)))
     expect(set.size).toBe(1)
   })

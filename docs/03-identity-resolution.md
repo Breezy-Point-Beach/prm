@@ -63,7 +63,7 @@ whitespace or case is useless:
 |---|---|
 | `email` | lowercase; trim; **no** gmail dot/plus stripping (that is a policy decision, not a normalization) |
 | `phone` | E.164, digits only, leading `+` |
-| `us-license-plate` | `US-{state}-{alnum uppercase, no spaces/dashes}` e.g. `US-MN-ABC123` |
+| `us-license-plate` | `US-{state}-{alnum uppercase, no spaces/dashes}` e.g. `US-CA-0EXAMPLE` |
 | `vin` | uppercase, 17 chars, ISO 3779 |
 | `device-id` | as issued, case-sensitive, no transformation |
 | `account-id` | `{issuer-domain}:{id}`, issuer lowercased |

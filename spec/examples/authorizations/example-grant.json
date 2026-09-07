@@ -7,35 +7,34 @@
     "VerifiableCredential",
     "PRMAuthorization"
   ],
-  "policyChainId": "urn:prm:chain:uEiAffJNBCpI9ao1XMxfFfASWJOX-aeXQW0maf_c1blRhmg",
-  "boundPolicyHash": "uEiDdn7WAetqrv8OmeKOCC64lGqvxR79xWzmDiO27di1Dtg",
+  "policyChainId": "urn:prm:chain:uEiCLGI_HAp0xe01I95O4jtbBQtB0P-9wl-EBephg2u1Z-A",
+  "boundPolicyHash": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
   "grantee": {
-    "name": "City of Breezy Point Police Department",
-    "id": "did:web:breezypointmn.gov",
-    "did": "did:web:breezypointmn.gov",
-    "domain": "breezypointmn.gov",
-    "contact": "records@breezypointmn.gov"
+    "name": "Example Data Controller",
+    "id": "did:web:example.org",
+    "did": "did:web:example.org",
+    "domain": "example.org",
+    "contact": "privacy@example.org"
   },
   "subjectRef": {
-    "pairwiseId": "uuig4ezebkdha5sh",
+    "pairwiseId": "elouyups46bgssst",
     "disclosedIdentifiers": [
       {
-        "namespace": "us-license-plate",
-        "value": "US-MN-ABC123",
-        "salt": "vBGkuGNuPzSoxUM7tEhVaA"
+        "namespace": "vin",
+        "value": "1HGBH41JXMN109186",
+        "salt": "1NjitacC6X2jApRc5vwPZg"
       }
     ]
   },
   "purposes": [
-    "prm:active-investigation"
+    "dpv:FraudPreventionAndDetection"
   ],
   "categories": [
     "prm:retention",
     "prm:correlation"
   ],
   "dataCategories": [
-    "plate-read",
-    "location"
+    "transaction-record"
   ],
   "issued": "2026-11-20T00:00:00Z",
   "expires": "2027-02-18T00:00:00Z",
@@ -47,14 +46,14 @@
     "statusPurpose": "revocation"
   },
   "receiptRequested": true,
-  "note": "Granted for case 26-114 only. Does not extend to the regional sharing network.",
-  "id": "urn:prm:authz:uEiAPbdcRV2F9Hppdue32ERrIq1gkBqBWOK83NryR-R4HRw",
+  "note": "Synthetic fixture. Scoped to a single stated purpose; no onward sharing.",
+  "id": "urn:prm:authz:uEiBqsFmVEmKWPHJOjWF9MKUvaYGixeQ0hVPrkNmSeAT5Ow",
   "proof": {
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-jcs-2022",
     "created": "2026-11-20T00:00:00Z",
     "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z5mwck9wjUPUdJTtu4Fn7QG3J4qw4JhRRYgJFdCCM9myPHEUriJsHfM5fTkbRnoNW52CJiXbd5ofitmToZqmpcPcS"
+    "proofValue": "z2WD48Bu8vow849U4dX2Yiey3tgvvjdj4BDXipnev5gqpdGZK2rfBAGjmFEMqkHNng5TRJGi4yqh17AH68TAHaCSC"
   }
 }

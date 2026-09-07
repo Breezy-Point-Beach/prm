@@ -24,9 +24,9 @@ const load = (p: string) => JSON.parse(readFileSync(resolve(SPEC, p), 'utf8'))
 const V = load('test-vectors/vectors.json')
 const genesis = load('examples/key-events/genesis.json')
 const rotation = load('examples/key-events/rotation-seq1.json')
-const v1 = load('examples/policies/alpr-policy-v1.json')
-const v2 = load('examples/policies/alpr-policy-v2.json')
-const authz = load('examples/authorizations/alpr-investigation-grant.json')
+const v1 = load('examples/policies/policy-v1.json')
+const v2 = load('examples/policies/policy-v2.json')
+const authz = load('examples/authorizations/example-grant.json')
 const entries = load('examples/ledger/entries.json')
 const sth = load('examples/ledger/signed-tree-head.json')
 
@@ -109,11 +109,11 @@ describe('key derivation reproduces the vectors', () => {
 
 describe('document digests reproduce the vectors', () => {
   it.each([
-    ['policies/alpr-policy-v1.json', v1, 'policy'],
-    ['policies/alpr-policy-v2.json', v2, 'policy'],
+    ['policies/policy-v1.json', v1, 'policy'],
+    ['policies/policy-v2.json', v2, 'policy'],
     ['key-events/genesis.json', genesis, 'keyEvent'],
     ['key-events/rotation-seq1.json', rotation, 'keyEvent'],
-    ['authorizations/alpr-investigation-grant.json', authz, 'authorization']
+    ['authorizations/example-grant.json', authz, 'authorization']
   ] as const)('%s', (name, doc, kind) => {
     expect(digest(doc, kind)).toBe(V.documents[name].digest)
   })
@@ -174,7 +174,7 @@ describe('identifier commitments and pairwise ids', () => {
 
   it('derives the salt from the binding secret (survives vault loss)', () => {
     const S = hexToBytes(V.keys.binding.S_bindHex)
-    const target = V.identifierCommitments.find((c: { namespace: string }) => c.namespace === 'us-license-plate')
+    const target = V.identifierCommitments.find((c: { namespace: string }) => c.namespace === 'vin')
     const salt = deriveIdentifierSalt(S, target.namespace, target.value)
     expect(encodeSalt(salt)).toBe(target.salt)
     expect(encodeMultihash(computeCommitment(target.namespace, target.value, salt))).toBe(target.commitment)
@@ -188,7 +188,7 @@ describe('identifier commitments and pairwise ids', () => {
 
   it('an unsalted hash of the identifier is NOT what is published', () => {
     // A bare SHA-256 of a plate is enumerable in minutes; the salt is the whole defence.
-    const bare = encodeMultihash(hashString('US-MN-ABC123'))
+    const bare = encodeMultihash(hashString('1HGBH41JXMN109186'))
     expect(v1.identifierCommitments.map((x: { commitment: string }) => x.commitment)).not.toContain(bare)
   })
 

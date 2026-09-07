@@ -7,7 +7,7 @@
     "VerifiableCredential",
     "PersonalDataPolicy"
   ],
-  "policyChainId": "urn:prm:chain:uEiAffJNBCpI9ao1XMxfFfASWJOX-aeXQW0maf_c1blRhmg",
+  "policyChainId": "urn:prm:chain:uEiCLGI_HAp0xe01I95O4jtbBQtB0P-9wl-EBephg2u1Z-A",
   "version": 1,
   "previousPolicyHash": null,
   "issuer": {
@@ -18,14 +18,13 @@
   },
   "effectiveDate": "2026-09-06T00:00:00Z",
   "jurisdictions": [
-    "US-MN",
     "US"
   ],
   "rules": [
     {
       "category": "prm:observation",
       "decision": "allow",
-      "note": "Lawful capture in a public place is not contested."
+      "note": "Observation itself is not contested."
     },
     {
       "category": "prm:transactional",
@@ -33,10 +32,10 @@
       "conditions": {
         "maxRetention": "PT0S",
         "purposes": [
-          "prm:hotlist-comparison"
+          "dpv:ServiceProvision"
         ],
         "requiresLegalProcess": false,
-        "note": "Immediate comparison against a lawfully constituted hotlist at the moment of capture."
+        "note": "Use strictly necessary to complete an interaction I initiated."
       }
     },
     {
@@ -47,18 +46,17 @@
         "recipients": [
           "prm:none"
         ],
-        "note": "Non-hit reads: delete immediately. Hit reads: retain only for the duration of the active investigation."
+        "note": "Delete once the initiating purpose is complete."
       }
     },
     {
       "category": "prm:location-history",
-      "decision": "deny",
-      "note": "No time-series record of my movements."
+      "decision": "deny"
     },
     {
       "category": "prm:correlation",
       "decision": "deny",
-      "note": "No joining to other databases or agency systems."
+      "note": "No joining to other databases."
     },
     {
       "category": "prm:profiling",
@@ -66,13 +64,11 @@
     },
     {
       "category": "prm:inference",
-      "decision": "deny",
-      "note": "No pattern-of-life or anomalous-movement scoring."
+      "decision": "deny"
     },
     {
       "category": "prm:third-party-sharing",
-      "decision": "deny",
-      "note": "No cross-agency, regional, or national sharing network."
+      "decision": "deny"
     },
     {
       "category": "prm:sale",
@@ -88,20 +84,21 @@
     },
     {
       "category": "prm:ai-training",
-      "decision": "deny",
-      "note": "Includes vendor model improvement on retained reads."
+      "decision": "deny"
     },
     {
       "category": "prm:biometric",
-      "decision": "deny",
-      "note": "No processing of vehicle occupant imagery."
+      "decision": "deny"
     },
     {
       "category": "prm:law-enforcement",
       "decision": "conditional",
       "conditions": {
         "requiresLegalProcess": true,
-        "requiresNotice": true
+        "requiresNotice": true,
+        "jurisdictions": [
+          "US"
+        ]
       },
       "basisAcknowledged": [
         "court-order",
@@ -114,25 +111,29 @@
       "basisAcknowledged": [
         "vital-interest"
       ],
-      "note": "Imminent threat to life, for the duration of the emergency."
+      "note": "Imminent threat to life, for its duration."
     },
     {
       "category": "prm:deletion",
       "decision": "conditional",
       "conditions": {
         "maxRetention": "PT0S",
-        "note": "Delete non-hit reads immediately; hit reads on case closure."
+        "note": "Delete once the purpose is complete."
       }
     }
   ],
   "identifierCommitments": [
     {
-      "namespace": "us-license-plate",
-      "commitment": "uEiAAReBMmFMY4_NHW7ftZg40gEX8LrJVMDXnRiFjfcaM6w"
+      "namespace": "vin",
+      "commitment": "uEiCDWH0mOPxvfHZLaHzOQMgq59GlFdhchw4gN4EZERDKmw"
     },
     {
       "namespace": "email",
       "commitment": "uEiCSorlDTGAKZc0XcqYkUNgFVgVF6e35KQ93X4YzxkHRwA"
+    },
+    {
+      "namespace": "device-id",
+      "commitment": "uEiDJAYWGMsi-Tg-hbIw8lb8dEgXdtCOKHeUyO7GOw28f7w"
     }
   ],
   "requests": {
@@ -143,7 +144,7 @@
   "humanReadable": {
     "mediaType": "text/markdown",
     "language": "en",
-    "text": "# Personal Data Policy — Vehicle Movement Records\n\nI consent to the lawful observation of my vehicle's license plate in public places, and to the\nimmediate comparison of that plate against a lawfully constituted hotlist at the moment of capture.\n\nI object to the persistent retention of any read that does not result in a hotlist match. I object to\nthe construction of a historical record of my movements, to the correlation of these records with\nother databases, to their disclosure to other agencies or to any regional or national sharing network,\nto their sale or commercial exploitation, to their use in behavioral profiling or derived inference,\nand to their inclusion in the training or evaluation of any machine learning model.\n\nI acknowledge that a court order or a specific statutory mandate may lawfully override these\nobjections, and I do not assert otherwise. Where such a basis exists, I request written notice and\nretention limited to what that basis actually requires.\n\nIn an emergency involving an imminent threat to life, I consent to the use of this data for the\nduration of that emergency.\n\nPlease confirm receipt and state which of these restrictions your systems can and cannot honour."
+    "text": "# Personal Data Policy\n\nThis document states the terms on which information about me may be retained and reused after it has\nbeen collected. It is a synthetic example used to pin the PRM canonicalization and signature format;\nit is not anyone's real policy and it describes no real organization.\n\nI permit observation and the use strictly necessary to complete an interaction I have initiated.\n\nI object to retention beyond that purpose, to combining these records with other databases, to\nbuilding a behavioral profile, to inferring facts about me that were never observed, to disclosure to\nother organizations, to sale or other commercial exploitation, to advertising use, and to inclusion in\nthe training or evaluation of any machine learning model.\n\nI acknowledge that a court order or a specific statutory mandate may lawfully override these\nobjections, and I do not assert otherwise.\n\nPlease confirm receipt and state which of these restrictions your systems can and cannot honour."
   },
   "distribution": {
     "canonicalUrl": "https://prm.app/u/ab12cd",
@@ -151,13 +152,13 @@
     "shortUrl": "https://prm.li/9fK2xQ",
     "statusList": "https://prm.app/status/1"
   },
-  "id": "urn:prm:policy:uEiBE9fuWQIzOQe08QcgbkYJdl54EKVdIlWi6GC2xmIZmqA",
+  "id": "urn:prm:policy:uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
   "proof": {
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-jcs-2022",
     "created": "2026-09-06T14:07:33Z",
     "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z3ENFJnfQ2YK2cAinY8N93i947uAR8K53PfWtHwm1PbFgs9MyPr9fcWGquFxGKGaiCCNjfvLupRfxPErUEs39TYXF"
+    "proofValue": "z2ioAeieoKDQxzk4Zs9hNk7TfavDtfW5CaM3oww6LaVb7JJmZuEAoeBUKhyoREoVW6rZSQZLcWUCPYrt6bw9n2UN2"
   }
 }

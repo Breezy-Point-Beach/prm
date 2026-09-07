@@ -49,7 +49,7 @@ afterAll(() => {
 describe('verification works with the network sabotaged', () => {
   it('verifies a policy using only the document and its key event log', async () => {
     const { verifyPolicy } = await import('../src/index.js')
-    const r = verifyPolicy(load('examples/policies/alpr-policy-v1.json'), {
+    const r = verifyPolicy(load('examples/policies/policy-v1.json'), {
       keyEventLog: [load('examples/key-events/genesis.json')],
       now: new Date('2026-10-01T00:00:00Z')
     })
@@ -62,7 +62,7 @@ describe('verification works with the network sabotaged', () => {
   it('reports currency and revocation as UNKNOWN rather than guessing', async () => {
     // The distinction matters: "could not check" must never be reported as "current".
     const { verifyPolicy } = await import('../src/index.js')
-    const r = verifyPolicy(load('examples/policies/alpr-policy-v1.json'), {
+    const r = verifyPolicy(load('examples/policies/policy-v1.json'), {
       keyEventLog: [load('examples/key-events/genesis.json')]
     })
     expect(r.currency).toBe('unknown')
@@ -74,8 +74,8 @@ describe('verification works with the network sabotaged', () => {
   it('verifies a full proof bundle offline', async () => {
     const { verifyBundle, buildBundle } = await import('../src/index.js')
     const bundle = buildBundle({
-      policy: load('examples/policies/alpr-policy-v1.json'),
-      policyChain: [load('examples/policies/alpr-policy-v1.json')],
+      policy: load('examples/policies/policy-v1.json'),
+      policyChain: [load('examples/policies/policy-v1.json')],
       keyEventLog: [load('examples/key-events/genesis.json')],
       ledgerEntries: load('examples/ledger/entries.json'),
       signedTreeHead: load('examples/ledger/signed-tree-head.json'),

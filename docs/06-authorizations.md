@@ -21,16 +21,16 @@ restrictive default credible.
   "boundPolicyHash": "uEiA7Zk...",         // the EXACT policy version this modifies
 
   "grantee": {
-    "name": "City of Breezy Point Police Department",
-    "domain": "breezypointmn.gov",
-    "did": "did:web:breezypointmn.gov",
-    "contact": "records@breezypointmn.gov"
+    "name": "City of Whittier Police Department",
+    "domain": "whittierpd.org",
+    "did": "did:web:whittierpd.org",
+    "contact": "records@whittierpd.org"
   },
 
   "subjectRef": {
     "pairwiseId": "b7k2m9qx4vn8",          // unlinkable across grantees
     "disclosedIdentifiers": [
-      { "namespace": "us-license-plate", "value": "US-MN-ABC123", "salt": "k9Xq..." }
+      { "namespace": "us-license-plate", "value": "US-CA-0EXAMPLE", "salt": "k9Xq..." }
     ]
   },
 

@@ -19,14 +19,14 @@ const write = (name: string, data: unknown) => {
 
 beforeAll(() => {
   dir = mkdtempSync(join(tmpdir(), 'prm-cli-'))
-  write('v1.json', load('examples/policies/alpr-policy-v1.json'))
-  write('v2.json', load('examples/policies/alpr-policy-v2.json'))
+  write('v1.json', load('examples/policies/policy-v1.json'))
+  write('v2.json', load('examples/policies/policy-v2.json'))
   write('genesis.json', load('examples/key-events/genesis.json'))
   write('kel.json', [load('examples/key-events/genesis.json'), load('examples/key-events/rotation-seq1.json')])
-  write('chain.json', [load('examples/policies/alpr-policy-v1.json'), load('examples/policies/alpr-policy-v2.json')])
+  write('chain.json', [load('examples/policies/policy-v1.json'), load('examples/policies/policy-v2.json')])
   write('evidence.prmproof', buildBundle({
-    policy: load('examples/policies/alpr-policy-v1.json'),
-    policyChain: [load('examples/policies/alpr-policy-v1.json')],
+    policy: load('examples/policies/policy-v1.json'),
+    policyChain: [load('examples/policies/policy-v1.json')],
     keyEventLog: [load('examples/key-events/genesis.json')],
     ledgerEntries: load('examples/ledger/entries.json'),
     signedTreeHead: load('examples/ledger/signed-tree-head.json'),
@@ -68,7 +68,7 @@ describe('prm verify', () => {
   })
 
   it('FAILS a tampered policy with exit code 2', () => {
-    const p = load('examples/policies/alpr-policy-v1.json')
+    const p = load('examples/policies/policy-v1.json')
     p.rules.find((r: { category: string }) => r.category === 'prm:sale').decision = 'allow'
     const r = cmdVerify(write('tampered.json', p), { kel: path('genesis.json') })
     expect(r.output).toContain('FAILED')
@@ -98,7 +98,7 @@ describe('prm verify-chain', () => {
   })
 
   it('fails a substituted chain', () => {
-    const [a, b] = [load('examples/policies/alpr-policy-v1.json'), load('examples/policies/alpr-policy-v2.json')]
+    const [a, b] = [load('examples/policies/policy-v1.json'), load('examples/policies/policy-v2.json')]
     b.previousPolicyHash = V.documents['key-events/genesis.json'].digest
     const r = cmdVerifyChain(write('badchain.json', [a, b]))
     expect(r.output).toContain('CHAIN FAILED')
@@ -120,7 +120,7 @@ describe('prm inspect', () => {
   it('shows committed identifiers WITHOUT disclosing their values', () => {
     const o = out()
     expect(o).toContain('values not disclosed')
-    expect(o).not.toContain('US-MN-ABC123')
+    expect(o).not.toContain('1HGBH41JXMN109186')
     expect(o).not.toContain('holder@example.org')
   })
 
@@ -140,7 +140,7 @@ describe('prm inspect', () => {
 describe('prm digest', () => {
   it('prints the canonical digest matching the vectors', () => {
     const r = cmdDigest(path('v1.json'), {})
-    expect(r.output).toContain(V.documents['policies/alpr-policy-v1.json'].digest)
+    expect(r.output).toContain(V.documents['policies/policy-v1.json'].digest)
     expect(r.output).toContain('excluded')
     expect(r.output).toContain('id, proof')
   })

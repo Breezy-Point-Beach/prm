@@ -21,11 +21,11 @@ for (const f of ['prm-policy-v1', 'prm-authorization-v1', 'prm-key-event-v1', 'p
 const validator = s => ajv.getSchema(`https://prm.dev/schemas/${s}.schema.json`)
 
 const cases = [
-  ['examples/policies/alpr-policy-v1.json', 'prm-policy-v1'],
-  ['examples/policies/alpr-policy-v2.json', 'prm-policy-v1'],
+  ['examples/policies/policy-v1.json', 'prm-policy-v1'],
+  ['examples/policies/policy-v2.json', 'prm-policy-v1'],
   ['examples/key-events/genesis.json', 'prm-key-event-v1'],
   ['examples/key-events/rotation-seq1.json', 'prm-key-event-v1'],
-  ['examples/authorizations/alpr-investigation-grant.json', 'prm-authorization-v1']
+  ['examples/authorizations/example-grant.json', 'prm-authorization-v1']
 ]
 
 let bad = 0

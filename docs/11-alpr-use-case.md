@@ -1,7 +1,7 @@
 # 11 — Demonstration Case: ALPR / Flock-style Systems
 
-Sample policy: [`spec/examples/policies/alpr-policy-v1.json`](../spec/examples/policies/alpr-policy-v1.json)
-Sample authorization: [`spec/examples/authorizations/alpr-investigation-grant.json`](../spec/examples/authorizations/alpr-investigation-grant.json)
+Sample policy: [`spec/examples/policies/policy-v1.json`](../spec/examples/policies/policy-v1.json)
+Sample authorization: [`spec/examples/authorizations/example-grant.json`](../spec/examples/authorizations/example-grant.json)
 
 ## 1. Why this is the right first case
 
@@ -59,8 +59,8 @@ Two details that make this policy hard to dismiss:
 The user picks the **"ALPR / Vehicle Movement"** template, adds their plate, and signs. Locally:
 
 ```
-salt        = HKDF(S_bind, info="prm/v1/salt/us-license-plate/US-MN-ABC123")[0..16]
-commitment  = SHA-256("us-license-plate" ‖ 0x00 ‖ "US-MN-ABC123" ‖ 0x00 ‖ salt)
+salt        = HKDF(S_bind, info="prm/v1/salt/us-license-plate/US-CA-0EXAMPLE")[0..16]
+commitment  = SHA-256("us-license-plate" ‖ 0x00 ‖ "US-CA-0EXAMPLE" ‖ 0x00 ‖ salt)
 digest      = SHA-256(JCS(policy minus id, proof))
 proofValue  = Ed25519(K_sign, "PRM-POLICY-v1\x00" ‖ digest)
 ```
