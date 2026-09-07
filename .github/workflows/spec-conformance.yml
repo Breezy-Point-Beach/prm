@@ -14,10 +14,16 @@ on:
     paths: ['spec/**', 'packages/schema/**', 'packages/crypto/**', 'packages/verify/**',
             'packages/ledger/**', 'package.json', 'pnpm-lock.yaml',
             '.github/workflows/spec-conformance.yml']
+  # NO paths filter on pull_request, deliberately.
+  #
+  # This job is a REQUIRED status check. A required check whose workflow is path-filtered simply
+  # never reports on an unrelated pull request, and GitHub blocks the merge waiting for a run that
+  # will never happen. That silently blocked a PR that touched no spec files at all.
+  #
+  # The job takes about 25 seconds, and the digest guard inside it already decides for itself whether
+  # anything relevant changed by diffing against the base. Running it always is both cheaper than the
+  # confusion and more correct.
   pull_request:
-    paths: ['spec/**', 'packages/schema/**', 'packages/crypto/**', 'packages/verify/**',
-            'packages/ledger/**', 'package.json', 'pnpm-lock.yaml',
-            '.github/workflows/spec-conformance.yml']
   workflow_dispatch:
 
 concurrency:
