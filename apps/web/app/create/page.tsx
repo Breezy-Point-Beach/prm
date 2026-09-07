@@ -106,6 +106,10 @@ export default function CreatePage () {
           </div>
           {error && <div className="note bad small">{error}</div>}
           <div className="row"><button onClick={generate}>Generate my key</button></div>
+          <p className="small muted" style={{ marginTop: '1rem' }}>
+            By continuing you agree to the <a href="/terms">Terms</a>. We collect no account details
+            — see <a href="/privacy">Privacy</a>.
+          </p>
         </>
       )}
 

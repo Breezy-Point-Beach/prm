@@ -94,6 +94,34 @@ unqualified one? Is asking for notice at all useful here, or does it weaken the 
 
 ---
 
+## 3. The Terms of Service and Privacy Policy are drafts
+
+`/terms` and `/privacy` are live at rightsroot.com and have **not been reviewed by a lawyer**. They
+are written to be accurate rather than flattering, and every factual claim in the privacy policy is
+enforced by tests in `apps/web/test/privacy-claims.test.ts` — so they will not silently drift from
+what the code does.
+
+What still needs professional attention:
+
+- **The warranty disclaimer and limitation of liability.** These are the sections where boilerplate
+  is either enforceable or worthless depending on jurisdiction and wording, and I am not qualified to
+  judge which. California consumer protection law also limits what can be disclaimed.
+- **Whether an LLC operating a free service needs different terms** than the ones drafted, and
+  whether "as is, no uptime guarantee" is sufficient given the evidentiary purpose users may rely on.
+- **The deletion mechanism.** The policy says a deletion request must be signed with the account key,
+  because there is no other way to authenticate a request when there are no accounts. Whether that
+  satisfies any applicable data-subject-rights regime is a question, not an assertion.
+- **Whether the entity name and address need to appear** on either page for CCPA/CPRA purposes.
+
+Two deliberate choices worth confirming rather than assuming:
+
+1. The privacy policy **does not claim "we collect nothing."** That would be false — the hosting
+   provider processes an IP address to serve a page. Saying so plainly costs nothing and makes the
+   rest credible. A test asserts the page never makes the stronger claim.
+2. The terms put the **unrecoverable key warning near the top**, in a highlighted block, rather than
+   buried in a liability section. If a user loses their phrase, that is the harm most likely to
+   actually occur, and burying it would be indefensible.
+
 ## What is settled and should not change
 
 These were reviewed and are considered correct. Adding further defensive language would start to
