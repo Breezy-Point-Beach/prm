@@ -1,13 +1,13 @@
-import { policyResponse } from '../../../../lib/publish'
-import { getStore, isValidHandle } from '../../../../lib/store'
+import { artifactResponse, readPolicyBytes } from '../../../../lib/publish'
+import { getStorage, isValidHandle } from '../../../../lib/storage'
 
 export const runtime = 'nodejs'
 
 /**
- * GET /u/{handle}/policy.json
+ * GET /u/{handle}/policy.json — the CURRENT version.
  *
- * Returns the stored bytes verbatim. No re-serialization, no added fields, no reordering — the
- * publish flow's byte comparison depends on this handler being a pass-through.
+ * An alias that moves when a new version is published, so it is cached briefly. For a stable
+ * reference use /u/{handle}/v/{n}.json, which is immutable.
  */
 export async function GET (
   _request: Request,
@@ -16,7 +16,15 @@ export async function GET (
   const { handle } = await context.params
   if (!isValidHandle(handle)) return new Response('Not found', { status: 404 })
 
-  const record = await getStore().getCurrent(handle)
+  const storage = await getStorage()
+  const record = await storage.metadata.currentVersion(handle)
   if (!record) return new Response('Not found', { status: 404 })
-  return policyResponse(record)
+
+  try {
+    return artifactResponse(await readPolicyBytes(storage, record), record)
+  } catch (e) {
+    // A digest mismatch here means the storage backend returned different bytes than were written.
+    // Serving them anyway would defeat the point, so refuse loudly.
+    return new Response(`Artifact integrity check failed: ${(e as Error).message}`, { status: 502 })
+  }
 }

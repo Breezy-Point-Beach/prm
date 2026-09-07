@@ -1,5 +1,5 @@
 import { handlePublish, type PublishRequest } from '../../../../lib/publish'
-import { getStore } from '../../../../lib/store'
+import { getStorage } from '../../../../lib/storage'
 
 // Node runtime: the store touches the filesystem in development, and verification uses Node crypto
 // paths in @noble. The public read routes stay cacheable and could move to Edge later.
@@ -22,7 +22,7 @@ export async function POST (request: Request): Promise<Response> {
   }
 
   const origin = new URL(request.url).origin
-  const result = await handlePublish(body, getStore(), origin)
+  const result = await handlePublish(body, await getStorage(), origin)
   return json(result, result.ok ? 200 : 400)
 }
 
