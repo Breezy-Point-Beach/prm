@@ -24,7 +24,7 @@ Examples: [`spec/examples/policies/`](../spec/examples/policies/)
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": ["VerifiableCredential", "PersonalDataPolicy"],
 
@@ -36,7 +36,7 @@ Examples: [`spec/examples/policies/`](../spec/examples/policies/)
   "issuer": {
     "id": "prm:k4h2qz9m7bvxr3tn8w6ycpsjdf",
     "did": "did:key:z6MkfR8...",
-    "keyEventLog": "https://prm.app/u/ab12cd/kel.json",
+    "keyEventLog": "https://rightsroot.com/u/ab12cd/kel.json",
     "keyEventHash": "uEiC2Wn...",           // KEL head at time of signing
     "displayName": "B. P. Beach"            // OPTIONAL, user-chosen, may be a pseudonym
   },
@@ -66,10 +66,10 @@ Examples: [`spec/examples/policies/`](../spec/examples/policies/)
   "legalNotice": "This document is a notice of restrictions... (OPTIONAL, user-supplied)",
 
   "distribution": {
-    "canonicalUrl":  "https://prm.app/u/ab12cd",
-    "machineUrl":    "https://prm.app/u/ab12cd/policy.json",
-    "shortUrl":      "https://prm.li/9fK2xQ",
-    "statusList":    "https://prm.app/status/1#42"
+    "canonicalUrl":  "https://rightsroot.com/u/ab12cd",
+    "machineUrl":    "https://rightsroot.com/u/ab12cd/policy.json",
+    "shortUrl":      "https://rightsroot.com/p/9fK2xQ",
+    "statusList":    "https://rightsroot.com/status/1#42"
   },
 
   "proof": {
@@ -210,7 +210,7 @@ The smallest valid document — this is what the MVP's default template produces
 
 ```jsonc
 {
-  "@context": ["https://www.w3.org/ns/credentials/v2","https://prm.dev/ns/policy/v1"],
+  "@context": ["https://www.w3.org/ns/credentials/v2","https://rightsroot.org/spec/prm/ns/v1"],
   "type": ["VerifiableCredential","PersonalDataPolicy"],
   "policyChainId": "urn:prm:chain:uEiQx...",
   "version": 1,

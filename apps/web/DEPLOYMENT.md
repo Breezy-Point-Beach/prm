@@ -1,5 +1,8 @@
 # Deploying to Vercel
 
+The application deploys to **rightsroot.com**. The open PRM specification is published separately at
+**rightsroot.org/spec/prm** — see `docs/naming.md` for why the two are deliberately separate.
+
 ## Required environment variables
 
 | Variable | Where from | Why |
@@ -80,6 +83,19 @@ because canonicalization erases formatting. Only the byte digest catches it.
 | `/u/{h}/policy.json` | `max-age=60, stale-while-revalidate=600` | An alias that moves when v2 is published |
 | `/u/{h}/qr.svg` | `max-age=60, stale-while-revalidate=600` | Encodes the current version's digest |
 
+## Domains
+
+| Domain | Serves | Vercel project |
+|---|---|---|
+| `rightsroot.com` | The app, policy pages, short links | this project |
+| `rightsroot.org` | The PRM specification and docs | separate; not yet built |
+
+`rightsroot.org` is not deployed from this project today. When it is, `spec/` and `docs/` are the
+natural source. Until then the specification URLs inside signed documents
+(`https://rightsroot.org/spec/prm/ns/v1`) are stable identifiers, not fetch targets — nothing in
+verification dereferences them, which is why they can be published later without breaking anything
+signed today.
+
 ## Deployment checklist
 
 - [ ] Blob store created, `BLOB_READ_WRITE_TOKEN` set for Production and Preview
@@ -88,3 +104,5 @@ because canonicalization erases formatting. Only the byte digest catches it.
 - [ ] Publish a policy, then redeploy, then confirm the artifact is byte-identical
 - [ ] Confirm `/u/{h}/v/1.json` still returns v1 after publishing v2
 - [ ] Confirm no raw identifier appears in logs, the database, or any published artifact
+- [ ] `rightsroot.com` added as a custom domain, with `www` redirecting to the apex
+- [ ] `rightsroot.org` reserved; DNS pointed somewhere deliberate even before the spec site exists

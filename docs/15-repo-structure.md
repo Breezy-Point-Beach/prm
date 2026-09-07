@@ -80,8 +80,10 @@ boundary that keeps the "verification doesn't need PRM" claim true.
 - **npm scope:** `@prm/*` if available, else `@breezy-point-beach/prm-*` with `@prm/*` reserved later.
   Check availability before writing import paths everywhere; renaming a scope later is tedious.
 - **Vercel projects:** `prm-web` (production), previews auto-named per branch.
-- **Domains:** `prm.app` (application + policy pages), `prm.li` (short URLs, separate domain so a
-  short-link compromise cannot serve a forged policy from the canonical origin).
+- **Domains:** `rightsroot.com` (product: the app, policy pages, short links) and
+  `rightsroot.org` (the open PRM specification and documentation). Short links live at
+  `rightsroot.com/p/{code}` rather than on a separate domain — see the note on D37 in
+  `docs/decisions.md`.
 
 ## 4. Branch strategy
 

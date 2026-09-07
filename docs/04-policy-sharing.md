@@ -19,23 +19,23 @@ The policy is only useful if it reaches people. Six channels, all carrying the *
 ## 2. URL structure
 
 ```
-https://prm.app/u/{handle}                     human page (HTML)
-https://prm.app/u/{handle}/policy.json         current signed policy (application/prm-policy+json)
-https://prm.app/u/{handle}/v/{n}.json          historical version n, immutable,permanently cacheable
-https://prm.app/u/{handle}/kel.json            key event log
-https://prm.app/u/{handle}/ledger.json         public ledger entries + inclusion proofs
-https://prm.app/u/{handle}/policy.pdf          rendered PDF with embedded signed JSON
-https://prm.app/u/{handle}/qr.svg              QR pointing at the short URL
-https://prm.li/{code}                          short URL (separate short domain)
-https://prm.app/.well-known/prm-log            log metadata + log public key
-https://prm.app/status/{listId}                Bitstring Status List credential
+https://rightsroot.com/u/{handle}                     human page (HTML)
+https://rightsroot.com/u/{handle}/policy.json         current signed policy (application/prm-policy+json)
+https://rightsroot.com/u/{handle}/v/{n}.json          historical version n, immutable,permanently cacheable
+https://rightsroot.com/u/{handle}/kel.json            key event log
+https://rightsroot.com/u/{handle}/ledger.json         public ledger entries + inclusion proofs
+https://rightsroot.com/u/{handle}/policy.pdf          rendered PDF with embedded signed JSON
+https://rightsroot.com/u/{handle}/qr.svg             QR: canonical URL + policy digest
+https://rightsroot.com/p/{code}                       short URL
+https://rightsroot.com/.well-known/prm-log            log metadata + log public key
+https://rightsroot.com/status/{listId}                Bitstring Status List credential
 ```
 
 **Content negotiation on `/u/{handle}`:** `Accept: application/json` → the signed policy;
 `text/html` → the page. Plus an unambiguous `Link` header so a crawler finds the machine form:
 
 ```
-Link: <https://prm.app/u/ab12cd/policy.json>; rel="alternate"; type="application/prm-policy+json"
+Link: <https://rightsroot.com/u/ab12cd/policy.json>; rel="alternate"; type="application/prm-policy+json"
 ```
 
 Register the media types `application/prm-policy+json` and `application/prm-authorization+json`; use
@@ -86,7 +86,7 @@ publishing one static JSON file before writing any code.
 real policy is 2–8 KB and grows. Instead:
 
 ```
-https://prm.li/9fK2xQ#uEiA7Zk
+https://rightsroot.com/p/9fK2xQ#uEiA7Zk
              ^short   ^first 8 chars of the policy digest
 ```
 

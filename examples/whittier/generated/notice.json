@@ -1,22 +1,22 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": [
     "VerifiableCredential",
     "PRMNotice"
   ],
-  "policyChainId": "urn:prm:chain:uEiAS72lEsH_jjv-pVEQDAsha8xgPHEJ_5leXHgGr65hg-Q",
-  "policyDigest": "uEiC9_iVQZ_-ozuxuwrl4Uzo79pURYmwFNpB156ELrcV-rg",
-  "policyByteDigest": "uEiDpKM6hLHAqJeMEKx5bJAGEdP_wbjmkOepSc3T1A7mC6Q",
+  "policyChainId": "urn:prm:chain:uEiAn4zfGoS7XwqrvlllM_DdOeqFeumqrIhOlh5vQlTp3kw",
+  "policyDigest": "uEiApNabq-0lnrwSeusO-io4zprjILwGqX5KtAxazF4onIA",
+  "policyByteDigest": "uEiBZWYQdCsYyGctmdFzNtKRA732cdFBfMwl302RLuhnXqA",
   "policyVersion": 1,
-  "policyUrl": "https://prm.app/u/user0001",
+  "policyUrl": "https://rightsroot.com/u/user0001",
   "issuer": {
-    "id": "prm:eob7fei7x3ji5vnqu4kezaeh65",
+    "id": "prm:s2nfbcv7jr5kcf3yopfs5dlrqa",
     "did": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
-    "keyEventLog": "https://prm.app/u/user0001/kel.json",
-    "keyEventHash": "uEiAjg_KRH77SjtWwpxRMgIf3TJHH96Y_kkV4j3QSA0sOUg"
+    "keyEventLog": "https://rightsroot.com/u/user0001/kel.json",
+    "keyEventHash": "uEiCWmlCKv0x6oRd4c8sujXGAHMGIESmnmHdAh7hr4bFZcQ"
   },
   "recipient": {
     "name": "City of Whittier Police Department",
@@ -44,7 +44,7 @@
     "created": "2026-09-16T16:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z4Thj4FN83xN8jq4itJCQuZML1zBRd4cxnStucx4tNtmK6ZFJKmdiktcjerSihnY58STwciXWSzpa33syAfQQWJB7"
+    "proofValue": "zE7bKCTmMtpfwJ42LzWE8JbrPV7xShayv4DYMixeEoNh1iF7Ma4oZr2WfJToD46hHRYnjx1UaSWFABeB82vFginx"
   },
-  "id": "urn:prm:notice:uEiAKIoHiJGaTnhDEQwJsIDlXYgU4Lw_Wd_D1nRNhaX09Ew"
+  "id": "urn:prm:notice:uEiAl1IInO9WpSRUDdyeMXECasrlzjC5sjzfN94TOr4B2Bg"
 }

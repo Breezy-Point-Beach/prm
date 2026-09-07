@@ -1,55 +1,55 @@
 [
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 0,
     "previousEntryHash": null,
     "recorded": "2026-09-06T14:02:12Z",
     "entryType": "key.event",
-    "subjectHash": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g",
+    "subjectHash": "uEiBiEkqvg-0kUuagfgLtlsBINn4IOVDRsI7YQY2tj3VylQ",
     "proof": {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
       "created": "2026-09-06T14:02:12Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4PPz8tZ9Xkxn5tvnZMQETa7ijHGtQR58g8DjYYRyWXZ7aKcwM1GrxsiBg1Rok6rxKweFomAsMT5or9T3PUHGpC7H"
+      "proofValue": "zjYUtqH7GipPn6SgzuQYQY35duijeGDVvutSjPDiS75C59hpLSbHut5wtLzvD6hfAG2UY8PxozKTxXLyNYfCcCdk"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 1,
-    "previousEntryHash": "uEiDlg2jfDaYJAtJaQ0R-EqHS9_bp5YXPPQXF8nG_EgF-Bw",
+    "previousEntryHash": "uEiC1NZVJ452V_RloUofetDE--1lj23I200PxfgCp4QMMAw",
     "recorded": "2026-09-06T14:07:35Z",
     "entryType": "policy.published",
-    "subjectHash": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
+    "subjectHash": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ",
     "proof": {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
       "created": "2026-09-06T14:07:35Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z5Ymf7CZkGd4X9nifsQfyUZJZRQUrnGNHxxWhiWPCMnQ5TdPyujqQXrjNdgiNMPTZSfGhCDpsaMAAGsuyFgR6nz4z"
+      "proofValue": "z3DWZjWf8j1ydsctHtYfU7CCsnSwsm5NMjLR6VCSSJJa9HywxiL6EuUoMbkW2duAppAWZoWSeRFzzvSv7hEXdWzUS"
     },
     "logInclusion": {
       "logId": "prm-log-1",
       "leafIndex": 1,
       "treeSize": 6,
-      "rootHash": "uEiAQqD0id5b7ESdDn8Tfazlcj9Jor8E1nSP0YXET6MtQOw",
+      "rootHash": "uEiCfckZzixFp3GzSDIr_3wrW9huZ6dDtIvxCTk56jyUnqg",
       "inclusionProof": [
-        "uEiDsgurbbQKaOiTiAa83zKojMMq5-6PMFyi-j2ml4hwRMw",
-        "uEiDPFQns1gPgVbpPACHgvDmsShcBAdGxUv3qjJnDQV11rw",
-        "uEiBmuWj375KQco8TeGUO0YB8LKV6Rd5TwkeMTugP641mzQ"
+        "uEiCWyWBmULMMvhMM1eoafbtCfDgucvMtTiE11GXxgVibEg",
+        "uEiBq85Cr2nPrn9iUMrejS4Gto8psRr-D20JxcBPgn6rAeg",
+        "uEiBkSrMyDQ3aSgFr1D4MHyBg5eI8sLUVYYBvDkprcfy2sA"
       ],
       "signedTreeHead": "<detached JWS — see spec/examples/ledger/signed-tree-head.json>"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 2,
-    "previousEntryHash": "uEiCW8jwfgPfQ-Uj2we1ZfMkxwD216t_tarDDqCU6HNe4DQ",
+    "previousEntryHash": "uEiC932MXMkdBXaXVVw2Ryt-zSrgmhH36msH8XIE79qhtBg",
     "recorded": "2026-09-12T09:30:00Z",
     "entryType": "notice.sent",
     "subjectHash": "uEiDHxLo-fBbKJYjjxeAtNkRERutlTL2zRm_ohpiBGKmVGA",
@@ -71,14 +71,14 @@
       "created": "2026-09-12T09:30:00Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z2UyPrDfQo72XVqEK4FnrzWCpNK4UxTzkvpSpLVfZjLSbNSzeMPs45KebCDsggmXL2Tn2TStPBkdY67ELkqvHkspA"
+      "proofValue": "z5FV6R478kYGbmKD1wjDdPD9NinqvbJFvR3S9aS17PbAmnvdF56snRDzmZy3uAxw2YpqxBZVcSttzaL6YYCW1ZoQ2"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 3,
-    "previousEntryHash": "uEiAccmTniDWb8L5mBkVUmo8pRlB9E4cc-XlXAgRgLzJurA",
+    "previousEntryHash": "uEiBUwR4s5AVbyNs2Whvz7RK_4kw15Q3Nj22E5Y8hwbpvKA",
     "recorded": "2026-09-16T00:00:00Z",
     "entryType": "notice.delivered",
     "subjectHash": "uEiDHxLo-fBbKJYjjxeAtNkRERutlTL2zRm_ohpiBGKmVGA",
@@ -99,45 +99,45 @@
       "created": "2026-09-16T00:00:00Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "zxk1xhdCoj9zn7gxMqeEdJ9bv2yzYmMDSR6f6RoRf7C67bTkxgRQ33VWEynCsLEoye6LQnEZNFf8LeDrRCWznGLd"
+      "proofValue": "zfEjU7NtkApbrKXK87Bmd3mTbtqG478Wr6sSRvEwAvNPur8YApLfyufgQiyYTnKmKtVtAszHaGddivxRbd2MaDQP"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 4,
-    "previousEntryHash": "uEiDBtPFSsmlqVnRd4PYZlBVoaDwlDyumCeiyW4GgfXcSvQ",
+    "previousEntryHash": "uEiBQMINBGOrRJjfcD62BzSAlsdfFEMikxoMlGR1JUZhsbg",
     "recorded": "2026-11-02T10:15:02Z",
     "entryType": "policy.published",
-    "subjectHash": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
+    "subjectHash": "uEiCDRPcf39RMK-jjyljqW1NsPAyDCuG9YMXmEmpOaJP73A",
     "proof": {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
       "created": "2026-11-02T10:15:02Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4gF5chb9ynm1htT7VF2szLm23aqjFGxUoZvQi69Nwrm4fVKmD5ZMZgTaFgvPgUXM7ctBezbkbQTWkmB14YLFEpwc"
+      "proofValue": "z3jRvY1EKdPeCeGCR9dNx3ZXT1yHShSUutRqpPSaoCXbVN6KH2ZA57p3cJ6m4PxEow5Jju6yoscKENQC1ALAkfKqa"
     },
     "logInclusion": {
       "logId": "prm-log-1",
       "leafIndex": 4,
       "treeSize": 6,
-      "rootHash": "uEiAQqD0id5b7ESdDn8Tfazlcj9Jor8E1nSP0YXET6MtQOw",
+      "rootHash": "uEiCfckZzixFp3GzSDIr_3wrW9huZ6dDtIvxCTk56jyUnqg",
       "inclusionProof": [
-        "uEiACZUrIS9B8D3-x4h3CdzNCKwGB6GJYBmt5sW2ZOo7a7Q",
-        "uEiDoklWWTDFFKFnGcIYJMvidZOIT1G3R6NhFzOOFewjjQw"
+        "uEiA87vRiWFargwM25BGabE-OlU9W6i7r12m6DMubghWTgQ",
+        "uEiDmEfCkDSiPdMGXMEHDqsnK7d4Am8cP2xupEENVM5-cMA"
       ],
       "signedTreeHead": "<detached JWS — see spec/examples/ledger/signed-tree-head.json>"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "sequence": 5,
-    "previousEntryHash": "uEiD6PXTrPwq2o-_zUB4G9wJd0s11-kscGmlHCnrUGOiOcA",
+    "previousEntryHash": "uEiC0aetUB-YSSupeUMhwJQGYm2q2j0eTyAAq2gWsSYlnOg",
     "recorded": "2026-11-20T00:00:03Z",
     "entryType": "authorization.granted",
-    "subjectHash": "uEiBqsFmVEmKWPHJOjWF9MKUvaYGixeQ0hVPrkNmSeAT5Ow",
+    "subjectHash": "uEiAk_1XyrFxRrIgfeZWillgk7F2XDLdQH73xePIUW5ZYxA",
     "counterparty": {
       "name": "Example Data Controller",
       "id": "did:web:example.org",
@@ -149,7 +149,7 @@
       "created": "2026-11-20T00:00:03Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4mwiLniYFn343Ej3LQSfwj3EqteW5pUajssPVyms2VksKroCN3jzQSJMfZnsPML9QeEdbn4b2gdj7FNkMiMkyXCd"
+      "proofValue": "z2j6tXq3BH8eS3pGyo9ChwETJVfgZtUJxgmGv8wChGBYef3HDzC12rcuqAHpY5jfgrsgVjpaixeA19p2bz9oFGXdn"
     }
   }
 ]

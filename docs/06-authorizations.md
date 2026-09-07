@@ -13,7 +13,7 @@ restrictive default credible.
 
 ```jsonc
 {
-  "@context": ["https://www.w3.org/ns/credentials/v2","https://prm.dev/ns/policy/v1"],
+  "@context": ["https://www.w3.org/ns/credentials/v2","https://rightsroot.org/spec/prm/ns/v1"],
   "type": ["VerifiableCredential","PRMAuthorization"],
   "id": "urn:prm:authz:uEiD4Qm...",
 
@@ -44,7 +44,7 @@ restrictive default credible.
   "onwardSharing": "prohibited",
 
   "revocation": {
-    "statusListCredential": "https://prm.app/status/1",
+    "statusListCredential": "https://rightsroot.com/status/1",
     "statusListIndex": 4211,
     "statusPurpose": "revocation"
   },

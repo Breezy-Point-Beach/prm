@@ -186,7 +186,7 @@ describe('a mutating server is caught', () => {
   it('DETECTS an added field, even a harmless-looking one', async () => {
     const { signed, fetched } = await publishThenMutate((b) => {
       const p = JSON.parse(b)
-      p.publishedBy = 'prm.app'
+      p.publishedBy = 'rightsroot.com'
       return JSON.stringify(p, null, 2)
     })
     expect(clientAcceptsFetchedBytes(signed.policyJson, fetched)).toBe(false)

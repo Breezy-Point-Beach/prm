@@ -1,14 +1,14 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": [
     "VerifiableCredential",
     "PRMAuthorization"
   ],
-  "policyChainId": "urn:prm:chain:uEiCLGI_HAp0xe01I95O4jtbBQtB0P-9wl-EBephg2u1Z-A",
-  "boundPolicyHash": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
+  "policyChainId": "urn:prm:chain:uEiB6YYylUjeUKi1bZ-dI-udT6yZh2ZK_giAfoE-eGrbkxA",
+  "boundPolicyHash": "uEiCDRPcf39RMK-jjyljqW1NsPAyDCuG9YMXmEmpOaJP73A",
   "grantee": {
     "name": "Example Data Controller",
     "id": "did:web:example.org",
@@ -41,19 +41,19 @@
   "maxRetention": "P90D",
   "onwardSharing": "prohibited",
   "revocation": {
-    "statusListCredential": "https://prm.app/status/1",
+    "statusListCredential": "https://rightsroot.com/status/1",
     "statusListIndex": 4211,
     "statusPurpose": "revocation"
   },
   "receiptRequested": true,
   "note": "Synthetic fixture. Scoped to a single stated purpose; no onward sharing.",
-  "id": "urn:prm:authz:uEiBqsFmVEmKWPHJOjWF9MKUvaYGixeQ0hVPrkNmSeAT5Ow",
+  "id": "urn:prm:authz:uEiAk_1XyrFxRrIgfeZWillgk7F2XDLdQH73xePIUW5ZYxA",
   "proof": {
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-jcs-2022",
     "created": "2026-11-20T00:00:00Z",
     "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z2WD48Bu8vow849U4dX2Yiey3tgvvjdj4BDXipnev5gqpdGZK2rfBAGjmFEMqkHNng5TRJGi4yqh17AH68TAHaCSC"
+    "proofValue": "z5d4C6oVSTAKdkftZKQLUN3B7eUqJWCU137jcxpsXGVaZLXZWJEg4GHNqP6TFA4UnrFxn3sWcR5SQy7TFbWxPXRTG"
   }
 }

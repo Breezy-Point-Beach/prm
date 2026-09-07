@@ -60,7 +60,7 @@ function run<T> (id: string, doc: unknown): ValidationResult<T> {
     : { valid: false, errors: format(v.errors) }
 }
 
-const BASE = 'https://prm.dev/schemas'
+const BASE = 'https://rightsroot.org/spec/prm/schemas'
 
 export const validatePolicy = (d: unknown) => run<Policy>(`${BASE}/prm-policy-v1.schema.json`, d)
 export const validateAuthorization = (d: unknown) => run<Authorization>(`${BASE}/prm-authorization-v1.schema.json`, d)

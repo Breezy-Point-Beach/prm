@@ -1,6 +1,19 @@
-# PRM — Personal Rights Management
+# RightsRoot / PRM
 
 > **A person remains the root authority over the persistent digital representation of themselves.**
+
+**RightsRoot** is the platform. **PRM — Personal Rights Management** is the open protocol it
+implements. RightsRoot puts the individual back at the root of their data rights.
+
+| | Where |
+|---|---|
+| The open specification | [rightsroot.org/spec/prm](https://rightsroot.org/spec/prm) |
+| The application | [rightsroot.com](https://rightsroot.com) |
+| Operator | Breezy Point Beach LLC |
+
+The separation is load-bearing, not branding: a protocol that lives at a neutral address, and that
+anyone can implement without depending on us, is what makes "don't trust us, verify it" credible.
+See [docs/naming.md](docs/naming.md).
 
 PRM lets an individual create, sign, publish, update, and share a **machine-readable personal data
 policy** describing how information *about them* may be retained, aggregated, correlated, shared,
@@ -49,6 +62,7 @@ files, signatures, ledger, and proofs remain independently verifiable.
 | 17 | [GitHub workflow](docs/17-github-workflow.md) | Branch → PR → preview → tests → main → production |
 | 18 | [Implementation roadmap](docs/18-roadmap.md) | Prototype → MVP → public beta → enterprise |
 | — | [Decision register](docs/decisions.md) | Every major decision: why, threat solved, MVP?, standard, simpler alternative |
+| — | [Naming](docs/naming.md) | RightsRoot vs PRM, canonical URLs, how to write it |
 | — | [Legal review](docs/legal-review.md) | Two template phrases awaiting an attorney's view, and what is settled |
 | — | [Original brief](docs/brief.md) | The requirements this architecture answers |
 
@@ -64,4 +78,4 @@ files, signatures, ledger, and proofs remain independently verifiable.
 ## Status
 
 Design complete; implementation not started. See [docs/18-roadmap.md](docs/18-roadmap.md).
-Target home: `github.com/Breezy-Point-Beach/prm`, deployed via Vercel.
+Target home: `github.com/Breezy-Point-Beach/prm`, deployed via Vercel to `rightsroot.com`.

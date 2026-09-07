@@ -5,7 +5,7 @@
 **Please do not open a public issue for security reports.**
 
 Use GitHub's [private vulnerability reporting](https://github.com/Breezy-Point-Beach/prm/security/advisories/new)
-on this repository, or email **security@prm.app** (PGP key at `/.well-known/security.txt` once the
+on this repository, or email **security@rightsroot.com** (PGP key at `/.well-known/security.txt` once the
 service is deployed).
 
 **Response commitment:** acknowledgement within 3 business days, an assessment within 10, and a fix or

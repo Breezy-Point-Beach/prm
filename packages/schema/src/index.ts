@@ -51,5 +51,5 @@ export const NON_HASHED_MEMBERS = {
 
 export const PRM_CONTEXT = [
   'https://www.w3.org/ns/credentials/v2',
-  'https://prm.dev/ns/policy/v1'
+  'https://rightsroot.org/spec/prm/ns/v1'
 ] as const

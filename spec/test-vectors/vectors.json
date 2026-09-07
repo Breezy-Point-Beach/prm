@@ -55,8 +55,8 @@
     }
   ],
   "accountId": {
-    "genesisDigest": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g",
-    "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "genesisDigest": "uEiBiEkqvg-0kUuagfgLtlsBINn4IOVDRsI7YQY2tj3VylQ",
+    "accountId": "prm:mijevl4d5usffzvapybo3fwaja",
     "derivation": "'prm:' + base32-nopad-lower(SHA-256(JCS(genesis minus id, proof))).slice(0,26)"
   },
   "identifierCommitments": [
@@ -85,22 +85,22 @@
   },
   "documents": {
     "policies/policy-v1.json": {
-      "digest": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
+      "digest": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ",
       "signedBy": "sign/0",
       "domain": "PRM-POLICY-v1"
     },
     "policies/policy-v2.json": {
-      "digest": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
+      "digest": "uEiCDRPcf39RMK-jjyljqW1NsPAyDCuG9YMXmEmpOaJP73A",
       "signedBy": "sign/0",
       "domain": "PRM-POLICY-v1"
     },
     "key-events/genesis.json": {
-      "digest": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g",
+      "digest": "uEiBiEkqvg-0kUuagfgLtlsBINn4IOVDRsI7YQY2tj3VylQ",
       "signedBy": "sign/0",
       "domain": "PRM-KEYEVENT-v1"
     },
     "key-events/rotation-seq1.json": {
-      "digest": "uEiAxMjtNJjLUqFqgas_NyN4PHdjbeHHS7Ajkj6tQPIRdsg",
+      "digest": "uEiAeQcltGVg9Uyb1Bv0nKvFi6JFdNxEYKeTfZnW3E6bDRQ",
       "signedBy": [
         "sign/0",
         "sign/1"
@@ -108,38 +108,38 @@
       "domain": "PRM-KEYEVENT-v1"
     },
     "authorizations/example-grant.json": {
-      "digest": "uEiBqsFmVEmKWPHJOjWF9MKUvaYGixeQ0hVPrkNmSeAT5Ow",
+      "digest": "uEiAk_1XyrFxRrIgfeZWillgk7F2XDLdQH73xePIUW5ZYxA",
       "signedBy": "sign/0",
       "domain": "PRM-AUTHZ-v1"
     }
   },
   "policyChain": {
-    "chainId": "urn:prm:chain:uEiCLGI_HAp0xe01I95O4jtbBQtB0P-9wl-EBephg2u1Z-A",
-    "v1": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
-    "v2": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
-    "v2PreviousPolicyHash": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ"
+    "chainId": "urn:prm:chain:uEiB6YYylUjeUKi1bZ-dI-udT6yZh2ZK_giAfoE-eGrbkxA",
+    "v1": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ",
+    "v2": "uEiCDRPcf39RMK-jjyljqW1NsPAyDCuG9YMXmEmpOaJP73A",
+    "v2PreviousPolicyHash": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ"
   },
   "merkleLog": {
     "hashing": "RFC 6962: leaf = SHA-256(0x00 || data), node = SHA-256(0x01 || left || right)",
     "treeSize": 6,
     "leaves": [
-      "uEiDsgurbbQKaOiTiAa83zKojMMq5-6PMFyi-j2ml4hwRMw",
-      "uEiDQ_6Kkq3FlGvSeh2FUk-B7lMgy8LcOdFoVEKZKPFaWZw",
-      "uEiBalMvSGGElJ3QzxaX-7QgXZjLlFRyuFT5mmWo5lI7lkg",
-      "uEiCQ6AMrwKvztGP7h_ORaoJv3x53YNSiLuvW5otXW66Kdw",
-      "uEiBKZMiQjPvyWeh96NbQuLx2zMeDHS5C3SepxF6wOuTBgA",
-      "uEiACZUrIS9B8D3-x4h3CdzNCKwGB6GJYBmt5sW2ZOo7a7Q"
+      "uEiCWyWBmULMMvhMM1eoafbtCfDgucvMtTiE11GXxgVibEg",
+      "uEiADJppnLSytBXswFab6JqHquBA5kEdk1TkccBIQo3sQEw",
+      "uEiA01yAKmPspAOedznHmi1fwMgZrov_XhP9VhMqtx-GknA",
+      "uEiB8i7F75bS_eJi-eZp3X9i0KgyThBdhktEuI3FGK-4yOg",
+      "uEiBsVegxVgUaBdpq9xkR9K-lX8PtKAXBfklZ-jft231zCg",
+      "uEiA87vRiWFargwM25BGabE-OlU9W6i7r12m6DMubghWTgQ"
     ],
-    "rootHash": "uEiAQqD0id5b7ESdDn8Tfazlcj9Jor8E1nSP0YXET6MtQOw",
+    "rootHash": "uEiCfckZzixFp3GzSDIr_3wrW9huZ6dDtIvxCTk56jyUnqg",
     "inclusionProofs": {
       "1": [
-        "uEiDsgurbbQKaOiTiAa83zKojMMq5-6PMFyi-j2ml4hwRMw",
-        "uEiDPFQns1gPgVbpPACHgvDmsShcBAdGxUv3qjJnDQV11rw",
-        "uEiBmuWj375KQco8TeGUO0YB8LKV6Rd5TwkeMTugP641mzQ"
+        "uEiCWyWBmULMMvhMM1eoafbtCfDgucvMtTiE11GXxgVibEg",
+        "uEiBq85Cr2nPrn9iUMrejS4Gto8psRr-D20JxcBPgn6rAeg",
+        "uEiBkSrMyDQ3aSgFr1D4MHyBg5eI8sLUVYYBvDkprcfy2sA"
       ],
       "4": [
-        "uEiACZUrIS9B8D3-x4h3CdzNCKwGB6GJYBmt5sW2ZOo7a7Q",
-        "uEiDoklWWTDFFKFnGcIYJMvidZOIT1G3R6NhFzOOFewjjQw"
+        "uEiA87vRiWFargwM25BGabE-OlU9W6i7r12m6DMubghWTgQ",
+        "uEiDmEfCkDSiPdMGXMEHDqsnK7d4Am8cP2xupEENVM5-cMA"
       ]
     },
     "logPublicKeyMultibase": "z6MksD2345487sJvw5BQrHGi6Qqam86KTHTvyXmDyW9dZHV4"

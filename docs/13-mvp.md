@@ -3,7 +3,7 @@
 **Definition of done:** one person can generate keys locally, sign a policy about ALPR retention,
 publish it at a public URL with a QR code and a PDF, prove it existed at a point in time, grant and
 revoke an exception, and hand a records officer a document that a third party can verify **with
-prm.app switched off**.
+rightsroot.com switched off**.
 
 If a feature is not required for that sentence, it is not in the MVP.
 

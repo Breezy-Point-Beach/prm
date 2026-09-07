@@ -26,7 +26,7 @@
   "services": [
     {
       "type": "PRMPublisher",
-      "endpoint": "https://prm.app/u/ab12cd"
+      "endpoint": "https://rightsroot.com/u/ab12cd"
     }
   ],
   "proof": [
@@ -36,7 +36,7 @@
       "created": "2026-09-06T14:02:11Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z8Nr4XpgjYLgwCw4xDdggoTBckn4fuW6V66HPV3g2qMi9dtRYXwZq1nYZJjFFUP7NfTcQvcQmr3LgqTrHbL2ZiSh"
+      "proofValue": "z2ifQQS14j7yDNFBxSZpy1U6WUjxEBiJJe8S8JWQiyS66wrUpntpp9BfGvYzpPxM3489LtiXKwAyjq2R7Pe3qEQwB"
     }
   ]
 }

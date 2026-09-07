@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-key-event-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-key-event-v1.schema.json",
   "title": "PRM Key Event v1",
   "description": "One entry in a self-certifying, hash-chained Key Event Log. accountId = 'prm:' + base32-nopad-lower(SHA-256(JCS(genesis event minus proof)))[0..25]. Signature domain prefix 'PRM-KEYEVENT-v1\\x00'.",
   "type": "object",
@@ -73,7 +73,7 @@
     "proof": {
       "type": "array",
       "minItems": 1,
-      "items": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" },
+      "items": { "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" },
       "description": "Array because a rotation carries TWO signatures: one by the outgoing key, one by the newly revealed pre-committed key."
     }
   },

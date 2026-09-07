@@ -2,7 +2,7 @@
   "type": "prm/KeyEvent/v1",
   "eventType": "rotation",
   "sequence": 1,
-  "previousEventHash": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g",
+  "previousEventHash": "uEiBiEkqvg-0kUuagfgLtlsBINn4IOVDRsI7YQY2tj3VylQ",
   "created": "2027-09-06T09:00:00Z",
   "keys": [
     {
@@ -26,7 +26,7 @@
   "services": [
     {
       "type": "PRMPublisher",
-      "endpoint": "https://prm.app/u/ab12cd"
+      "endpoint": "https://rightsroot.com/u/ab12cd"
     }
   ],
   "proof": [
@@ -36,7 +36,7 @@
       "created": "2027-09-06T09:00:00Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "ztXercH7mXxo8asEiuwhDuu5Z19edy29VTdSjSrD1b3zSDdC9aqZHARCjSruvRyUKRnM8zaPy9XLY69GRJ2MP6tw"
+      "proofValue": "z4Pyr5RLWQhaSvS7K2t2bsm4YmwJnoMSsN4JrE8rmNm8ycT9JRcmMBGZHMnNidEPzdFtN7qvcZN1AYWFPAGfqL9z5"
     },
     {
       "type": "DataIntegrityProof",
@@ -44,7 +44,7 @@
       "created": "2027-09-06T09:00:00Z",
       "verificationMethod": "did:key:z6Mkm1UPdBHW6PjW7uD6FzPh8Goa2LHtHG3Auztep7gh6aEY#z6Mkm1UPdBHW6PjW7uD6FzPh8Goa2LHtHG3Auztep7gh6aEY",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4JeTUBv6C2KN2sWCksCuY49ZkbMKGNufmDVHVe5fhW2zg9UQzPttp3GSx5qhk89PTQk8VTmY5HUhjCtBkaxFUCKh"
+      "proofValue": "z3FD4vh8VfrVF9JYcD8SHyz6nLmvKMLoEszhC5s9CvDDL9nMS96CQtcoDbeg7T3BSUVXJv3968enhtUNoAtKfsF7A"
     }
   ]
 }

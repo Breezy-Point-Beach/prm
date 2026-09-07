@@ -3,7 +3,7 @@
 ## 1. The bar
 
 The test this layer must pass: **a recipient with a cached copy of the policy, the KEL, and one signed
-tree head can complete a full verification with prm.app unreachable and DNS for prm.app returning
+tree head can complete a full verification with rightsroot.com unreachable and DNS for rightsroot.com returning
 NXDOMAIN.** If that is not true, PRM is a central authority.
 
 ## 2. The six checks

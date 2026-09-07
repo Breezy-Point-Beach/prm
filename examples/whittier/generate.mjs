@@ -19,7 +19,7 @@
  * they can be regenerated freely as the template evolves.
  */
 import { createInterface } from 'node:readline/promises'
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -108,7 +108,7 @@ async function main () {
     nextKeyDigests: [keys.next.publicKeyDigest],
     recoveryKeyDigests: [keys.recovery.publicKeyDigest],
     threshold: 1,
-    services: [{ type: 'PRMPublisher', endpoint: 'https://prm.app/u/user0001' }]
+    services: [{ type: 'PRMPublisher', endpoint: 'https://rightsroot.com/u/user0001' }]
   }
   genesis.proof = [buildProof(genesis, {
     privateKey: keys.signing.privateKey, publicKey: keys.signing.publicKey,
@@ -141,7 +141,7 @@ async function main () {
       issuer: {
         id: accountId,
         did: keys.signing.did,
-        keyEventLog: 'https://prm.app/u/user0001/kel.json',
+        keyEventLog: 'https://rightsroot.com/u/user0001/kel.json',
         keyEventHash: digest(genesis, 'keyEvent')
       },
       effectiveDate: effective,
@@ -164,10 +164,10 @@ async function main () {
         text: alprHumanReadable({ agency: AGENCY.name, state: 'CA' })
       },
       distribution: {
-        canonicalUrl: 'https://prm.app/u/user0001',
-        machineUrl: 'https://prm.app/u/user0001/policy.json',
-        shortUrl: 'https://prm.li/user0001',
-        statusList: 'https://prm.app/status/1'
+        canonicalUrl: 'https://rightsroot.com/u/user0001',
+        machineUrl: 'https://rightsroot.com/u/user0001/policy.json',
+        shortUrl: 'https://rightsroot.com/p/user0001',
+        statusList: 'https://rightsroot.com/status/1'
       }
     }
     return doc
@@ -293,7 +293,7 @@ async function main () {
     maxRetention: 'P180D',
     onwardSharing: 'prohibited',
     revocation: {
-      statusListCredential: 'https://prm.app/status/1',
+      statusListCredential: 'https://rightsroot.com/status/1',
       statusListIndex: 1,
       statusPurpose: 'revocation'
     },
@@ -326,7 +326,7 @@ async function main () {
     },
     purpose: 'To place my standing personal data policy on record with the recipient.',
     matchingIdentifiers: [{ namespace: plate.namespace, value: plate.value, salt: plate.salt }],
-    policyUrl: 'https://prm.app/u/user0001',
+    policyUrl: 'https://rightsroot.com/u/user0001',
     issued: local ? new Date() : new Date('2026-09-16T16:00:00Z')
   }, keys.signing)
 
@@ -372,6 +372,9 @@ async function main () {
   })
 
   // ---- 11. Write, then verify what we wrote --------------------------------
+  // Wipe first. An artifact left behind from an earlier layout is still a signed document, and it
+  // would sit in an evidence folder looking current. PR 7 renamed several of these.
+  rmSync(OUT, { recursive: true, force: true })
   mkdirSync(OUT, { recursive: true })
   const write = (name, data) =>
     writeFileSync(resolve(OUT, name), JSON.stringify(data, null, 2) + '\n')
@@ -399,7 +402,7 @@ async function main () {
     policyDigest: notice.document.policyDigest,
     policyByteDigest: notice.document.policyByteDigest,
     manifestDigest: bundle.manifestDigest,
-    verificationUrl: 'https://prm.app/u/user0001',
+    verificationUrl: 'https://rightsroot.com/u/user0001',
     verifyCommand: 'npx @prm/cli verify notice.prmproof',
     includeMatchingIdentifiers: true,
     generatedAt: local ? new Date() : new Date('2026-09-16T16:00:00Z')

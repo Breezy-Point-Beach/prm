@@ -1,20 +1,20 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": [
     "VerifiableCredential",
     "PersonalDataPolicy"
   ],
-  "policyChainId": "urn:prm:chain:uEiCLGI_HAp0xe01I95O4jtbBQtB0P-9wl-EBephg2u1Z-A",
+  "policyChainId": "urn:prm:chain:uEiB6YYylUjeUKi1bZ-dI-udT6yZh2ZK_giAfoE-eGrbkxA",
   "version": 2,
-  "previousPolicyHash": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
+  "previousPolicyHash": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ",
   "issuer": {
-    "id": "prm:737vmx23g2dbf2yy66qr2ta4a2",
+    "id": "prm:mijevl4d5usffzvapybo3fwaja",
     "did": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
-    "keyEventLog": "https://prm.app/u/ab12cd/kel.json",
-    "keyEventHash": "uEiD-_1ZfWzaGEusY96EdTBwGudBdM5BYI2zz_Y9rlSg21g"
+    "keyEventLog": "https://rightsroot.com/u/ab12cd/kel.json",
+    "keyEventHash": "uEiBiEkqvg-0kUuagfgLtlsBINn4IOVDRsI7YQY2tj3VylQ"
   },
   "effectiveDate": "2026-11-09T00:00:00Z",
   "jurisdictions": [
@@ -151,20 +151,20 @@
     "text": "# Personal Data Policy\n\nThis document states the terms on which information about me may be retained and reused after it has\nbeen collected. It is a synthetic example used to pin the PRM canonicalization and signature format;\nit is not anyone's real policy and it describes no real organization.\n\nI permit observation and the use strictly necessary to complete an interaction I have initiated.\n\nI object to retention beyond that purpose, to combining these records with other databases, to\nbuilding a behavioral profile, to inferring facts about me that were never observed, to disclosure to\nother organizations, to sale or other commercial exploitation, to advertising use, and to inclusion in\nthe training or evaluation of any machine learning model.\n\nI acknowledge that a court order or a specific statutory mandate may lawfully override these\nobjections, and I do not assert otherwise.\n\nPlease confirm receipt and state which of these restrictions your systems can and cannot honour."
   },
   "distribution": {
-    "canonicalUrl": "https://prm.app/u/ab12cd",
-    "machineUrl": "https://prm.app/u/ab12cd/policy.json",
-    "shortUrl": "https://prm.li/9fK2xQ",
-    "statusList": "https://prm.app/status/1"
+    "canonicalUrl": "https://rightsroot.com/u/ab12cd",
+    "machineUrl": "https://rightsroot.com/u/ab12cd/policy.json",
+    "shortUrl": "https://rightsroot.com/p/9fK2xQ",
+    "statusList": "https://rightsroot.com/status/1"
   },
-  "supersedes": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
+  "supersedes": "uEiASvTFe2WZxFUfBzh6MRXtXVaabo88XnswKmvrwXP1gJQ",
   "expirationDate": "2028-11-09T00:00:00Z",
-  "id": "urn:prm:policy:uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
+  "id": "urn:prm:policy:uEiCDRPcf39RMK-jjyljqW1NsPAyDCuG9YMXmEmpOaJP73A",
   "proof": {
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-jcs-2022",
     "created": "2026-11-02T10:15:00Z",
     "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z2Vc3iT3Xz1UTPpsT7vxUUPDJWMyHmupqeDa6PWeKhUvLuaaxKGQvjU29kUGkVfRJUGwghzL6w1FVHEMAeqGFMqie"
+    "proofValue": "z4GjEf7N6Zr87U3yc4zNgWaK6Bw9fCUwvzPdYecR6NqAvASCLNi6jDjzR4GUB5PxJ9tupk8UBhVLtAoSBgXCQMj46"
   }
 }
