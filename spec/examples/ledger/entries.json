@@ -23,24 +23,24 @@
     "previousEntryHash": "uEiDlg2jfDaYJAtJaQ0R-EqHS9_bp5YXPPQXF8nG_EgF-Bw",
     "recorded": "2026-09-06T14:07:35Z",
     "entryType": "policy.published",
-    "subjectHash": "uEiBE9fuWQIzOQe08QcgbkYJdl54EKVdIlWi6GC2xmIZmqA",
+    "subjectHash": "uEiAJFWRm-OkVHft16L4qNeHrUEpFnU4JOC_3HdBesnKQkQ",
     "proof": {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
       "created": "2026-09-06T14:07:35Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4WguzPouR4xH7umHAr6ZNu4ZtUxrhbg9SLgg1ymVWZ9VzWFusompTyRCgpHwwSt4XMB1PPb2rWjTKnsaPVjfbutw"
+      "proofValue": "z5Ymf7CZkGd4X9nifsQfyUZJZRQUrnGNHxxWhiWPCMnQ5TdPyujqQXrjNdgiNMPTZSfGhCDpsaMAAGsuyFgR6nz4z"
     },
     "logInclusion": {
       "logId": "prm-log-1",
       "leafIndex": 1,
       "treeSize": 6,
-      "rootHash": "uEiBmOX1s1mj3vLNKb_0N6uzYSh88FJYoeFWSGHka1Qc81Q",
+      "rootHash": "uEiAQqD0id5b7ESdDn8Tfazlcj9Jor8E1nSP0YXET6MtQOw",
       "inclusionProof": [
         "uEiDsgurbbQKaOiTiAa83zKojMMq5-6PMFyi-j2ml4hwRMw",
-        "uEiBDynIUODDIwn9Yxy67kXZ5uZ7b3ilz7IcaMnI0KJI3_A",
-        "uEiAONDA5OOQ8eRTcN-jK0gYPFdzwCQWvj5ojHEeV3qXuaQ"
+        "uEiDPFQns1gPgVbpPACHgvDmsShcBAdGxUv3qjJnDQV11rw",
+        "uEiBmuWj375KQco8TeGUO0YB8LKV6Rd5TwkeMTugP641mzQ"
       ],
       "signedTreeHead": "<detached JWS — see spec/examples/ledger/signed-tree-head.json>"
     }
@@ -49,20 +49,20 @@
     "type": "prm/LedgerEntry/v1",
     "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
     "sequence": 2,
-    "previousEntryHash": "uEiA5wCN1jHfXzS9RDl_W3kudXn8dxSjVful5nBEQHo9cRg",
+    "previousEntryHash": "uEiCW8jwfgPfQ-Uj2we1ZfMkxwD216t_tarDDqCU6HNe4DQ",
     "recorded": "2026-09-12T09:30:00Z",
     "entryType": "notice.sent",
-    "subjectHash": "uEiBY5N9KEeBTsKqfhKvqyQLOGg4B_8MMV3TqJTfzsH8l3Q",
+    "subjectHash": "uEiDHxLo-fBbKJYjjxeAtNkRERutlTL2zRm_ohpiBGKmVGA",
     "counterparty": {
-      "name": "City of Breezy Point Police Department",
-      "id": "did:web:breezypointmn.gov",
+      "name": "Example Data Controller",
+      "id": "did:web:example.org",
       "channel": "postal"
     },
     "evidence": [
       {
         "kind": "certified-mail-receipt",
         "digest": "uEiBcjdQPIUYBB-pOcQiCqK5xr1gOxvwd8WNYNCRuXJ94pw",
-        "note": "USPS Certified Mail 9407 1118 9876 5432 1098 76"
+        "note": "Synthetic delivery receipt reference"
       }
     ],
     "proof": {
@@ -71,26 +71,26 @@
       "created": "2026-09-12T09:30:00Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z51eaWKJZe8ABGGuC89uB8VRugsaRkT83PgPUeVWz1ezQrUgiPZcoudUDsQTJ1qMfWS4hL1hDfsU9LwQb1f51SMdZ"
+      "proofValue": "z2UyPrDfQo72XVqEK4FnrzWCpNK4UxTzkvpSpLVfZjLSbNSzeMPs45KebCDsggmXL2Tn2TStPBkdY67ELkqvHkspA"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
     "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
     "sequence": 3,
-    "previousEntryHash": "uEiAoIYf8OCia_AfGFKv_ZNI1rMaHw00OHRPaDpVnDn_F9A",
+    "previousEntryHash": "uEiAccmTniDWb8L5mBkVUmo8pRlB9E4cc-XlXAgRgLzJurA",
     "recorded": "2026-09-16T00:00:00Z",
     "entryType": "notice.delivered",
-    "subjectHash": "uEiBY5N9KEeBTsKqfhKvqyQLOGg4B_8MMV3TqJTfzsH8l3Q",
+    "subjectHash": "uEiDHxLo-fBbKJYjjxeAtNkRERutlTL2zRm_ohpiBGKmVGA",
     "counterparty": {
-      "name": "City of Breezy Point Police Department",
-      "id": "did:web:breezypointmn.gov",
+      "name": "Example Data Controller",
+      "id": "did:web:example.org",
       "channel": "postal"
     },
     "evidence": [
       {
         "kind": "usps-tracking",
-        "digest": "uEiAeYLIpxYCOkp_nSgJz8Qz1-P6wJMkCepwx7UPz8TKvrg"
+        "digest": "uEiARm4A8jWcMf7azBUF0hjNDFpVQ9Hki8ixhgp0xz6ao4w"
       }
     ],
     "proof": {
@@ -99,33 +99,33 @@
       "created": "2026-09-16T00:00:00Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z313xheV9w73ihXMre3xX5obJhuc4Aikc8UeoP7ZoWodT3Xdtrzeu6jEjWk7yENjD49VeeeRHjz6rVuVW5NCC56Sy"
+      "proofValue": "zxk1xhdCoj9zn7gxMqeEdJ9bv2yzYmMDSR6f6RoRf7C67bTkxgRQ33VWEynCsLEoye6LQnEZNFf8LeDrRCWznGLd"
     }
   },
   {
     "type": "prm/LedgerEntry/v1",
     "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
     "sequence": 4,
-    "previousEntryHash": "uEiA7u_GmdfWv65OVxSvCuZ8XBcZYodJu-nvZQAM-VMWvwQ",
+    "previousEntryHash": "uEiDBtPFSsmlqVnRd4PYZlBVoaDwlDyumCeiyW4GgfXcSvQ",
     "recorded": "2026-11-02T10:15:02Z",
     "entryType": "policy.published",
-    "subjectHash": "uEiDdn7WAetqrv8OmeKOCC64lGqvxR79xWzmDiO27di1Dtg",
+    "subjectHash": "uEiBwanjk0uwUmEPptghaWNpZ8BdT5rBnAZi1iBfOq2pyig",
     "proof": {
       "type": "DataIntegrityProof",
       "cryptosuite": "eddsa-jcs-2022",
       "created": "2026-11-02T10:15:02Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z4vU9RwNtGNKWzevkP1FhmDNB3ghnhCcWL4hoF2R1VvjMbg1j5uJerQEnVrHPGBFCkbQUimofR9FpHr6zitS8i1di"
+      "proofValue": "z4gF5chb9ynm1htT7VF2szLm23aqjFGxUoZvQi69Nwrm4fVKmD5ZMZgTaFgvPgUXM7ctBezbkbQTWkmB14YLFEpwc"
     },
     "logInclusion": {
       "logId": "prm-log-1",
       "leafIndex": 4,
       "treeSize": 6,
-      "rootHash": "uEiBmOX1s1mj3vLNKb_0N6uzYSh88FJYoeFWSGHka1Qc81Q",
+      "rootHash": "uEiAQqD0id5b7ESdDn8Tfazlcj9Jor8E1nSP0YXET6MtQOw",
       "inclusionProof": [
-        "uEiDEvTAuA2dwdLpLxAP44sbAF0YBcvldkSTd4drCVXKhTQ",
-        "uEiBlVTXMe9GBFADnfDMObiLn_ruPzsEtyx3WXRARM6VgNg"
+        "uEiACZUrIS9B8D3-x4h3CdzNCKwGB6GJYBmt5sW2ZOo7a7Q",
+        "uEiDoklWWTDFFKFnGcIYJMvidZOIT1G3R6NhFzOOFewjjQw"
       ],
       "signedTreeHead": "<detached JWS — see spec/examples/ledger/signed-tree-head.json>"
     }
@@ -134,13 +134,13 @@
     "type": "prm/LedgerEntry/v1",
     "accountId": "prm:737vmx23g2dbf2yy66qr2ta4a2",
     "sequence": 5,
-    "previousEntryHash": "uEiCajtEi-KAzHvlXinNFJJSXBqxNo3jPS9yKAHxT7IpJfQ",
+    "previousEntryHash": "uEiD6PXTrPwq2o-_zUB4G9wJd0s11-kscGmlHCnrUGOiOcA",
     "recorded": "2026-11-20T00:00:03Z",
     "entryType": "authorization.granted",
-    "subjectHash": "uEiAPbdcRV2F9Hppdue32ERrIq1gkBqBWOK83NryR-R4HRw",
+    "subjectHash": "uEiBqsFmVEmKWPHJOjWF9MKUvaYGixeQ0hVPrkNmSeAT5Ow",
     "counterparty": {
-      "name": "City of Breezy Point Police Department",
-      "id": "did:web:breezypointmn.gov",
+      "name": "Example Data Controller",
+      "id": "did:web:example.org",
       "channel": "email"
     },
     "proof": {
@@ -149,7 +149,7 @@
       "created": "2026-11-20T00:00:03Z",
       "verificationMethod": "did:key:z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo#z6MkrXkKJa4ytWRY9ZtJXK3k3o9dsrLdKYC5vhRbZjZfu4Zo",
       "proofPurpose": "assertionMethod",
-      "proofValue": "z5qxdWUoRQyX52zj82GFSPhQPEgEPaZouknuszhEDiXAuABbHxmcRr5GfpMU2q3yZ784dckk4v2joAF2bQKkYFXX6"
+      "proofValue": "z4mwiLniYFn343Ej3LQSfwj3EqteW5pUajssPVyms2VksKroCN3jzQSJMfZnsPML9QeEdbn4b2gdj7FNkMiMkyXCd"
     }
   }
 ]

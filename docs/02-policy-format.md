@@ -45,7 +45,7 @@ Examples: [`spec/examples/policies/`](../spec/examples/policies/)
   "expirationDate": "2028-09-06T00:00:00Z", // OPTIONAL; absent = until superseded
   "supersedes": "uEiB9Lm...",
 
-  "jurisdictions": ["US-MN", "US", "EU"],   // ISO 3166-1/-2; declared, not adjudicated
+  "jurisdictions": ["US-CA", "US", "EU"],   // ISO 3166-1/-2; declared, not adjudicated
 
   "rules": [ /* see §3 */ ],
   "exceptions": [ /* see §4 */ ],
@@ -122,7 +122,7 @@ Two details that matter:
     "maxRetention": "P0D",               // ISO 8601 duration
     "purposes":     ["dpv:FraudPreventionAndDetection"],
     "recipients":   ["prm:none"],        // or list of org identifiers / classes
-    "jurisdictions":["US-MN"],
+    "jurisdictions":["US-CA"],
     "requiresLegalProcess": true,
     "note": "Retention only for the duration of an active hotlist match."
   },

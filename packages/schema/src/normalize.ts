@@ -42,7 +42,7 @@ export function normalizeIdentifier (namespace: string, raw: string): string {
       return e164
     }
     case 'us-license-plate': {
-      // Canonical form: US-{STATE}-{ALNUM}. Accepts "mn abc123", "MN-ABC-123", "US-MN-ABC123".
+      // Canonical form: US-{STATE}-{ALNUM}. Accepts "ca 7abc123", "CA-7ABC-123", "US-CA-7ABC123".
       const cleaned = v.toUpperCase().replace(/^US[-\s]+/, '')
       const m = cleaned.match(/^([A-Z]{2})[-\s]*(.+)$/)
       if (!m) throw new NormalizationError(`expected a two-letter state then the plate, got: ${v}`)

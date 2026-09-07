@@ -137,7 +137,7 @@ Each is a test, not a checkbox.
 2. `npx @prm/verify policy.json --offline` succeeds with the network disabled and DNS blackholed.
 3. A policy published through the UI produces an RFC 3161 token within one hour, verifiable with
    `openssl ts -verify` and no PRM code.
-4. Grepping the server's request logs, database, and error reports for the test plate `US-MN-ABC123`
+4. Grepping the server's request logs, database, and error reports for the test plate `US-CA-0EXAMPLE`
    returns **zero** hits after a full end-to-end run. Automate this as a CI test against a seeded
    preview deployment.
 5. Deleting the Vercel deployment leaves a previously exported `.prmproof` bundle fully verifiable.

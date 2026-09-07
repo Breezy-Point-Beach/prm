@@ -1,0 +1,17 @@
+{
+  "name": "@prm/example-whittier",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Worked example: a PRM ALPR notice to the City of Whittier, California. Placeholder identifiers only.",
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs",
+    "generate:local": "node generate.mjs --local",
+    "test": "node generate.mjs >/dev/null && node verify.mjs"
+  },
+  "dependencies": {
+    "@prm/crypto": "workspace:*",
+    "@prm/schema": "workspace:*",
+    "@prm/verify": "workspace:*"
+  }
+}

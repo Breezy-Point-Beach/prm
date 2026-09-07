@@ -61,7 +61,8 @@ jobs:
       - name: Assert published digests are unchanged
         if: >-
           github.event_name == 'pull_request' &&
-          !contains(github.event.pull_request.labels.*.name, 'spec-version-bump')
+          !contains(github.event.pull_request.labels.*.name, 'spec-version-bump') &&
+          !contains(github.event.pull_request.labels.*.name, 'vector-regeneration')
         run: |
           git fetch origin "${{ github.base_ref }}" --depth=1
           if ! git diff --quiet "origin/${{ github.base_ref }}" -- \
@@ -69,11 +70,34 @@ jobs:
             echo "::error title=Canonical digests changed::A committed example digest or test vector changed."
             echo ""
             echo "This invalidates every signature ever produced under the current spec version."
-            echo "If the change is intentional, it is a SPEC VERSION BUMP (v1 -> v2), not an edit:"
-            echo "  1. add new schemas alongside the existing ones — do not modify v1"
-            echo "  2. keep the v1 vectors so historical documents stay verifiable"
-            echo "  3. document the migration in docs/decisions.md"
-            echo "  4. apply the 'spec-version-bump' label to acknowledge this check"
+            echo "Two labels can acknowledge it, and they are NOT interchangeable:"
+            echo ""
+            echo "  vector-regeneration  Fixture data only. The schemas and the canonicalization"
+            echo "                       rules are untouched; only the synthetic example values"
+            echo "                       changed. CI additionally verifies spec/schemas is unchanged."
+            echo ""
+            echo "  spec-version-bump    A real protocol change (v1 -> v2):"
+            echo "                         1. add new schemas alongside the existing ones"
+            echo "                         2. keep the v1 vectors so old documents stay verifiable"
+            echo "                         3. document the migration in docs/decisions.md"
             exit 1
           fi
           echo "Canonical digests unchanged."
+
+      # A fixture regeneration must not smuggle in a protocol change. If the
+      # vector-regeneration label is used, the schemas must be byte-identical.
+      - name: Fixture regeneration must not change the protocol
+        if: >-
+          github.event_name == 'pull_request' &&
+          contains(github.event.pull_request.labels.*.name, 'vector-regeneration') &&
+          !contains(github.event.pull_request.labels.*.name, 'spec-version-bump')
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          if ! git diff --quiet "origin/${{ github.base_ref }}" -- spec/schemas; then
+            echo "::error title=Protocol changed under a fixture label::spec/schemas was modified in a PR labelled vector-regeneration."
+            echo "That label is only for changes to synthetic example VALUES. A schema change is a"
+            echo "spec-version-bump and must follow that process instead."
+            git --no-pager diff --stat "origin/${{ github.base_ref }}" -- spec/schemas
+            exit 1
+          fi
+          echo "spec/schemas unchanged: this is a fixture regeneration, not a protocol change."

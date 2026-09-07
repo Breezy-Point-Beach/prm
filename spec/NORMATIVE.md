@@ -146,6 +146,42 @@ canonicalization difference and therefore a different signature.
 
 ---
 
+## 10. Fixture policy — normative vectors are jurisdiction-neutral
+
+The documents in `spec/examples/` and `spec/test-vectors/vectors.json` exist to pin the **wire
+format**: canonicalization, digests, signatures, derivations, and proof structures. They are
+deliberately synthetic and carry no jurisdictional narrative.
+
+- Identifier fixtures use RFC 2606 reserved names (`example.org`), an ISO 3779 VIN, and a synthetic
+  device id — none of which name a state or country.
+- `jurisdictions` is `["US"]` only. No subdivision.
+- The counterparty is `did:web:example.org`, "Example Data Controller".
+- The policy exercises every rule shape (`allow`, `deny`, `conditional`, `basisAcknowledged`, and each
+  supported condition field) without describing any real processing regime.
+
+**Jurisdiction-specific material does not belong here.** The production California ALPR template lives
+in `packages/schema/src/templates/alpr.ts`, and the Whittier worked example in `examples/whittier/`.
+Neither participates in the digest guard, so both can evolve as the law and the product do, without
+touching a single signature.
+
+The one namespace with jurisdiction-specific parsing is `us-license-plate`. Its normalization rules are
+normative and are covered by `@prm/schema` unit tests, which do not participate in digests — so plate
+coverage is complete without a state code appearing in a vector.
+
+### Changing the fixtures
+
+Two labels acknowledge a digest change, and they are not interchangeable:
+
+| Label | Meaning | Extra check |
+|---|---|---|
+| `vector-regeneration` | Only synthetic example **values** changed. Schemas and rules untouched. | CI asserts `spec/schemas/` is byte-identical |
+| `spec-version-bump` | A real protocol change (v1 → v2) | Add new schemas alongside v1; keep v1 vectors; document in `docs/decisions.md` |
+
+Using `vector-regeneration` while modifying `spec/schemas/` fails the build. That trap exists so a
+canonicalization change can never ride in under a fixture label.
+
+---
+
 ## Audit findings (2026-09-06)
 
 Discovered while implementing the core packages against the existing spec. All six were resolved by
@@ -160,3 +196,25 @@ precedence order (normative artifacts > documentation > implementation convenien
 | C4 | `docs/07` described the signed tree head signature as a "detached JWS", but the vector uses the same multibase base58btc Ed25519 construction as every other document, with domain `PRM-STH-v1`. | Corrected `docs/07`. One signature scheme everywhere is simpler and is what the vectors actually require. |
 | C5 | `docs/01` wrote the account id truncation as `[0..26]`, ambiguous between 26 and 27 characters. | Pinned to "first 26 characters" in §5. |
 | C6 | Merkle inclusion proof ordering was implicit. It caused two real test failures during spec authoring. | Documented in §8. |
+
+## Fixture regeneration (2026-09-07)
+
+The original vectors used Minnesota fixture values (`US-MN-ABC123`, "City of Breezy Point Police
+Department", `jurisdictions: ["US-MN","US"]`) and an ALPR-shaped policy. That tied the normative wire
+format to a jurisdiction the project has no connection to, and risked a Minnesota sample becoming the
+basis of the production template.
+
+The vectors were regenerated as generic, jurisdiction-neutral documents per §10, and the ALPR
+material moved to the production template and the Whittier example. **No schema, canonicalization
+rule, derivation, or signing domain changed** — only the synthetic values inside the fixtures. The
+account identifier is unchanged, because the genesis key event was not touched.
+
+Renamed for accuracy, since the vectors are no longer ALPR-specific:
+
+| Was | Now |
+|---|---|
+| `examples/policies/alpr-policy-v1.json` | `examples/policies/policy-v1.json` |
+| `examples/policies/alpr-policy-v2.json` | `examples/policies/policy-v2.json` |
+| `examples/authorizations/alpr-investigation-grant.json` | `examples/authorizations/example-grant.json` |
+
+Landed under the `vector-regeneration` label.

@@ -140,27 +140,30 @@ function commitmentFor (namespace, value) {
   ]))
   return { salt: b64u(salt), commitment: mh(c) }
 }
-const PLATE = commitmentFor('us-license-plate', 'US-MN-ABC123')
+// Deliberately jurisdiction-neutral fixtures. A VIN (ISO 3779) identifies a vehicle without naming
+// any state; example.org is reserved by RFC 2606. Plate normalization — the only namespace with
+// jurisdiction-specific parsing — is covered by @prm/schema unit tests, which do not participate in
+// normative digests, so nothing is lost by keeping a real state code out of the vectors.
+const VIN = commitmentFor('vin', '1HGBH41JXMN109186')
 const EMAIL = commitmentFor('email', 'holder@example.org')
+const DEVICE = commitmentFor('device-id', 'device-0001-synthetic')
 
 /* ---------- 4. ALPR policy v1 ---------- */
-const HUMAN = `# Personal Data Policy — Vehicle Movement Records
+const HUMAN = `# Personal Data Policy
 
-I consent to the lawful observation of my vehicle's license plate in public places, and to the
-immediate comparison of that plate against a lawfully constituted hotlist at the moment of capture.
+This document states the terms on which information about me may be retained and reused after it has
+been collected. It is a synthetic example used to pin the PRM canonicalization and signature format;
+it is not anyone's real policy and it describes no real organization.
 
-I object to the persistent retention of any read that does not result in a hotlist match. I object to
-the construction of a historical record of my movements, to the correlation of these records with
-other databases, to their disclosure to other agencies or to any regional or national sharing network,
-to their sale or commercial exploitation, to their use in behavioral profiling or derived inference,
-and to their inclusion in the training or evaluation of any machine learning model.
+I permit observation and the use strictly necessary to complete an interaction I have initiated.
+
+I object to retention beyond that purpose, to combining these records with other databases, to
+building a behavioral profile, to inferring facts about me that were never observed, to disclosure to
+other organizations, to sale or other commercial exploitation, to advertising use, and to inclusion in
+the training or evaluation of any machine learning model.
 
 I acknowledge that a court order or a specific statutory mandate may lawfully override these
-objections, and I do not assert otherwise. Where such a basis exists, I request written notice and
-retention limited to what that basis actually requires.
-
-In an emergency involving an imminent threat to life, I consent to the use of this data for the
-duration of that emergency.
+objections, and I do not assert otherwise.
 
 Please confirm receipt and state which of these restrictions your systems can and cannot honour.`
 
@@ -175,11 +178,12 @@ function buildPolicy ({ version, previousPolicyHash, chainId, key, created, effe
       keyEventHash: mh(GENESIS_DIGEST)
     },
     effectiveDate,
-    jurisdictions: ['US-MN', 'US'],
+    jurisdictions: ['US'],
     rules,
     identifierCommitments: [
-      { namespace: 'us-license-plate', commitment: PLATE.commitment },
-      { namespace: 'email', commitment: EMAIL.commitment }
+      { namespace: 'vin', commitment: VIN.commitment },
+      { namespace: 'email', commitment: EMAIL.commitment },
+      { namespace: 'device-id', commitment: DEVICE.commitment }
     ],
     requests: { deletionOnPurposeCompletion: true, doNotSellOrShare: true, globalPrivacyControl: true },
     humanReadable: { mediaType: 'text/markdown', language: 'en', text: HUMAN },
@@ -197,46 +201,48 @@ function buildPolicy ({ version, previousPolicyHash, chainId, key, created, effe
   return { doc, digest: d }
 }
 
-const ALPR_RULES = [
-  { category: 'prm:observation', decision: 'allow', note: 'Lawful capture in a public place is not contested.' },
+// Exercises every shape the schema allows: allow / deny / conditional, conditions with each
+// supported field, and basisAcknowledged. Coverage of the format, not of any jurisdiction's law.
+const GENERIC_RULES = [
+  { category: 'prm:observation', decision: 'allow', note: 'Observation itself is not contested.' },
   { category: 'prm:transactional', decision: 'conditional',
-    conditions: { maxRetention: 'PT0S', purposes: ['prm:hotlist-comparison'], requiresLegalProcess: false,
-      note: 'Immediate comparison against a lawfully constituted hotlist at the moment of capture.' } },
+    conditions: { maxRetention: 'PT0S', purposes: ['dpv:ServiceProvision'], requiresLegalProcess: false,
+      note: 'Use strictly necessary to complete an interaction I initiated.' } },
   { category: 'prm:retention', decision: 'conditional',
     conditions: { maxRetention: 'PT0S', recipients: ['prm:none'],
-      note: 'Non-hit reads: delete immediately. Hit reads: retain only for the duration of the active investigation.' } },
-  { category: 'prm:location-history', decision: 'deny', note: 'No time-series record of my movements.' },
-  { category: 'prm:correlation', decision: 'deny', note: 'No joining to other databases or agency systems.' },
+      note: 'Delete once the initiating purpose is complete.' } },
+  { category: 'prm:location-history', decision: 'deny' },
+  { category: 'prm:correlation', decision: 'deny', note: 'No joining to other databases.' },
   { category: 'prm:profiling', decision: 'deny' },
-  { category: 'prm:inference', decision: 'deny', note: 'No pattern-of-life or anomalous-movement scoring.' },
-  { category: 'prm:third-party-sharing', decision: 'deny', note: 'No cross-agency, regional, or national sharing network.' },
+  { category: 'prm:inference', decision: 'deny' },
+  { category: 'prm:third-party-sharing', decision: 'deny' },
   { category: 'prm:sale', decision: 'deny' },
   { category: 'prm:commercialization', decision: 'deny' },
   { category: 'prm:advertising', decision: 'deny' },
-  { category: 'prm:ai-training', decision: 'deny', note: 'Includes vendor model improvement on retained reads.' },
-  { category: 'prm:biometric', decision: 'deny', note: 'No processing of vehicle occupant imagery.' },
+  { category: 'prm:ai-training', decision: 'deny' },
+  { category: 'prm:biometric', decision: 'deny' },
   { category: 'prm:law-enforcement', decision: 'conditional',
-    conditions: { requiresLegalProcess: true, requiresNotice: true },
+    conditions: { requiresLegalProcess: true, requiresNotice: true, jurisdictions: ['US'] },
     basisAcknowledged: ['court-order', 'statutory-override'] },
   { category: 'prm:emergency', decision: 'allow',
-    basisAcknowledged: ['vital-interest'], note: 'Imminent threat to life, for the duration of the emergency.' },
+    basisAcknowledged: ['vital-interest'], note: 'Imminent threat to life, for its duration.' },
   { category: 'prm:deletion', decision: 'conditional',
-    conditions: { maxRetention: 'PT0S', note: 'Delete non-hit reads immediately; hit reads on case closure.' } }
+    conditions: { maxRetention: 'PT0S', note: 'Delete once the purpose is complete.' } }
 ]
 
 // v1: chainId is self-referential, so compute the digest with a placeholder then rebind.
 const probe = buildPolicy({ version: 1, previousPolicyHash: null, chainId: 'urn:prm:chain:PLACEHOLDER',
-  key: k0, created: '2026-09-06T14:07:33Z', effectiveDate: '2026-09-06T00:00:00Z', rules: ALPR_RULES })
+  key: k0, created: '2026-09-06T14:07:33Z', effectiveDate: '2026-09-06T00:00:00Z', rules: GENERIC_RULES })
 // Chain id is defined as the digest of v1 computed with chainId omitted entirely.
 const { policyChainId: _drop, ...v1NoChain } = (() => { const { id, proof, ...r } = probe.doc; return r })()
 const CHAIN_DIGEST = sha256(Buffer.from(jcs(v1NoChain), 'utf8'))
 const CHAIN_ID = 'urn:prm:chain:' + mh(CHAIN_DIGEST)
 
 const v1 = buildPolicy({ version: 1, previousPolicyHash: null, chainId: CHAIN_ID,
-  key: k0, created: '2026-09-06T14:07:33Z', effectiveDate: '2026-09-06T00:00:00Z', rules: ALPR_RULES })
+  key: k0, created: '2026-09-06T14:07:33Z', effectiveDate: '2026-09-06T00:00:00Z', rules: GENERIC_RULES })
 
 // v2: tightens emergency use to require after-the-fact notice.
-const V2_RULES = ALPR_RULES.map(r => r.category === 'prm:emergency'
+const V2_RULES = GENERIC_RULES.map(r => r.category === 'prm:emergency'
   ? { category: 'prm:emergency', decision: 'conditional',
       conditions: { maxRetention: 'P30D', requiresNotice: true, note: 'Written notice within 30 days of use.' },
       basisAcknowledged: ['vital-interest'] }
@@ -246,7 +252,7 @@ const v2 = buildPolicy({ version: 2, previousPolicyHash: mh(v1.digest), chainId:
   extra: { supersedes: mh(v1.digest), expirationDate: '2028-11-09T00:00:00Z' } })
 
 /* ---------- 5. authorization ---------- */
-const GRANTEE_ID = 'did:web:breezypointmn.gov'
+const GRANTEE_ID = 'did:web:example.org'
 const pairwiseId = base32nopad(Buffer.from(crypto.hkdfSync('sha256', S_BIND,
   Buffer.from(GRANTEE_ID, 'utf8'), Buffer.from('prm/v1/pairwise', 'utf8'), 12))).slice(0, 16)
 
@@ -254,20 +260,20 @@ let authz = {
   '@context': ['https://www.w3.org/ns/credentials/v2', 'https://prm.dev/ns/policy/v1'],
   type: ['VerifiableCredential', 'PRMAuthorization'],
   policyChainId: CHAIN_ID, boundPolicyHash: mh(v2.digest),
-  grantee: { name: 'City of Breezy Point Police Department', id: GRANTEE_ID,
-    did: GRANTEE_ID, domain: 'breezypointmn.gov', contact: 'records@breezypointmn.gov' },
+  grantee: { name: 'Example Data Controller', id: GRANTEE_ID,
+    did: GRANTEE_ID, domain: 'example.org', contact: 'privacy@example.org' },
   subjectRef: {
     pairwiseId,
-    disclosedIdentifiers: [{ namespace: 'us-license-plate', value: 'US-MN-ABC123', salt: PLATE.salt }]
+    disclosedIdentifiers: [{ namespace: 'vin', value: '1HGBH41JXMN109186', salt: VIN.salt }]
   },
-  purposes: ['prm:active-investigation'],
+  purposes: ['dpv:FraudPreventionAndDetection'],
   categories: ['prm:retention', 'prm:correlation'],
-  dataCategories: ['plate-read', 'location'],
+  dataCategories: ['transaction-record'],
   issued: '2026-11-20T00:00:00Z', expires: '2027-02-18T00:00:00Z',
   maxRetention: 'P90D', onwardSharing: 'prohibited',
   revocation: { statusListCredential: 'https://prm.app/status/1', statusListIndex: 4211, statusPurpose: 'revocation' },
   receiptRequested: true,
-  note: 'Granted for case 26-114 only. Does not extend to the regional sharing network.'
+  note: 'Synthetic fixture. Scoped to a single stated purpose; no onward sharing.'
 }
 const AUTHZ_DIGEST = digestOf(authz)
 authz.id = 'urn:prm:authz:' + mh(AUTHZ_DIGEST)
@@ -293,15 +299,15 @@ function inclusionProof (leaves, i) {
 const entrySpecs = [
   { seq: 0, recorded: '2026-09-06T14:02:12Z', entryType: 'key.event', subject: GENESIS_DIGEST },
   { seq: 1, recorded: '2026-09-06T14:07:35Z', entryType: 'policy.published', subject: v1.digest },
-  { seq: 2, recorded: '2026-09-12T09:30:00Z', entryType: 'notice.sent', subject: sha256(Buffer.from('notice-packet-breezypoint-2026-09-12')),
-    counterparty: { name: 'City of Breezy Point Police Department', id: GRANTEE_ID, channel: 'postal' },
-    evidence: [{ kind: 'certified-mail-receipt', digest: mh(sha256(Buffer.from('usps-9407-1118-9876-5432-1098-76'))), note: 'USPS Certified Mail 9407 1118 9876 5432 1098 76' }] },
-  { seq: 3, recorded: '2026-09-16T00:00:00Z', entryType: 'notice.delivered', subject: sha256(Buffer.from('notice-packet-breezypoint-2026-09-12')),
-    counterparty: { name: 'City of Breezy Point Police Department', id: GRANTEE_ID, channel: 'postal' },
-    evidence: [{ kind: 'usps-tracking', digest: mh(sha256(Buffer.from('delivered-2026-09-16-signed-M.Torres'))) }] },
+  { seq: 2, recorded: '2026-09-12T09:30:00Z', entryType: 'notice.sent', subject: sha256(Buffer.from('notice-packet-synthetic-2026-09-12')),
+    counterparty: { name: 'Example Data Controller', id: GRANTEE_ID, channel: 'postal' },
+    evidence: [{ kind: 'certified-mail-receipt', digest: mh(sha256(Buffer.from('usps-9407-1118-9876-5432-1098-76'))), note: 'Synthetic delivery receipt reference' }] },
+  { seq: 3, recorded: '2026-09-16T00:00:00Z', entryType: 'notice.delivered', subject: sha256(Buffer.from('notice-packet-synthetic-2026-09-12')),
+    counterparty: { name: 'Example Data Controller', id: GRANTEE_ID, channel: 'postal' },
+    evidence: [{ kind: 'usps-tracking', digest: mh(sha256(Buffer.from('delivered-2026-09-16-signed-by-recipient'))) }] },
   { seq: 4, recorded: '2026-11-02T10:15:02Z', entryType: 'policy.published', subject: v2.digest },
   { seq: 5, recorded: '2026-11-20T00:00:03Z', entryType: 'authorization.granted', subject: AUTHZ_DIGEST,
-    counterparty: { name: 'City of Breezy Point Police Department', id: GRANTEE_ID, channel: 'email' } }
+    counterparty: { name: 'Example Data Controller', id: GRANTEE_ID, channel: 'email' } }
 ]
 
 let prev = null
@@ -341,17 +347,17 @@ for (const idx of [1, 4]) {
 
 /* ---------- write ---------- */
 const w = (p, o) => { fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, JSON.stringify(o, null, 2) + '\n') }
-w(`${OUT}/examples/policies/alpr-policy-v1.json`, v1.doc)
-w(`${OUT}/examples/policies/alpr-policy-v2.json`, v2.doc)
+w(`${OUT}/examples/policies/policy-v1.json`, v1.doc)
+w(`${OUT}/examples/policies/policy-v2.json`, v2.doc)
 w(`${OUT}/examples/key-events/genesis.json`, genesis)
 w(`${OUT}/examples/key-events/rotation-seq1.json`, rotation)
-w(`${OUT}/examples/authorizations/alpr-investigation-grant.json`, authz)
+w(`${OUT}/examples/authorizations/example-grant.json`, authz)
 w(`${OUT}/examples/ledger/entries.json`, entries.map(e => e.entry))
 w(`${OUT}/examples/ledger/signed-tree-head.json`, sth)
 
 /* ---------- test vectors ---------- */
 w(`${OUT}/test-vectors/vectors.json`, {
-  note: 'Generated by spec/test-vectors/generate.mjs. Every PRM implementation MUST reproduce these byte-for-byte. Keys derive from a published test seed and MUST NOT be used in production.',
+  note: 'Generated by spec/test-vectors/generate.mjs. Every PRM implementation MUST reproduce these byte-for-byte. Keys derive from a published test seed and MUST NOT be used in production. These fixtures are deliberately synthetic and jurisdiction-neutral: they pin the wire format, not any jurisdiction\'s law. The California ALPR material lives in examples/whittier/ and is NOT part of the normative digest set.',
   masterSeedHex: MASTER_SEED.toString('hex'),
   hkdf: { hash: 'SHA-256', salt: '32 zero bytes', infoPrefix: 'prm/v1/' },
   keys: {
@@ -373,16 +379,17 @@ w(`${OUT}/test-vectors/vectors.json`, {
   accountId: { genesisDigest: mh(GENESIS_DIGEST), accountId: ACCOUNT_ID,
     derivation: "'prm:' + base32-nopad-lower(SHA-256(JCS(genesis minus id, proof))).slice(0,26)" },
   identifierCommitments: [
-    { namespace: 'us-license-plate', value: 'US-MN-ABC123', salt: PLATE.salt, commitment: PLATE.commitment },
-    { namespace: 'email', value: 'holder@example.org', salt: EMAIL.salt, commitment: EMAIL.commitment }
+    { namespace: 'vin', value: '1HGBH41JXMN109186', salt: VIN.salt, commitment: VIN.commitment },
+    { namespace: 'email', value: 'holder@example.org', salt: EMAIL.salt, commitment: EMAIL.commitment },
+    { namespace: 'device-id', value: 'device-0001-synthetic', salt: DEVICE.salt, commitment: DEVICE.commitment }
   ],
   pairwiseId: { granteeId: GRANTEE_ID, pairwiseId },
   documents: {
-    'policies/alpr-policy-v1.json': { digest: mh(v1.digest), signedBy: 'sign/0', domain: 'PRM-POLICY-v1' },
-    'policies/alpr-policy-v2.json': { digest: mh(v2.digest), signedBy: 'sign/0', domain: 'PRM-POLICY-v1' },
+    'policies/policy-v1.json': { digest: mh(v1.digest), signedBy: 'sign/0', domain: 'PRM-POLICY-v1' },
+    'policies/policy-v2.json': { digest: mh(v2.digest), signedBy: 'sign/0', domain: 'PRM-POLICY-v1' },
     'key-events/genesis.json': { digest: mh(GENESIS_DIGEST), signedBy: 'sign/0', domain: 'PRM-KEYEVENT-v1' },
     'key-events/rotation-seq1.json': { digest: mh(digestOf(rotation)), signedBy: ['sign/0', 'sign/1'], domain: 'PRM-KEYEVENT-v1' },
-    'authorizations/alpr-investigation-grant.json': { digest: mh(AUTHZ_DIGEST), signedBy: 'sign/0', domain: 'PRM-AUTHZ-v1' }
+    'authorizations/example-grant.json': { digest: mh(AUTHZ_DIGEST), signedBy: 'sign/0', domain: 'PRM-AUTHZ-v1' }
   },
   policyChain: { chainId: CHAIN_ID, v1: mh(v1.digest), v2: mh(v2.digest), v2PreviousPolicyHash: v2.doc.previousPolicyHash },
   merkleLog: {

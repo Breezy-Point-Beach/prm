@@ -24,8 +24,9 @@
     "spec:verify": "node spec/test-vectors/verify.mjs",
     "spec:schemas": "node spec/test-vectors/validate-schemas.mjs",
     "spec:reproducible": "node spec/test-vectors/check-reproducible.mjs",
-    "spec:check": "pnpm spec:verify && pnpm spec:schemas && pnpm spec:reproducible",
-    "clean": "git clean -xdf dist .turbo node_modules"
+    "spec:check": "pnpm spec:verify && pnpm spec:schemas && pnpm spec:reproducible && pnpm example:whittier",
+    "clean": "git clean -xdf dist .turbo node_modules",
+    "example:whittier": "pnpm --filter @prm/example-whittier test"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

@@ -89,17 +89,17 @@ Structured per **ISO/IEC 27560:2023**, referenced by digest, signed by the organ
 ```jsonc
 {
   "type": ["VerifiableCredential", "PRMConsentReceipt"],
-  "issuer": "did:web:breezypointmn.gov",
+  "issuer": "did:web:whittierpd.org",
   "receiptOf": "uEiD4Qm...",                  // authorization or notice digest
   "receivedAt": "2026-09-10T14:22:00Z",
   "disposition": "accepted",                   // accepted | rejected | partial | acknowledged
   "appliedCategories": ["prm:retention"],
   "declined": [
-    { "category": "prm:correlation", "reason": "statutory-retention", "citation": "Minn. Stat. §13.82" }
+    { "category": "prm:correlation", "reason": "statutory-retention", "citation": "Cal. Civ. Code § 1798.90.5" }
   ],
   "retentionApplied": "P90D",
   "systemsAffected": ["alpr-primary", "records-warehouse"],
-  "contact": "records@breezypointmn.gov",
+  "contact": "records@whittierpd.org",
   "proof": { "type": "DataIntegrityProof", "cryptosuite": "eddsa-jcs-2022", "...": "..." }
 }
 ```

@@ -34,6 +34,20 @@ Negative (each MUST fail): tampering with a rule · replaying a policy signature
 rotating to a key that was never pre-committed · proving inclusion of a leaf that was never logged ·
 finding a raw identifier in a published policy.
 
+## These fixtures are jurisdiction-neutral, on purpose
+
+The examples here pin the **wire format**, not any jurisdiction's law. They use RFC 2606 reserved
+names, an ISO 3779 VIN, `jurisdictions: ["US"]` with no subdivision, and a fictional
+`did:web:example.org` counterparty.
+
+Jurisdiction-specific material lives outside the normative set:
+
+- the production California ALPR template — `packages/schema/src/templates/alpr.ts`
+- the Whittier, California worked example — `examples/whittier/`
+
+Neither participates in the digest guard, so both can evolve without touching a signature. See
+[NORMATIVE.md §10](NORMATIVE.md).
+
 ## Test keys
 
 Every key derives from the published seed

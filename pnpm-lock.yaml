@@ -27,6 +27,18 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.1)
 
+  examples/whittier:
+    dependencies:
+      '@prm/crypto':
+        specifier: workspace:*
+        version: link:../../packages/crypto
+      '@prm/schema':
+        specifier: workspace:*
+        version: link:../../packages/schema
+      '@prm/verify':
+        specifier: workspace:*
+        version: link:../../packages/verify
+
   packages/cli:
     dependencies:
       '@prm/crypto':

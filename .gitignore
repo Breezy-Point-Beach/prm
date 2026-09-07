@@ -27,3 +27,6 @@ test-results/
 
 # Turborepo
 .turbo/
+
+# Whittier example: a --local run writes REAL identifiers here. Never commit them.
+examples/whittier/local/
