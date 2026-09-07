@@ -24,3 +24,6 @@ test-results/
 *.p12
 *.pfx
 *.prmvault
+
+# Turborepo
+.turbo/

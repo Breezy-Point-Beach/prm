@@ -142,7 +142,8 @@ log of key events, modeled on KERI and `did:plc` but deliberately reduced to the
 **Account identifier:**
 
 ```
-accountId = "prm:" + base32-nopad-lower( SHA-256( JCS(genesisEvent) ) )[0..26]
+accountId = "prm:" + base32-nopad-lower( SHA-256( PRM-JCS(genesisEvent minus proof) ) )
+            truncated to the FIRST 26 CHARACTERS
           → e.g. prm:k4h2qz9m7bvxr3tn8w6ycpsjdf
 ```
 

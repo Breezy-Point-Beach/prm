@@ -53,7 +53,10 @@ ledger entries is **ciphertext only**, encrypted with `K_vault` before upload.
 Standard append-only Merkle tree, RFC 6962 hashing rules (leaf `0x00 || data`, node `0x01 || l || r` —
 use them exactly, so existing verifier code works).
 
-**Signed Tree Head**, emitted every 60 seconds when there is new data, and at least hourly regardless:
+**Signed Tree Head**, emitted every 60 seconds when there is new data, and at least hourly regardless.
+It is signed with the same construction as every other PRM document — domain-separated Ed25519 over the
+PRM-JCS digest, with `signature` itself excluded from the hashed bytes
+(see [`spec/NORMATIVE.md`](../spec/NORMATIVE.md) §2 and §4):
 
 ```jsonc
 {
@@ -62,7 +65,7 @@ use them exactly, so existing verifier code works).
   "rootHash": "uEiC9Xk...",
   "timestamp": "2026-09-06T15:00:00Z",
   "previousRootHash": "uEiB2Pq...",
-  "signature": "<detached JWS, EdDSA, by K_log>"
+  "signature": "z5WnAnzv7Yiq…"   // multibase base58btc Ed25519, domain "PRM-STH-v1"
 }
 ```
 
