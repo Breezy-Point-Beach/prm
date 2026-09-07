@@ -2,7 +2,8 @@
 
 **To:** City of Whittier Police Department
 **Attn:** Records Division
-**Address:** Records Division, Whittier Police Department, 13200 Penn St, Whittier, CA 90602
+**Address:** 13200 Penn St
+Whittier, CA 90602
 **Copy to:** ALPR system vendor (as identified in the agency contract) — privacy@example-alpr-vendor.com
 
 **From:** PRM account `prm:eob7fei7x3ji5vnqu4kezaeh65`

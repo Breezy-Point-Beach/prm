@@ -2,8 +2,9 @@ import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf
 import QRCode from 'qrcode'
 import type { Notice, Policy, Rule } from '@prm/schema'
 import {
-  categoryLabel, machineSummary, PRM_EXPLANATION, OBSERVATION_DISTINCTION,
-  VERIFICATION_NOTE, RECIPIENT_TYPE_LABELS
+  PRM_EXPLANATION, OBSERVATION_DISTINCTION, VERIFICATION_NOTE, RECIPIENT_TYPE_LABELS,
+  presentRule, presentCategory, presentIdentifierNamespace, presentIdentifierValue,
+  ALPR_PRESENTATION, GENERIC_PRESENTATION, type PresentationProfile
 } from '@prm/schema'
 
 /**
@@ -29,6 +30,7 @@ const INK = rgb(0.1, 0.1, 0.095)
 const MUTED = rgb(0.42, 0.42, 0.39)
 const RULE = rgb(0.85, 0.85, 0.82)
 const DENY = rgb(0.55, 0.12, 0.13)
+const CONDITIONAL = rgb(0.45, 0.32, 0.02)
 const ALLOW = rgb(0.11, 0.38, 0.27)
 
 export interface NoticePdfInput {
@@ -45,6 +47,11 @@ export interface NoticePdfInput {
   verifyCommand?: string
   /** Include the private matching identifier section. Off unless the recipient needs it. */
   includeMatchingIdentifiers?: boolean
+  /**
+   * How categories are WORDED. Changes display only — never a decision, a condition, or anything a
+   * verifier reads. Defaults to the ALPR profile when the policy contains ALPR-specific categories.
+   */
+  presentation?: PresentationProfile
   generatedAt?: Date
 }
 
@@ -65,6 +72,13 @@ export async function renderNoticePdf (input: NoticePdfInput): Promise<Uint8Arra
     italic: await doc.embedFont(StandardFonts.HelveticaOblique),
     mono: await doc.embedFont(StandardFonts.Courier)
   }
+
+  // Default to the ALPR wording when the policy actually is an ALPR policy; otherwise the core
+  // vocabulary. Never inferred from anything a verifier reads.
+  const profile = input.presentation ??
+    (input.policy.rules.some((r) => r.category === 'prm:location-history')
+      ? ALPR_PRESENTATION
+      : GENERIC_PRESENTATION)
 
   const cursor: Cursor = { page: doc.addPage([PAGE.width, PAGE.height]), y: PAGE.height - MARGIN, pageNumber: 1 }
   const newPage = (): void => {
@@ -87,7 +101,7 @@ export async function renderNoticePdf (input: NoticePdfInput): Promise<Uint8Arra
   paragraph(cursor, fonts,
     'The following is generated from the machine-readable policy identified above. It is not a ' +
     'separate summary that could drift from the signed document.', space, { italic: true })
-  policySection(cursor, fonts, input.policy, space)
+  policySection(cursor, fonts, input.policy, profile, space)
 
   // ---- 4. Requested treatment ----------------------------------------------
   heading(cursor, fonts, 'What I am asking', space)
@@ -97,22 +111,29 @@ export async function renderNoticePdf (input: NoticePdfInput): Promise<Uint8Arra
   heading(cursor, fonts, 'Legal effect', space)
   paragraph(cursor, fonts, input.notice.legalEffect, space)
 
-  // ---- 6/7/8. Verification, digests, QR ------------------------------------
-  await verificationSection(doc, cursor, fonts, input, space)
-
-  // ---- 9. Recipient-specific identifier ------------------------------------
+  // ---- 6. Recipient-specific identifier -------------------------------------
+  // Placed here, immediately after what is being asked, because it answers "which records?" — and
+  // because trailing it after the verification block stranded it alone on a near-empty page.
   if (input.includeMatchingIdentifiers && input.notice.matchingIdentifiers?.length) {
     heading(cursor, fonts, 'Records this concerns', space)
     paragraph(cursor, fonts,
       'Provided so you can associate this policy with the correct records. It does not appear in my ' +
       'published policy, which contains only a cryptographic commitment to it.', space, { italic: true })
     for (const id of input.notice.matchingIdentifiers) {
-      keyValue(cursor, fonts, id.namespace.replace(/-/g, ' '), id.value, space, { mono: true })
+      keyValue(cursor, fonts,
+        presentIdentifierNamespace(id.namespace, id.value),
+        presentIdentifierValue(id.namespace, id.value), space, { mono: true })
     }
   }
 
+  // ---- 7/8/9. Verification, digests, QR ------------------------------------
+  await verificationSection(doc, cursor, fonts, input, space)
+
   // ---- 10. Technical appendix ----------------------------------------------
-  newPage()
+  // Deliberately NOT forced onto a fresh page. Verification already breaks to a new page when it
+  // does not fit, and forcing another break after it left a page holding nothing but the
+  // verification block — which reads as content that failed to render rather than as design.
+  // Letting the appendix flow directly after verification makes that a coherent closing page.
   appendixSection(cursor, fonts, input, space)
 
   footers(doc, fonts)
@@ -138,52 +159,73 @@ async function coverSection (
   c.y -= 16
 
   const generated = (input.generatedAt ?? new Date()).toISOString().slice(0, 10)
-  keyValue(c, f, 'To', notice.recipient.name, space, { bold: true })
-  if (notice.recipient.department) keyValue(c, f, '', notice.recipient.department, space)
-  if (notice.recipient.postalAddress) keyValue(c, f, '', notice.recipient.postalAddress, space)
-  keyValue(c, f, 'Recipient type', RECIPIENT_TYPE_LABELS[notice.recipient.type] ?? notice.recipient.type, space)
-  c.y -= 6
-  keyValue(c, f, 'From', notice.issuer.displayName ?? 'PRM account holder', space, { bold: true })
-  keyValue(c, f, 'PRM account', notice.issuer.id, space, { mono: true })
-  c.y -= 6
+
+  // Laid out as correspondence rather than as fields. The recipient type is descriptive metadata and
+  // belongs in the appendix, not at the top of a letter.
+  c.page.drawText('To', { x: MARGIN, y: c.y, size: 9, font: f.regular, color: MUTED })
+  c.y -= 14
+  addressLine(c, f, notice.recipient.name, space, true)
+  if (notice.recipient.department) addressLine(c, f, notice.recipient.department, space)
+  for (const line of (notice.recipient.postalAddress ?? '').split('\n')) {
+    if (line.trim()) addressLine(c, f, line.trim(), space)
+  }
+  c.y -= 10
+
+  c.page.drawText('From', { x: MARGIN, y: c.y, size: 9, font: f.regular, color: MUTED })
+  c.y -= 14
+  addressLine(c, f, notice.issuer.displayName ?? 'PRM account holder', space, true)
+  addressLine(c, f, notice.issuer.id, space, { mono: true })
+  c.y -= 10
+
   keyValue(c, f, 'Policy version', `v${policy.version}`, space)
-  keyValue(c, f, 'Effective', policy.effectiveDate.slice(0, 10), space)
-  keyValue(c, f, 'Notice issued', notice.issued.slice(0, 10), space)
-  keyValue(c, f, 'Packet generated', generated, space)
+  keyValue(c, f, 'Effective', longDate(policy.effectiveDate), space)
+  keyValue(c, f, 'Notice issued', longDate(notice.issued), space)
+  keyValue(c, f, 'Packet generated', longDate(generated), space)
   c.y -= 10
   divider(c)
   c.y -= 14
 }
 
-function policySection (c: Cursor, f: Fonts, policy: Policy, space: (n: number) => void): void {
-  const rows = machineSummary(policy)
-  const group = (decision: Rule['decision']) => rows.filter((r) => r.decision === decision)
+function policySection (
+  c: Cursor, f: Fonts, policy: Policy, profile: PresentationProfile, space: (n: number) => void
+): void {
+  const rendered = policy.rules.map((r) => presentRule(r, profile))
+  const group = (decision: Rule['decision']) => rendered.filter((r) => r.decision === decision)
 
-  const allowed = [...group('allow'), ...group('conditional')]
+  // THREE sections, not two.
+  //
+  // Merging 'conditional' into 'permitted' made a conditional rule read as an affirmative grant —
+  // "Bryan permits 60-day retention" rather than "Bryan permits this only where these conditions
+  // already hold". That is a rendering problem, and this fixes the rendering. It does NOT resolve
+  // whether the underlying rule should be conditional at all; see docs/legal-review.md.
+  const allowed = group('allow')
   if (allowed.length > 0) {
-    subheading(c, f, 'Generally permitted or acknowledged', space, ALLOW)
-    for (const row of allowed) {
-      bullet(c, f, row.label, row.conditions, space)
-    }
+    subheading(c, f, 'Not objected to', space, ALLOW)
+    for (const row of allowed) bullet(c, f, row.label, row.detail, space)
+    c.y -= 6
+  }
+
+  const conditional = group('conditional')
+  if (conditional.length > 0) {
+    subheading(c, f, 'Not objected to, but only on these terms', space, CONDITIONAL)
+    for (const row of conditional) bullet(c, f, row.label, row.detail, space)
     c.y -= 6
   }
 
   const denied = group('deny')
   if (denied.length > 0) {
     subheading(c, f, 'Objected to absent separate legal authority or my authorization', space, DENY)
-    for (const row of denied) bullet(c, f, row.label, row.conditions, space)
+    for (const row of denied) bullet(c, f, row.label, row.detail, space)
     c.y -= 6
   }
 
-  // Silence is not permission, and a reader should be told so explicitly.
   const addressed = new Set(policy.rules.map((r) => r.category))
-  const silent = machineSummary({ rules: [] } as unknown as Policy)
-  void silent
   const missing = ['prm:observation', 'prm:retention', 'prm:sale', 'prm:ai-training']
     .filter((cat) => !addressed.has(cat))
   if (missing.length > 0) {
     subheading(c, f, 'Not addressed by this policy', space, MUTED)
-    bullet(c, f, missing.map((m) => categoryLabel(m)).join(', '), 'treat as not authorized', space)
+    bullet(c, f, missing.map((m) => presentCategory(m, profile)).join(', '),
+      'Silence is not permission.', space)
   }
 }
 
@@ -246,6 +288,9 @@ function appendixSection (c: Cursor, f: Fonts, input: NoticePdfInput, space: (n:
   }
   keyValue(c, f, 'Policy chain', input.policy.policyChainId, space, { mono: true, small: true })
   keyValue(c, f, 'Signing key', input.notice.issuer.did, space, { mono: true, small: true })
+  keyValue(c, f, 'Recipient type',
+    RECIPIENT_TYPE_LABELS[input.notice.recipient.type] ?? input.notice.recipient.type,
+    space, { small: true })
 
   c.y -= 8
   subheading(c, f, 'Why there are two policy digests', space)
@@ -272,6 +317,26 @@ function appendixSection (c: Cursor, f: Fonts, input: NoticePdfInput, space: (n:
 }
 
 // ---- primitives -----------------------------------------------------------
+
+function addressLine (
+  c: Cursor, f: Fonts, text: string, space: (n: number) => void,
+  opts: boolean | { mono?: boolean } = false
+): void {
+  const bold = opts === true
+  const mono = typeof opts === 'object' && opts.mono === true
+  space(16)
+  c.page.drawText(text, {
+    x: MARGIN + 12, y: c.y, size: mono ? 8.5 : 10,
+    font: mono ? f.mono : bold ? f.bold : f.regular,
+    color: mono ? MUTED : INK
+  })
+  c.y -= mono ? 13 : 15
+}
+
+function longDate (iso: string): string {
+  const d = new Date(iso.length === 10 ? `${iso}T00:00:00Z` : iso)
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' })
+}
 
 function divider (c: Cursor): void {
   c.page.drawLine({
