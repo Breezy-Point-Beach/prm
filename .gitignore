@@ -35,3 +35,4 @@ examples/whittier/local/
 apps/web/.prm-store/
 .next/
 next-env.d.ts
+.env*.local
