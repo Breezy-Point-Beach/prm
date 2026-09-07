@@ -35,6 +35,30 @@ jobs:
       - name: Unit tests
         run: pnpm test:unit
 
+      # The central product claim, executable. The offline suite sabotages fetch,
+      # XMLHttpRequest, WebSocket, http.request and https.request before running, so
+      # any network access from @prm/verify fails the build loudly.
+      - name: Offline verification
+        run: pnpm --filter @prm/verify test:offline
+
+      # @prm/verify must never gain a network-capable dependency. Its whole value is
+      # that a recipient can verify with prm.app deleted and its operator hostile.
+      - name: '@prm/verify has no network dependencies'
+        run: |
+          deps=$(node -e "const p=require('./packages/verify/package.json');console.log(Object.keys(p.dependencies||{}).join(' '))")
+          echo "declared dependencies: $deps"
+          for d in $deps; do
+            case "$d" in
+              @prm/*) ;;
+              *) echo "::error::@prm/verify declares a non-PRM dependency: $d"; exit 1 ;;
+            esac
+          done
+          if grep -rnE "\bfetch\s*\(|from 'node:https?'|require\('https?'\)" packages/verify/src; then
+            echo "::error title=Network access in @prm/verify::Verification must never contact the network."
+            exit 1
+          fi
+          echo "OK: @prm/verify depends only on @prm/* and contains no network calls."
+
       # spec/schemas is the single source of truth. If the inlined copy in
       # @prm/schema has drifted from it, fail rather than ship two vocabularies.
       - name: Generated schemas are up to date
