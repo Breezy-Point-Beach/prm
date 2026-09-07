@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-response-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-response-v1.schema.json",
   "title": "PRM Response Record v1",
   "description": "A signed record that the issuer received (or did not receive) a response to a notice. PRM PRESERVES the response; it does not evaluate it. The status is the issuer's own characterisation, and carries no assertion that the recipient's legal position is right or wrong. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-RESPONSE-v1\\u0000'.",
   "type": "object",
@@ -11,7 +11,7 @@
       "type": "array",
       "prefixItems": [
         { "const": "https://www.w3.org/ns/credentials/v2" },
-        { "const": "https://prm.dev/ns/policy/v1" }
+        { "const": "https://rightsroot.org/spec/prm/ns/v1" }
       ],
       "items": { "type": "string", "format": "uri" }
     },
@@ -54,7 +54,7 @@
       "description": "The issuer's own words about the response. PRM does not interpret them."
     },
 
-    "proof": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
+    "proof": { "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
   },
   "allOf": [
     {

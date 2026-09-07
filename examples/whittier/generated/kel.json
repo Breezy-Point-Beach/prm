@@ -27,7 +27,7 @@
     "services": [
       {
         "type": "PRMPublisher",
-        "endpoint": "https://prm.app/u/user0001"
+        "endpoint": "https://rightsroot.com/u/user0001"
       }
     ],
     "proof": [
@@ -37,7 +37,7 @@
         "created": "2026-09-15T17:00:00Z",
         "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
         "proofPurpose": "assertionMethod",
-        "proofValue": "z4aVL6k5WYCz1uruTCwEEEJHwgNrQPk4PR5Gfu1847d3mUi9TUgi8a3HpWP6Wj4JVsXkN5gLP8co6s6xD8jbi61nw"
+        "proofValue": "z3CWvYnrGpMhHhiVkp3FaEHCLkgj9y3WyfqPohT7sd8dp3whHHpWaZP2akdX5QW4ek9UPm3Z43bJUjPm2LPUBqDs8"
       }
     ]
   }

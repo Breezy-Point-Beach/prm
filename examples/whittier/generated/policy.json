@@ -1,20 +1,20 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": [
     "VerifiableCredential",
     "PersonalDataPolicy"
   ],
-  "policyChainId": "urn:prm:chain:uEiAS72lEsH_jjv-pVEQDAsha8xgPHEJ_5leXHgGr65hg-Q",
+  "policyChainId": "urn:prm:chain:uEiAn4zfGoS7XwqrvlllM_DdOeqFeumqrIhOlh5vQlTp3kw",
   "version": 1,
   "previousPolicyHash": null,
   "issuer": {
-    "id": "prm:eob7fei7x3ji5vnqu4kezaeh65",
+    "id": "prm:s2nfbcv7jr5kcf3yopfs5dlrqa",
     "did": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
-    "keyEventLog": "https://prm.app/u/user0001/kel.json",
-    "keyEventHash": "uEiAjg_KRH77SjtWwpxRMgIf3TJHH96Y_kkV4j3QSA0sOUg"
+    "keyEventLog": "https://rightsroot.com/u/user0001/kel.json",
+    "keyEventHash": "uEiCWmlCKv0x6oRd4c8sujXGAHMGIESmnmHdAh7hr4bFZcQ"
   },
   "effectiveDate": "2026-09-15T00:00:00Z",
   "jurisdictions": [
@@ -163,18 +163,18 @@
     "text": "# Personal Data Policy — Automated License Plate Reader Records\n\n## What I authorize\n\nI do not object to the lawful photographing of my vehicle's license plate in a public place, nor to\nthe immediate comparison of that plate against a lawfully constituted hotlist at the moment of\ncapture. I understand that is what the system is for, and I am not asking City of Whittier Police Department to stop operating\nit.\n\nWhere there is a valid, individualized investigative purpose supported by appropriate legal process,\nor a genuine emergency involving an imminent threat to life, I do not object to the use of a read\nabout my vehicle for the duration of that specific matter.\n\n## What I object to and do not consent to\n\nEverything that happens after the moment of comparison is a separate act, and I address it separately.\nI object to, and do not consent to:\n\n- retention of a read that produced no hotlist match, beyond the instant of comparison;\n- storage of my vehicle observations as a historical location record, and search of such a record;\n- aggregation of these reads with one another to reconstruct my movements over time;\n- correlation of these reads with records held in other databases or systems;\n- disclosure to other agencies, or to any regional, statewide, federal, or commercial sharing network;\n- behavioral profiling, and derived movement inference such as pattern-of-life analysis, travel\n  prediction, or \"unusual movement\" scoring;\n- sale, commercial exploitation, or advertising use;\n- inclusion in the training, fine-tuning, or evaluation of any machine learning model, including\n  vendor product development;\n- biometric processing of imagery of vehicle occupants.\n\n## What this document is, and is not\n\nThis is a record of my instructions and the date on which I gave them. It is signed and independently\ntimestamped so that a third party can confirm exactly what it said and when it existed.\n\nIt does not purport to create rights that do not already exist, and I make no claim here about which\nof these restrictions California law obliges you to honour. Where a court order or a specific\nstatutory mandate requires something I have objected to, I acknowledge that it governs, and I ask only\nfor written notice and for retention limited to what that basis actually requires.\n\n## What I am asking of you\n\nPlease confirm receipt, and tell me which of these restrictions your systems can and cannot honour,\nand why. A partial answer with a citation is more useful to me than no answer.\n\nI would also like to know what reads you currently hold that are associated with my vehicle, how long\nyou retain them, and with whom they have been shared."
   },
   "distribution": {
-    "canonicalUrl": "https://prm.app/u/user0001",
-    "machineUrl": "https://prm.app/u/user0001/policy.json",
-    "shortUrl": "https://prm.li/user0001",
-    "statusList": "https://prm.app/status/1"
+    "canonicalUrl": "https://rightsroot.com/u/user0001",
+    "machineUrl": "https://rightsroot.com/u/user0001/policy.json",
+    "shortUrl": "https://rightsroot.com/p/user0001",
+    "statusList": "https://rightsroot.com/status/1"
   },
-  "id": "urn:prm:policy:uEiC9_iVQZ_-ozuxuwrl4Uzo79pURYmwFNpB156ELrcV-rg",
+  "id": "urn:prm:policy:uEiApNabq-0lnrwSeusO-io4zprjILwGqX5KtAxazF4onIA",
   "proof": {
     "type": "DataIntegrityProof",
     "cryptosuite": "eddsa-jcs-2022",
     "created": "2026-09-15T17:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "z4NHM8NSRW9P2CqETxDXSU1ridRWsWYBT9oSATUGTQW376fLXFu9hBr2TSDvTvno7Qy15AvKrkuUx9DcnQGPMFEpe"
+    "proofValue": "zAJKPkA2cwFiokbLGQZE56bfT9xf4vctomPomovnADgMmz5nQEURKU5a7arJA21HH6mQ4d6RtbA6BFaQCGJcYLim"
   }
 }

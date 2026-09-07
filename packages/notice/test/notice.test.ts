@@ -81,7 +81,7 @@ function makeChain (opts: { plate?: string } = {}) {
     policy, policyJson, recipient: WHITTIER,
     purpose: 'To place my standing personal data policy on record with the recipient.',
     matchingIdentifiers: [{ namespace: 'us-license-plate', value: plate, salt: encodeSalt(salt) }],
-    policyUrl: 'https://prm.app/u/user0001',
+    policyUrl: 'https://rightsroot.com/u/user0001',
     issued: NOW
   }, account.keys.signing)
 
@@ -407,7 +407,7 @@ describe('PDF rendering', () => {
       policyDigest: notice.document.policyDigest,
       policyByteDigest: notice.document.policyByteDigest,
       manifestDigest: bundle.manifestDigest,
-      verificationUrl: 'https://prm.app/u/user0001',
+      verificationUrl: 'https://rightsroot.com/u/user0001',
       verifyCommand: 'npx @prm/cli verify notice.prmproof',
       generatedAt: LATER
     })
@@ -424,7 +424,7 @@ describe('PDF rendering', () => {
       policyDigest: notice.document.policyDigest,
       policyByteDigest: notice.document.policyByteDigest,
       manifestDigest: bundle.manifestDigest,
-      verificationUrl: 'https://prm.app/u/user0001',
+      verificationUrl: 'https://rightsroot.com/u/user0001',
       includeMatchingIdentifiers: true,
       generatedAt: LATER
     })

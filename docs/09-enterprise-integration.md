@@ -18,7 +18,7 @@ cannot claim they never received.
 
 ## 2. REST API
 
-Base: `https://api.prm.app/v1`. JSON only. Versioned in the path. All responses include
+Base: `https://api.rightsroot.com/v1`. JSON only. Versioned in the path. All responses include
 `X-PRM-Log-Tree-Size` so a client can pin log state.
 
 ### Public / unauthenticated (cacheable, no rate concerns)

@@ -18,7 +18,7 @@ addFormats(ajv)
 for (const f of ['prm-policy-v1', 'prm-authorization-v1', 'prm-key-event-v1', 'prm-ledger-entry-v1']) {
   ajv.addSchema(load(`schemas/${f}.schema.json`))
 }
-const validator = s => ajv.getSchema(`https://prm.dev/schemas/${s}.schema.json`)
+const validator = s => ajv.getSchema(`https://rightsroot.org/spec/prm/schemas/${s}.schema.json`)
 
 const cases = [
   ['examples/policies/policy-v1.json', 'prm-policy-v1'],

@@ -134,7 +134,7 @@ log of key events, modeled on KERI and `did:plc` but deliberately reduced to the
   "nextKeyDigests": [ "u3Q9vX..." ],   // SHA-256 of the NEXT public key(s) — pre-rotation commitment
   "recoveryKeyDigests": [ "uH7bK..." ],
   "threshold": 1,
-  "services": [ { "type": "PRMPublisher", "endpoint": "https://prm.app/u/ab12cd" } ],
+  "services": [ { "type": "PRMPublisher", "endpoint": "https://rightsroot.com/u/ab12cd" } ],
   "proof": { /* Ed25519 signature by the current key(s) */ }
 }
 ```
@@ -152,7 +152,7 @@ Derived from content, so no registry mints it and PRM cannot reassign it.
 **Interop aliases** (same key, different serialization — all resolvable to the same public key):
 
 - `did:key:z6Mkf…` — for offline verification with existing DID tooling. Cannot express rotation.
-- `did:web:prm.app:u:ab12cd` — for discovery. Its DID document is *derived from* the KEL and includes
+- `did:web:rightsroot.com:u:ab12cd` — for discovery. Its DID document is *derived from* the KEL and includes
   the KEL URL and current event hash. **A verifier that trusts `did:web` alone is trusting PRM's DNS
   and hosting; a verifier that walks the KEL is not.** Say this in the docs and make `@prm/verify`
   walk the KEL by default.

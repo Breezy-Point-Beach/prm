@@ -90,7 +90,7 @@ Every PR gets a preview. Configuration that makes them safe:
 ## 5. Production
 
 - `main` → production, auto-deploy.
-- Custom domains: `prm.app` (apex + `www` redirect), `prm.li` (short links).
+- Custom domains: `rightsroot.com` (apex + `www` redirect), `rightsroot.com` (short links).
 - Skew protection on, so a client mid-session does not hit a mismatched deployment.
 - Instant rollback via the Vercel dashboard; because the log is append-only, a rollback of application
   code never rewinds evidence.

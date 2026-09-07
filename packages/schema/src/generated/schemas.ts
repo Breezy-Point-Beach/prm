@@ -4,7 +4,7 @@
 
 export const policySchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-policy-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json",
   "title": "PRM Personal Data Policy v1",
   "description": "A cryptographically signed, versioned statement by a natural person of the terms under which information about them may be processed after initial observation. HASHING NOTE: the canonical digest is SHA-256(JCS(document with 'id' and 'proof' members removed)).",
   "type": "object",
@@ -35,7 +35,7 @@ export const policySchema = {
           "const": "https://www.w3.org/ns/credentials/v2"
         },
         {
-          "const": "https://prm.dev/ns/policy/v1"
+          "const": "https://rightsroot.org/spec/prm/ns/v1"
         }
       ]
     },
@@ -506,7 +506,7 @@ export const policySchema = {
 
 export const authorizationSchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-authorization-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-authorization-v1.schema.json",
   "title": "PRM Authorization (Exception Grant) v1",
   "description": "A signed, scoped, expiring grant from an individual to one named organization, carving an exception out of that individual's Personal Data Policy. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-AUTHZ-v1\\x00'.",
   "type": "object",
@@ -531,7 +531,7 @@ export const authorizationSchema = {
           "const": "https://www.w3.org/ns/credentials/v2"
         },
         {
-          "const": "https://prm.dev/ns/policy/v1"
+          "const": "https://rightsroot.org/spec/prm/ns/v1"
         }
       ],
       "items": {
@@ -705,7 +705,7 @@ export const authorizationSchema = {
       "maxLength": 2000
     },
     "proof": {
-      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+      "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
     }
   },
   "$defs": {
@@ -722,7 +722,7 @@ export const authorizationSchema = {
 
 export const keyEventSchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-key-event-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-key-event-v1.schema.json",
   "title": "PRM Key Event v1",
   "description": "One entry in a self-certifying, hash-chained Key Event Log. accountId = 'prm:' + base32-nopad-lower(SHA-256(JCS(genesis event minus proof)))[0..25]. Signature domain prefix 'PRM-KEYEVENT-v1\\x00'.",
   "type": "object",
@@ -889,7 +889,7 @@ export const keyEventSchema = {
       "type": "array",
       "minItems": 1,
       "items": {
-        "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+        "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
       },
       "description": "Array because a rotation carries TWO signatures: one by the outgoing key, one by the newly revealed pre-committed key."
     }
@@ -964,7 +964,7 @@ export const keyEventSchema = {
 
 export const ledgerEntrySchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-ledger-entry-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-ledger-entry-v1.schema.json",
   "title": "PRM Ledger Entry v1",
   "description": "One entry in an individual's append-only personal hash chain. The chain is the user's own evidence record; only entryHash values are submitted to the global Merkle transparency log, so the log learns nothing about content. Signature domain prefix 'PRM-LEDGER-v1\\x00'.",
   "type": "object",
@@ -1122,7 +1122,7 @@ export const ledgerEntrySchema = {
       }
     },
     "proof": {
-      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+      "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
     }
   },
   "$defs": {
@@ -1139,7 +1139,7 @@ export const ledgerEntrySchema = {
 
 export const noticeSchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-notice-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-notice-v1.schema.json",
   "title": "PRM Recipient Notice v1",
   "description": "A signed, recipient-specific notice directing a standing Personal Data Policy at one named organization. Distinct from the policy itself: the policy is public and general, a notice is targeted and may carry a private matching identifier that MUST NOT appear in the published policy. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-NOTICE-v1\\u0000'.",
   "type": "object",
@@ -1166,7 +1166,7 @@ export const noticeSchema = {
           "const": "https://www.w3.org/ns/credentials/v2"
         },
         {
-          "const": "https://prm.dev/ns/policy/v1"
+          "const": "https://rightsroot.org/spec/prm/ns/v1"
         }
       ],
       "items": {
@@ -1339,7 +1339,7 @@ export const noticeSchema = {
       "maxLength": 4000
     },
     "proof": {
-      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+      "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
     }
   },
   "$defs": {
@@ -1356,7 +1356,7 @@ export const noticeSchema = {
 
 export const deliverySchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-delivery-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-delivery-v1.schema.json",
   "title": "PRM Delivery Record v1",
   "description": "A signed record that the issuer delivered a specific notice packet to a specific recipient, by a stated method, at a stated time. The timestamp is USER-ASSERTED: it records what the issuer says they did, and is evidence of their claim rather than proof of receipt. Independent corroboration comes from the transparency log (when the record was published) and from private supporting evidence. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-DELIVERY-v1\\u0000'.",
   "type": "object",
@@ -1380,7 +1380,7 @@ export const deliverySchema = {
           "const": "https://www.w3.org/ns/credentials/v2"
         },
         {
-          "const": "https://prm.dev/ns/policy/v1"
+          "const": "https://rightsroot.org/spec/prm/ns/v1"
         }
       ],
       "items": {
@@ -1501,7 +1501,7 @@ export const deliverySchema = {
       "description": "DIGESTS ONLY. The artifacts themselves stay in the encrypted personal ledger and are never published by default."
     },
     "proof": {
-      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+      "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
     }
   },
   "$defs": {
@@ -1518,7 +1518,7 @@ export const deliverySchema = {
 
 export const responseSchema = {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-response-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-response-v1.schema.json",
   "title": "PRM Response Record v1",
   "description": "A signed record that the issuer received (or did not receive) a response to a notice. PRM PRESERVES the response; it does not evaluate it. The status is the issuer's own characterisation, and carries no assertion that the recipient's legal position is right or wrong. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-RESPONSE-v1\\u0000'.",
   "type": "object",
@@ -1539,7 +1539,7 @@ export const responseSchema = {
           "const": "https://www.w3.org/ns/credentials/v2"
         },
         {
-          "const": "https://prm.dev/ns/policy/v1"
+          "const": "https://rightsroot.org/spec/prm/ns/v1"
         }
       ],
       "items": {
@@ -1621,7 +1621,7 @@ export const responseSchema = {
       "description": "The issuer's own words about the response. PRM does not interpret them."
     },
     "proof": {
-      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+      "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
     }
   },
   "allOf": [

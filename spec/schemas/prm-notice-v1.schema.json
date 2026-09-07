@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://prm.dev/schemas/prm-notice-v1.schema.json",
+  "$id": "https://rightsroot.org/spec/prm/schemas/prm-notice-v1.schema.json",
   "title": "PRM Recipient Notice v1",
   "description": "A signed, recipient-specific notice directing a standing Personal Data Policy at one named organization. Distinct from the policy itself: the policy is public and general, a notice is targeted and may carry a private matching identifier that MUST NOT appear in the published policy. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-NOTICE-v1\\u0000'.",
   "type": "object",
@@ -11,7 +11,7 @@
       "type": "array",
       "prefixItems": [
         { "const": "https://www.w3.org/ns/credentials/v2" },
-        { "const": "https://prm.dev/ns/policy/v1" }
+        { "const": "https://rightsroot.org/spec/prm/ns/v1" }
       ],
       "items": { "type": "string", "format": "uri" }
     },
@@ -99,7 +99,7 @@
     },
     "note": { "type": "string", "maxLength": 4000 },
 
-    "proof": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
+    "proof": { "$ref": "https://rightsroot.org/spec/prm/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
   },
   "$defs": {
     "multihash": { "type": "string", "pattern": "^u[A-Za-z0-9_-]{40,}$" },

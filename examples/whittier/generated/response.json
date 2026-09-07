@@ -1,14 +1,14 @@
 {
   "@context": [
     "https://www.w3.org/ns/credentials/v2",
-    "https://prm.dev/ns/policy/v1"
+    "https://rightsroot.org/spec/prm/ns/v1"
   ],
   "type": [
     "VerifiableCredential",
     "PRMResponseRecord"
   ],
-  "noticeDigest": "uEiAKIoHiJGaTnhDEQwJsIDlXYgU4Lw_Wd_D1nRNhaX09Ew",
-  "deliveryDigest": "uEiCMjMThMF54b_oZoGBHOl24KqG2o2lFkX1vJUK1q0wVBA",
+  "noticeDigest": "uEiAl1IInO9WpSRUDdyeMXECasrlzjC5sjzfN94TOr4B2Bg",
+  "deliveryDigest": "uEiAX8rNctUkfK1VdIx8qefnGTqrTOJyDkBZ9t1mmvgkSCQ",
   "recipient": {
     "name": "City of Whittier Police Department"
   },
@@ -22,7 +22,7 @@
     "created": "2026-09-24T16:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "zPkrnX9Ns1BsY8QuGTo4BKUHbNBNzjiCj9CQTshCNxF2a92TP39PRUwv21MwFYDcR9u4oyEsg3hDXT1FdWTE823C"
+    "proofValue": "z3RoUWPTiayE4T4Nsn6mu4QQB3qDUBCuXv4U86rV3zFw3jtai7AobFhkQzUyDAcmBvtnkQF6C3HH6JihabGGtfWMo"
   },
-  "id": "urn:prm:response:uEiCeDJ9IsIcJKu0dv0qbXQ_Te-KrhXCKfpY02lkJr-mwfQ"
+  "id": "urn:prm:response:uEiBg5_6RkeJVO4viTjlM3Pk5qFZWd5----GcfyZr1z3bdg"
 }

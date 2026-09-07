@@ -50,7 +50,7 @@ ${bold('EXAMPLES')}
   prm inspect policy.json
   prm digest policy.json --bytes
 
-${dim('Verification never requires the PRM service. If prm.app is gone, this still works.')}
+${dim('Verification never requires the PRM service. If rightsroot.com is gone, this still works.')}
 `
 
 interface Parsed {

@@ -268,8 +268,13 @@ async function verificationSection (
     c.y = Math.min(c.y, qrY - 12)
   }
 
-  paragraph(c, f, 'To verify independently, without contacting PRM:', space)
+  paragraph(c, f, 'To verify independently, without contacting us:', space)
   monoBlock(c, f, input.verifyCommand ?? 'npx @prm/cli verify notice.prmproof', space)
+  wrapped(c, f,
+    'Produced with RightsRoot. The document format is PRM (Personal Rights Management), an open ' +
+    'protocol specified at rightsroot.org/spec/prm — any implementation of it can verify this ' +
+    'notice, and none of them needs our cooperation.', space,
+    { size: 8.5, font: f.italic, color: MUTED })
   c.y -= 4
 }
 

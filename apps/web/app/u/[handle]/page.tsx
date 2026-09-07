@@ -69,7 +69,7 @@ export default async function PublicPolicyPage (
 
   return (
     <main>
-      <p className="small muted" style={{ margin: 0 }}>Personal Rights Management</p>
+      <p className="small muted" style={{ margin: 0 }}>RightsRoot</p>
       <h1>Policy v{policy.version}</h1>
       <p className="muted small">
         Effective {formatDate(policy.effectiveDate)}
@@ -189,6 +189,11 @@ export default async function PublicPolicyPage (
       <p className="small muted" style={{ marginTop: '2rem' }}>
         This document records the issuer&rsquo;s instructions and the date they were given. It does not
         by itself establish that every restriction is enforceable under the law of any jurisdiction.
+      </p>
+      <p className="small muted">
+        Published with RightsRoot. The document format is{' '}
+        <a href="https://rightsroot.org/spec/prm">PRM, an open protocol</a> — verification does not
+        depend on this site, or on us.
       </p>
     </main>
   )

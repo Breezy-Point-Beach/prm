@@ -6,7 +6,7 @@
 Whittier, CA 90602
 **Copy to:** ALPR system vendor (as identified in the agency contract) — privacy@example-alpr-vendor.com
 
-**From:** PRM account `prm:eob7fei7x3ji5vnqu4kezaeh65`
+**From:** PRM account `prm:s2nfbcv7jr5kcf3yopfs5dlrqa`
 **Date:** 2026-09-16
 **Re:** Personal data policy concerning automated license plate reader records
 
@@ -30,7 +30,7 @@ record of my express position and non-consent regarding those downstream uses.
 | File | What it is |
 |---|---|
 | `notice.pdf` | This notice, in full |
-| `policy.json` | The signed policy. Digest `uEiC9_iVQZ_-ozuxuwrl4Uzo79pURYmwFNpB156ELrcV-rg` |
+| `policy.json` | The signed policy. Digest `uEiApNabq-0lnrwSeusO-io4zprjILwGqX5KtAxazF4onIA` |
 | `notice.json` | The signed recipient-specific notice |
 | `kel.json` | Key history proving the policy was signed by this account |
 | `notice.prmproof` | A single-file evidence bundle covering all of the above |

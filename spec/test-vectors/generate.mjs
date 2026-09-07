@@ -110,7 +110,7 @@ let genesis = {
   nextKeyDigests: [k1.digest],
   recoveryKeyDigests: [krec.digest],
   threshold: 1,
-  services: [{ type: 'PRMPublisher', endpoint: 'https://prm.app/u/ab12cd' }]
+  services: [{ type: 'PRMPublisher', endpoint: 'https://rightsroot.com/u/ab12cd' }]
 }
 genesis.proof = [proofFor(genesis, k0, 'PRM-KEYEVENT-v1', '2026-09-06T14:02:11Z')]
 const GENESIS_DIGEST = digestOf(genesis)
@@ -122,7 +122,7 @@ let rotation = {
   previousEventHash: mh(GENESIS_DIGEST), created: '2027-09-06T09:00:00Z',
   keys: [{ id: '#k1', alg: 'Ed25519', publicKeyMultibase: k1.multibase, use: ['assertion', 'authentication'], device: 'laptop' }],
   nextKeyDigests: [k2.digest], recoveryKeyDigests: [krec.digest], threshold: 1,
-  services: [{ type: 'PRMPublisher', endpoint: 'https://prm.app/u/ab12cd' }]
+  services: [{ type: 'PRMPublisher', endpoint: 'https://rightsroot.com/u/ab12cd' }]
 }
 // Two proofs: outgoing key AND the newly revealed pre-committed key.
 rotation.proof = [
@@ -169,12 +169,12 @@ Please confirm receipt and state which of these restrictions your systems can an
 
 function buildPolicy ({ version, previousPolicyHash, chainId, key, created, effectiveDate, rules, extra = {} }) {
   const doc = {
-    '@context': ['https://www.w3.org/ns/credentials/v2', 'https://prm.dev/ns/policy/v1'],
+    '@context': ['https://www.w3.org/ns/credentials/v2', 'https://rightsroot.org/spec/prm/ns/v1'],
     type: ['VerifiableCredential', 'PersonalDataPolicy'],
     policyChainId: chainId, version, previousPolicyHash,
     issuer: {
       id: ACCOUNT_ID, did: 'did:key:' + key.multibase,
-      keyEventLog: 'https://prm.app/u/ab12cd/kel.json',
+      keyEventLog: 'https://rightsroot.com/u/ab12cd/kel.json',
       keyEventHash: mh(GENESIS_DIGEST)
     },
     effectiveDate,
@@ -188,10 +188,10 @@ function buildPolicy ({ version, previousPolicyHash, chainId, key, created, effe
     requests: { deletionOnPurposeCompletion: true, doNotSellOrShare: true, globalPrivacyControl: true },
     humanReadable: { mediaType: 'text/markdown', language: 'en', text: HUMAN },
     distribution: {
-      canonicalUrl: 'https://prm.app/u/ab12cd',
-      machineUrl: 'https://prm.app/u/ab12cd/policy.json',
-      shortUrl: 'https://prm.li/9fK2xQ',
-      statusList: 'https://prm.app/status/1'
+      canonicalUrl: 'https://rightsroot.com/u/ab12cd',
+      machineUrl: 'https://rightsroot.com/u/ab12cd/policy.json',
+      shortUrl: 'https://rightsroot.com/p/9fK2xQ',
+      statusList: 'https://rightsroot.com/status/1'
     },
     ...extra
   }
@@ -257,7 +257,7 @@ const pairwiseId = base32nopad(Buffer.from(crypto.hkdfSync('sha256', S_BIND,
   Buffer.from(GRANTEE_ID, 'utf8'), Buffer.from('prm/v1/pairwise', 'utf8'), 12))).slice(0, 16)
 
 let authz = {
-  '@context': ['https://www.w3.org/ns/credentials/v2', 'https://prm.dev/ns/policy/v1'],
+  '@context': ['https://www.w3.org/ns/credentials/v2', 'https://rightsroot.org/spec/prm/ns/v1'],
   type: ['VerifiableCredential', 'PRMAuthorization'],
   policyChainId: CHAIN_ID, boundPolicyHash: mh(v2.digest),
   grantee: { name: 'Example Data Controller', id: GRANTEE_ID,
@@ -271,7 +271,7 @@ let authz = {
   dataCategories: ['transaction-record'],
   issued: '2026-11-20T00:00:00Z', expires: '2027-02-18T00:00:00Z',
   maxRetention: 'P90D', onwardSharing: 'prohibited',
-  revocation: { statusListCredential: 'https://prm.app/status/1', statusListIndex: 4211, statusPurpose: 'revocation' },
+  revocation: { statusListCredential: 'https://rightsroot.com/status/1', statusListIndex: 4211, statusPurpose: 'revocation' },
   receiptRequested: true,
   note: 'Synthetic fixture. Scoped to a single stated purpose; no onward sharing.'
 }

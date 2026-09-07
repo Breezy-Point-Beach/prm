@@ -233,6 +233,42 @@ what already-signed documents validate against** and is a protocol change requir
 
 ---
 
+## 12. Namespace migration (2026-09-07)
+
+The JSON-LD context and the schema `$id` values moved:
+
+| Was | Now |
+|---|---|
+| `https://prm.dev/ns/policy/v1` | `https://rightsroot.org/spec/prm/ns/v1` |
+| `https://prm.dev/schemas/…` | `https://rightsroot.org/spec/prm/schemas/…` |
+
+**Why it had to happen, and why now.** `prm.dev` was never controlled by this project. A JSON-LD
+context URI pointing at a domain a third party could register is an integrity problem rather than a
+cosmetic one, and every signed document carries it. `rightsroot.org` is owned.
+
+The context appears inside the signed bytes, so every digest in `spec/` changed. Nothing about
+canonicalization, hashing, signing domains, derivations, or document structure changed — the schemas
+differ only in their `$id` and `$ref` strings.
+
+### Why the "keep v1 alongside" clause does not apply
+
+The `spec-version-bump` process normally requires adding new schemas beside the old ones and keeping
+the old vectors, so that previously signed documents stay verifiable. That exists to protect real
+documents in the wild.
+
+**There are none.** Nothing has been deployed, and no policy has been signed outside test fixtures and
+the Whittier example. Preserving a `prm.dev` namespace would mean carrying a permanent reference to a
+domain the project does not own, for zero real users — a trap, not a migration path.
+
+A verifier encountering a document under the old namespace will reject it at schema validation. That
+is the correct outcome: any such document is a fixture, not evidence.
+
+**Note that nothing dereferences these URIs.** They are stable identifiers. Verification never fetches
+a context or a schema over the network, which is why `rightsroot.org` can be published later without
+affecting anything signed today.
+
+---
+
 ## Audit findings (2026-09-06)
 
 Discovered while implementing the core packages against the existing spec. All six were resolved by
