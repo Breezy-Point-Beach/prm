@@ -7,6 +7,7 @@ export * from './types.js'
 export * from './categories.js'
 export * from './normalize.js'
 export * from './validate.js'
+export * from './prose.js'
 export * from './templates/alpr.js'
 export {
   policySchema,

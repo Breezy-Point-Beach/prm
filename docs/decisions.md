@@ -92,6 +92,11 @@ Threat IDs reference [12 — Threat Model](12-threat-model.md).
 | D49 | `spec-conformance.yml` fails loudly if committed digests change | Forces "is this a spec version bump?" to be an explicit decision | T8 | **Yes** | — | Reviewer vigilance — insufficient at 1am |
 | D50 | No Kubernetes, queues, or custom orchestration | A single technical founder must be able to operate this | operability | **Yes** | — | "Proper" infrastructure — cost and cognitive load with no benefit at this scale |
 
+| D51 | Published policies are stored as **raw text**, never `jsonb` | `jsonb` does not preserve key order, whitespace, duplicate keys, or numeric formatting, so it cannot return the exact bytes the user signed | T4, T8 | **Yes** | — | Store `jsonb`, as `docs/13-mvp.md` originally specified — rejected: most reserializations survive JCS and would still verify, but "most" is not a property worth resting on |
+| D52 | The publish API accepts signed documents as **strings**, not nested objects | An object would have to be re-serialized before storage, destroying the signed bytes at the very first hop | T4, T8 | **Yes** | — | Accept objects — quietly loses byte-exactness before anything is written down |
+| D53 | After publishing, the client **fetches the artifact back and compares bytes**; a mismatch is a hard failure | A signature check alone passes a server that reserialized the document, because canonicalization erases formatting | **T4**, T8 | **Yes** | — | Trust the server's success response — the failure would be silent and permanent |
+| D54 | The generated rules summary is appended to the prose **at signing time, always** | Prevents prose/rules drift structurally rather than detecting it heuristically; a stale summary would otherwise carry the same signature authority as the current rules | T5, T7 | **Yes** | — | Warn on divergence only — catches less, and depends on fragile text matching |
+
 ---
 
 ## The five load-bearing decisions
