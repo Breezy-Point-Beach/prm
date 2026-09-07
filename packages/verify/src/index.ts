@@ -16,4 +16,13 @@ export * from './kel.js'
 export * from './policy.js'
 export * from './ledger.js'
 export * from './authorization.js'
-export * from './bundle.js'
+/**
+ * Bundle verification is v2 only.
+ *
+ * The v1 format embedded artifacts as nested JSON objects, so serializing the envelope destroyed the
+ * exact bytes the user signed. Signatures still verified — canonicalization erases formatting — but
+ * the byte digest that PR 6 made load-bearing could not be checked. Rather than keep a weaker second
+ * verification path that would get used by accident, v1 was removed; verifyProofBundle recognizes a
+ * v1 bundle and says plainly why it cannot be checked.
+ */
+export * from './proof-bundle.js'

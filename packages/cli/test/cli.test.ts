@@ -3,7 +3,7 @@ import { mkdtempSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { cmdVerify, cmdInspect, cmdDigest, cmdVerifyChain, UsageError } from '../src/commands.js'
-import { buildBundle } from '@prm/verify'
+import { buildProofBundle } from '@prm/notice'
 
 const SPEC = resolve(import.meta.dirname, '../../../spec')
 const load = (p: string) => JSON.parse(readFileSync(resolve(SPEC, p), 'utf8'))
@@ -24,14 +24,12 @@ beforeAll(() => {
   write('genesis.json', load('examples/key-events/genesis.json'))
   write('kel.json', [load('examples/key-events/genesis.json'), load('examples/key-events/rotation-seq1.json')])
   write('chain.json', [load('examples/policies/policy-v1.json'), load('examples/policies/policy-v2.json')])
-  write('evidence.prmproof', buildBundle({
+  write('evidence.prmproof', buildProofBundle({
     policy: load('examples/policies/policy-v1.json'),
-    policyChain: [load('examples/policies/policy-v1.json')],
-    keyEventLog: [load('examples/key-events/genesis.json')],
-    ledgerEntries: load('examples/ledger/entries.json'),
-    signedTreeHead: load('examples/ledger/signed-tree-head.json'),
-    logPublicKeyMultibase: V.merkleLog.logPublicKeyMultibase,
-    timestamp: { notLaterThan: '2026-11-20T01:00:00Z', source: 'rfc3161', authority: 'FreeTSA' }
+    policyJson: readFileSync(resolve(SPEC, 'examples/policies/policy-v1.json'), 'utf8'),
+    keyEventLogJson: readFileSync(resolve(SPEC, 'examples/key-events/genesis.json'), 'utf8'),
+    signedTreeHeadJson: readFileSync(resolve(SPEC, 'examples/ledger/signed-tree-head.json'), 'utf8'),
+    generatedAt: new Date('2026-11-20T01:00:00Z')
   }))
 })
 
@@ -61,7 +59,7 @@ describe('prm verify', () => {
 
   it('detects and verifies a .prmproof bundle', () => {
     const r = cmdVerify(path('evidence.prmproof'), {})
-    expect(r.output).toContain('log inclusion')
+    expect(r.output).toContain('manifest')
     expect(r.output).toContain('VERIFIED')
     expect(r.output).toMatch(/Verified: PRM account prm:/)
     expect(r.exitCode).toBe(0)

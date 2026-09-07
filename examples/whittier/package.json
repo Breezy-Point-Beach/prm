@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@prm/crypto": "workspace:*",
+    "@prm/notice": "workspace:*",
     "@prm/schema": "workspace:*",
     "@prm/verify": "workspace:*"
   }

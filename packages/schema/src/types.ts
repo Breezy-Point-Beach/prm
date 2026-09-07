@@ -281,3 +281,92 @@ export interface SignedTreeHead {
 }
 
 export type PrmDocument = Policy | Authorization | KeyEvent | LedgerEntry
+
+// ---------------------------------------------------------------------------
+// Recipient-specific notice, delivery, and response — PR 7
+// ---------------------------------------------------------------------------
+
+export type RecipientType =
+  | 'government-agency' | 'law-enforcement' | 'company'
+  | 'data-processor' | 'vendor' | 'attorney' | 'other'
+
+export interface Recipient {
+  name: string
+  type: RecipientType
+  id?: string
+  did?: string
+  domain?: string
+  contact?: string
+  postalAddress?: string
+  department?: string
+  jurisdiction?: string
+}
+
+export interface Notice {
+  '@context': string[]
+  type: string[]
+  id?: string
+  policyChainId: string
+  /** Protocol identity of the policy: stable across reserialization. */
+  policyDigest: Multihash
+  /** Storage identity: the exact bytes delivered. Both are recorded, deliberately. */
+  policyByteDigest: Multihash
+  policyVersion: number
+  policyUrl?: string
+  issuer: PolicyIssuer
+  recipient: Recipient
+  purpose?: string
+  issued: UtcInstant
+  /**
+   * PRIVATE. Lets the recipient associate the policy with the right records. Never copied into the
+   * published policy, a public page, the transparency log, server logs, or analytics.
+   */
+  matchingIdentifiers?: DisclosedIdentifier[]
+  requestedTreatment: string
+  legalEffect: string
+  note?: string
+  proof: DataIntegrityProof
+}
+
+export type DeliveryMethod =
+  | 'email' | 'certified-mail' | 'postal-mail' | 'hand-delivery' | 'web-form' | 'other'
+
+export interface DeliveryRecord {
+  '@context': string[]
+  type: string[]
+  id?: string
+  noticeDigest: Multihash
+  policyDigest: Multihash
+  manifestDigest?: Multihash
+  packetDigest?: Multihash
+  recipient: { name: string; id?: string; domain?: string; contact?: string }
+  method: DeliveryMethod
+  /** USER-ASSERTED. PRM cannot witness delivery, and does not claim to. */
+  deliveredAt: UtcInstant
+  recorded: UtcInstant
+  reference?: string
+  notes?: string
+  /** Digests only. Supporting artifacts stay in the encrypted personal ledger. */
+  evidence?: Array<{ kind: string; digest: Multihash; note?: string }>
+  proof: DataIntegrityProof
+}
+
+export type ResponseStatus =
+  | 'acknowledged' | 'accepted' | 'partially-accepted' | 'declined' | 'no-response' | 'superseded'
+
+export interface ResponseRecord {
+  '@context': string[]
+  type: string[]
+  id?: string
+  noticeDigest: Multihash
+  deliveryDigest?: Multihash
+  recipient?: { name: string; id?: string; domain?: string; contact?: string }
+  /** The ISSUER'S characterisation. PRM does not evaluate the recipient's legal position. */
+  status: ResponseStatus
+  receivedAt?: UtcInstant
+  recorded: UtcInstant
+  responseDigest?: Multihash
+  responseMediaType?: string
+  notes?: string
+  proof: DataIntegrityProof
+}

@@ -101,3 +101,32 @@ jobs:
             exit 1
           fi
           echo "spec/schemas unchanged: this is a fixture regeneration, not a protocol change."
+
+      # Adding a new document type is additive and safe. MODIFYING an existing schema changes what
+      # already-signed documents validate against, and is a protocol change. Previously only the
+      # example-digest guard covered spec/, so a pure schema edit with no example change slipped
+      # through unguarded.
+      - name: Existing schemas may not be modified without a version bump
+        if: >-
+          github.event_name == 'pull_request' &&
+          !contains(github.event.pull_request.labels.*.name, 'spec-version-bump')
+        run: |
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          modified=$(git diff --name-only --diff-filter=M "origin/${{ github.base_ref }}" -- spec/schemas || true)
+          if [ -n "$modified" ]; then
+            echo "::error title=An existing schema was modified::$modified"
+            echo ""
+            echo "Adding a NEW schema file is additive and needs no label. Changing an existing one"
+            echo "alters what already-signed documents validate against, which is a protocol change:"
+            echo "  1. add the new version alongside, do not edit v1 in place"
+            echo "  2. keep the v1 vectors so old documents stay verifiable"
+            echo "  3. document the migration in docs/decisions.md"
+            echo "  4. apply the 'spec-version-bump' label"
+            exit 1
+          fi
+          added=$(git diff --name-only --diff-filter=A "origin/${{ github.base_ref }}" -- spec/schemas || true)
+          if [ -n "$added" ]; then
+            echo "New schemas added (additive, allowed):"
+            echo "$added"
+          fi
+          echo "No existing schema was modified."

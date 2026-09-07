@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-delivery-v1.schema.json",
+  "title": "PRM Delivery Record v1",
+  "description": "A signed record that the issuer delivered a specific notice packet to a specific recipient, by a stated method, at a stated time. The timestamp is USER-ASSERTED: it records what the issuer says they did, and is evidence of their claim rather than proof of receipt. Independent corroboration comes from the transparency log (when the record was published) and from private supporting evidence. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-DELIVERY-v1\\u0000'.",
+  "type": "object",
+  "required": ["@context", "type", "noticeDigest", "policyDigest", "recipient", "method", "deliveredAt", "recorded", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "https://www.w3.org/ns/credentials/v2" },
+        { "const": "https://prm.dev/ns/policy/v1" }
+      ],
+      "items": { "type": "string", "format": "uri" }
+    },
+    "type": { "type": "array", "contains": { "const": "PRMDeliveryRecord" }, "items": { "type": "string" } },
+    "id": { "type": "string", "pattern": "^urn:prm:delivery:u[A-Za-z0-9_-]{40,}$" },
+
+    "noticeDigest": { "$ref": "#/$defs/multihash" },
+    "policyDigest": { "$ref": "#/$defs/multihash" },
+    "manifestDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the proof-bundle manifest that was delivered, when a bundle accompanied the notice. Pins exactly which packet went out."
+    },
+    "packetDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the delivered PDF or other packet file, if one was produced."
+    },
+
+    "recipient": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "id": { "type": "string" },
+        "domain": { "type": "string" },
+        "contact": { "type": "string", "description": "The address actually used, e.g. the email or postal address." }
+      }
+    },
+
+    "method": {
+      "enum": ["email", "certified-mail", "postal-mail", "hand-delivery", "web-form", "other"]
+    },
+    "deliveredAt": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "USER-ASSERTED time of delivery. PRM does not and cannot witness this."
+    },
+    "recorded": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "When the issuer signed this record. Independently corroborated once the record is included in the transparency log."
+    },
+    "reference": {
+      "type": "string",
+      "maxLength": 256,
+      "description": "External tracking or reference id: certified mail number, message id, web form confirmation."
+    },
+    "notes": { "type": "string", "maxLength": 4000 },
+
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "digest"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": ["smtp-receipt", "email-headers", "sent-message", "usps-tracking", "certified-mail-receipt", "screenshot", "web-form-confirmation", "photo", "other"]
+          },
+          "digest": { "$ref": "#/$defs/multihash" },
+          "note": { "type": "string", "maxLength": 1000 }
+        }
+      },
+      "description": "DIGESTS ONLY. The artifacts themselves stay in the encrypted personal ledger and are never published by default."
+    },
+
+    "proof": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
+  },
+  "$defs": {
+    "multihash": { "type": "string", "pattern": "^u[A-Za-z0-9_-]{40,}$" },
+    "utcInstant": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$" }
+  }
+}

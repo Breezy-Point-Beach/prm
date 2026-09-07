@@ -313,7 +313,8 @@ export default function PublishPage () {
           </p>
 
           <div className="row">
-            <Link href={outcome.canonicalUrl}><button>View my public page</button></Link>
+            <Link href="/notice"><button>Send this to someone</button></Link>
+            <Link href={outcome.canonicalUrl}><button className="secondary">View my public page</button></Link>
           </div>
         </>
       )}

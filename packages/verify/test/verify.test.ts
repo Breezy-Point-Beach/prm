@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   verifyPolicy, verifyPolicyChain, verifyKeyEventLog, verifyLedgerChain,
-  verifyLogInclusion, verifySignedTreeHead, verifyAuthorization, verifyBundle, buildBundle
+  verifyLogInclusion, verifySignedTreeHead, verifyAuthorization, verifyProofBundle
 } from '../src/index.js'
 import {
   deriveAccountKeys, buildProof, digest, hashString, encodeMultihash, hash, decodePublicKey
@@ -360,62 +360,27 @@ describe('authorizations', () => {
   })
 })
 
-describe('proof bundles', () => {
-  const full = () => buildBundle({
-    policy: v1(),
-    policyChain: [v1(), v2()],
-    keyEventLog: [genesis(), rotation()],
-    ledgerEntries: entries(),
-    signedTreeHead: sth(),
-    logPublicKeyMultibase: V.merkleLog.logPublicKeyMultibase,
-    timestamp: { notLaterThan: '2026-11-20T01:00:00Z', source: 'rfc3161', authority: 'FreeTSA' }
+describe('proof bundles — structural cases', () => {
+  // Full round-trip coverage lives in @prm/notice, which can both build and verify a bundle.
+  // These are the cases that must fail before a bundle is ever parsed.
+  it('rejects a non-bundle', () => {
+    expect(verifyProofBundle(null).valid).toBe(false)
+    expect(verifyProofBundle('nope').conclusion).toMatch(/not a PRM proof bundle/)
   })
 
-  it('verifies a complete bundle and states a plain-language conclusion', () => {
-    const r = verifyBundle(full(), { now: NOW })
-    expect(r.errors).toEqual([])
-    expect(r.valid).toBe(true)
-    expect(r.conclusion).toMatch(/^Verified: PRM account prm:\w+ signed version 1/)
-    expect(r.conclusion).toMatch(/independently proven by FreeTSA/)
-  })
-
-  it('REJECTS a bundle whose header disagrees with its policy', () => {
-    const b = full()
-    b.subject.policyDigest = encodeMultihash(hashString('different'))
-    const r = verifyBundle(b, { now: NOW })
+  it('rejects the removed v1 format, and explains why', () => {
+    const r = verifyProofBundle({ prmproof: 1, policy: {}, keyEventLog: [] })
     expect(r.valid).toBe(false)
-    expect(r.errors.join(' ')).toMatch(/header does not match/)
+    expect(r.conclusion).toMatch(/did not preserve exact artifact bytes/)
   })
 
-  it('REJECTS a bundle with a substituted policy', () => {
-    const b = full()
-    b.policy.rules[0].decision = 'deny'
-    expect(verifyBundle(b, { now: NOW }).valid).toBe(false)
+  it('rejects an unknown future version', () => {
+    expect(verifyProofBundle({ prmproof: 99 }).conclusion).toMatch(/incompatible version/)
   })
 
-  it('REJECTS a bundle with a forged tree head', () => {
-    const b = full()
-    b.signedTreeHead.timestamp = '2020-01-01T00:00:00Z'
-    const r = verifyBundle(b, { now: NOW })
+  it('rejects a bundle with no manifest', () => {
+    const r = verifyProofBundle({ prmproof: 2, artifacts: {} })
     expect(r.valid).toBe(false)
-    expect(r.errors.join(' ')).toMatch(/signed tree head signature is not valid/)
-  })
-
-  it('warns when the log key is absent so the tree head cannot be checked', () => {
-    const b = full()
-    delete b.logPublicKeyMultibase
-    const r = verifyBundle(b, { now: NOW })
-    expect(r.warnings.join(' ')).toMatch(/not checked/)
-  })
-
-  it('rejects a non-bundle and an unsupported version', () => {
-    expect(verifyBundle(null).valid).toBe(false)
-    expect(verifyBundle({ prmproof: 99 }).conclusion).toMatch(/incompatible version/)
-  })
-
-  it('the bundle round-trips through JSON unchanged', () => {
-    const b = full()
-    const r = verifyBundle(JSON.parse(JSON.stringify(b)), { now: NOW })
-    expect(r.valid).toBe(true)
+    expect(r.conclusion).toMatch(/malformed/)
   })
 })

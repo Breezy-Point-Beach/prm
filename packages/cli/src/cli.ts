@@ -32,6 +32,7 @@ ${bold('COMMANDS')}
 ${bold('OPTIONS')}
   --kel <file>    Key event log (one event or an array). Without it, issuer authority
                   cannot be established and is reported as unconfirmed rather than valid.
+  --log-key <mb>  Transparency log public key, to check a signed tree head in a bundle.
   --chain <file>  Array of policy versions, to additionally verify the version chain.
   --offline       No-op. This tool is always offline; the flag documents that intent.
   --kind <type>   policy | authorization | keyEvent | ledgerEntry | signedTreeHead
@@ -45,7 +46,7 @@ ${bold('EXIT CODES')}
 
 ${bold('EXAMPLES')}
   prm verify policy.json --kel kel.json --offline
-  prm verify evidence.prmproof
+  prm verify notice.prmproof
   prm inspect policy.json
   prm digest policy.json --bytes
 
@@ -60,7 +61,7 @@ interface Parsed {
 
 function parseArgs (argv: string[]): Parsed {
   const out: Parsed = { positional: [], flags: {} }
-  const takesValue = new Set(['kel', 'chain', 'kind'])
+  const takesValue = new Set(['kel', 'chain', 'kind', 'log-key'])
 
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i] as string
@@ -103,6 +104,7 @@ function run (argv: string[]): CommandResult {
       return cmdVerify(need(), {
         ...(typeof flags.kel === 'string' ? { kel: flags.kel } : {}),
         ...(typeof flags.chain === 'string' ? { chain: flags.chain } : {}),
+        ...(typeof flags['log-key'] === 'string' ? { logKey: flags['log-key'] } : {}),
         offline: flags.offline === true,
         json: flags.json === true
       })

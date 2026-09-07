@@ -13,6 +13,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
     "@prm/crypto": "workspace:*",
+    "@prm/notice": "workspace:^",
     "@prm/schema": "workspace:*",
     "@prm/vault": "workspace:*",
     "@prm/verify": "workspace:*",

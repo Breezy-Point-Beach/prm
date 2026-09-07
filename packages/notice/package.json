@@ -1,0 +1,37 @@
+{
+  "name": "@prm/notice",
+  "version": "0.1.0",
+  "description": "PRM notice packets: recipient-specific notices, delivery and response records, portable .prmproof bundles with a manifest, and PDF rendering. Runs client-side.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@prm/crypto": "workspace:*",
+    "@prm/schema": "workspace:*",
+    "@prm/verify": "workspace:*",
+    "pdf-lib": "1.17.1",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "@prm/vault": "workspace:*",
+    "@types/qrcode": "^1.5.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
