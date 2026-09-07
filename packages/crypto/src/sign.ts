@@ -11,7 +11,10 @@ const DOMAIN_FOR: Record<DocumentKind, SigningDomain> = {
   authorization: SIGNING_DOMAINS.authorization,
   keyEvent: SIGNING_DOMAINS.keyEvent,
   ledgerEntry: SIGNING_DOMAINS.ledgerEntry,
-  signedTreeHead: SIGNING_DOMAINS.signedTreeHead
+  signedTreeHead: SIGNING_DOMAINS.signedTreeHead,
+  notice: SIGNING_DOMAINS.notice,
+  delivery: SIGNING_DOMAINS.delivery,
+  response: SIGNING_DOMAINS.response
 }
 
 /**

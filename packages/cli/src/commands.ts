@@ -4,8 +4,8 @@ import type { KeyEvent, Policy } from '@prm/schema'
 import { validatePolicy, CORE_CATEGORIES, categoryLabel, resolveDecision, unknownCategories } from '@prm/schema'
 import { digest, digestBytes, jcs, policyChainId, stripNonHashed, bytesToHex } from '@prm/crypto'
 import {
-  verifyPolicy, verifyPolicyChain, verifyKeyEventLog, verifyBundle,
-  type PrmProofBundle, type VerificationResult
+  verifyPolicy, verifyPolicyChain, verifyKeyEventLog, verifyProofBundle,
+  type ProofBundle, type VerificationResult
 } from '@prm/verify'
 import { renderResult, exitCodeFor, bold, dim, green, red, yellow, TICK, CROSS, WARN, short } from './render.js'
 
@@ -39,6 +39,8 @@ function readKel (path: string): KeyEvent[] {
 export interface VerifyOptions {
   kel?: string
   chain?: string
+  /** Transparency log public key, so a signed tree head inside a bundle can be checked. */
+  logKey?: string
   /** Accepted and documented, but a no-op: this CLI never contacts the network in any mode. */
   offline?: boolean
   json?: boolean
@@ -51,7 +53,7 @@ export interface VerifyOptions {
 export function cmdVerify (path: string, opts: VerifyOptions = {}): CommandResult {
   const doc = readJson(path)
 
-  if (isBundle(doc)) return renderBundleResult(doc as PrmProofBundle, path, opts)
+  if (isBundle(doc)) return renderBundleResult(doc as ProofBundle, path, opts)
 
   if (isKeyEvent(doc)) {
     const kel = Array.isArray(doc) ? (doc as KeyEvent[]) : [doc as KeyEvent]
@@ -96,37 +98,34 @@ export function cmdVerify (path: string, opts: VerifyOptions = {}): CommandResul
 }
 
 /**
- * Renders a bundle verification. Does NOT verify anything itself — verifyBundle() from @prm/verify
- * does all of it. The name matters: a `verify*` function living in the CLI is exactly the drift this
+ * Renders a proof bundle verification. Does NOT verify anything itself — verifyProofBundle() from
+ * @prm/verify does all of it. A `verify*` function living in the CLI is exactly the drift this
  * package must not have, and a test asserts none exists.
  */
-function renderBundleResult (bundle: PrmProofBundle, path: string, opts: VerifyOptions): CommandResult {
-  const r = verifyBundle(bundle, opts.now ? { now: opts.now } : {})
+function renderBundleResult (bundle: ProofBundle, path: string, opts: VerifyOptions): CommandResult {
+  const r = verifyProofBundle(bundle, {
+    ...(opts.now ? { now: opts.now } : {}),
+    ...(opts.logKey ? { logPublicKeyMultibase: opts.logKey } : {})
+  })
   if (opts.json) return { output: JSON.stringify(r, replacer, 2), exitCode: r.valid ? 0 : 2 }
 
   const out = [bold(`Proof bundle: ${basename(path)}`), '']
-  const m = (ok: boolean) => (ok ? TICK : CROSS)
-
-  out.push(`${m(r.keyEventLog.valid)} key history  ${dim(r.keyEventLog.accountId ?? 'unverified')}`)
-  out.push(`${m(r.policy.summary !== 'failed')} policy       ${dim(`version ${r.policy.checked.version} — ${short(r.policy.checked.digest)}`)}`)
-  if (r.chain) out.push(`${m(r.chain.valid)} version chain`)
-  if (r.ledger) out.push(`${m(r.ledger.valid)} ledger       ${dim('append-only chain intact')}`)
-  if (r.inclusion?.length) {
-    out.push(`${m(r.inclusion.every((i) => i.valid))} log inclusion ${dim(`${r.inclusion.length} entr(ies) proven in the transparency log`)}`)
+  for (const check of r.checks) {
+    out.push(`${check.ok ? TICK : CROSS} ${check.name.padEnd(18)}${dim(check.detail)}`)
   }
-  if (r.signedTreeHead) {
-    out.push(r.signedTreeHead.checked
-      ? `${m(r.signedTreeHead.valid)} tree head    ${dim('signed by the published log key')}`
-      : `${WARN} tree head    ${dim('not checked (no log public key in bundle)')}`)
-  }
-  if (bundle.timestamp) {
-    out.push(`${TICK} timestamp    ${dim(`not later than ${bundle.timestamp.notLaterThan} (${bundle.timestamp.source})`)}`)
-  }
-
   for (const w of r.warnings) out.push(`  ${WARN} ${w}`)
-  for (const e of r.errors) out.push(`  ${CROSS} ${e}`)
 
-  out.push('', r.valid ? bold(green('VERIFIED')) : bold(red('FAILED')), '', r.conclusion)
+  out.push('')
+  out.push(r.valid ? bold(green('VERIFIED')) : bold(red('FAILED')))
+  out.push('')
+  out.push(r.conclusion)
+
+  if (r.policyDigest) {
+    out.push('')
+    out.push(dim(`policy digest  ${r.policyDigest}`))
+    out.push(dim(`byte digest    ${r.policyByteDigest ?? '(none)'}`))
+    if (r.noticeDigest) out.push(dim(`notice digest  ${r.noticeDigest}`))
+  }
   return { output: out.join('\n'), exitCode: r.valid ? 0 : 2 }
 }
 

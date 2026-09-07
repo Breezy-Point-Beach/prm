@@ -1,75 +1,106 @@
 # Whittier, California — worked example
 
-The first real-world PRM test: a notice to the **City of Whittier Police Department** and its ALPR
-vendor, using the production California ALPR template.
+The first real-world PRM test: a notice to the **City of Whittier Police Department** about a standing
+California ALPR policy.
 
 ```console
 pnpm --filter @prm/example-whittier generate    # placeholder identifiers, committed output
-pnpm --filter @prm/example-whittier test        # generate, then verify
+pnpm --filter @prm/example-whittier test        # generate, then verify with the network sabotaged
 node examples/whittier/generate.mjs --local     # your real values, written to ./local/ (gitignored)
 ```
 
+## The chain this produces
+
+```
+Standing California ALPR policy      policy.json          public, no raw identifiers
+        |
+        v
+Recipient-specific notice            notice.json          carries the plate, for Whittier only
+        |
+        v
+Notice PDF                           notice.pdf           what you actually mail
+        |
+        v
+Proof bundle                         notice.prmproof      single-file, independently verifiable
+        |
+        v
+Delivery record                      delivery.json        what you say you sent, and when
+        |
+        v
+Response record                      response.json        what came back, if anything
+```
+
+## What this notice is, and is not
+
+It is a **notice and an evidentiary artifact**. It records a standing policy, directs it at a named
+recipient, and preserves what happened next.
+
+It is **not a records request**. It does not ask about retention periods, sharing lists, access logs,
+contracts, technical capability, or legal authority. Those questions are handled through separate
+correspondence; repeating them here would turn a focused notice into a second information request and
+invite it to be routed and answered as one. `verify.mjs` fails the build if that language creeps back
+in.
+
+It does not assert that the recipient is obliged to do anything. `buildNotice` refuses to sign text
+containing phrases like "you must comply" or "legally binding", and the verifier checks the generated
+notice for them.
+
 ## No private data lives here
 
-The committed artifacts use the placeholder plate `US-CA-0EXAMPLE` and `user0001@example.org`.
-Bryan's actual plate, address, phone, and email are entered at generation time on his own machine and
-are written only to `examples/whittier/local/`, which is gitignored.
+Committed artifacts use the placeholder plate `US-CA-0EXAMPLE`. Real values are entered at generation
+time via `--local` and written only to `examples/whittier/local/`, which is gitignored.
 
-`verify.mjs` enforces this: it fails if the committed artifacts contain a non-placeholder plate, if a
-raw identifier appears in any published file, or if a `local/` directory has been committed.
+`verify.mjs` enforces this. It fails if the committed artifacts carry a non-placeholder plate, if a
+raw identifier appears in any published file, if the plate appears anywhere in the bundle other than
+`notice.json`, or if a `local/` directory has been committed.
 
-## What gets generated
+**The plate appears in exactly one artifact**: the notice delivered to the named agency. The published
+policy carries only a salted commitment to it, so nobody else can work out what it is, and the agency
+can still confirm the policy covers the right vehicle.
 
-| File | Published? | Contents |
-|---|---|---|
-| `policy.json` | **yes** | The signed policy. Contains salted *commitments* to the plate and email — never the values |
-| `kel.json` | **yes** | Key history proving the policy was signed by this account |
-| `ledger.json` | no | What was sent, to whom, with what delivery evidence |
-| `signed-tree-head.json` | **yes** | Transparency log head. Opaque hashes only |
-| `authorization-whittier-pd.json` | no — delivered to one recipient | Discloses the plate to Whittier PD **and to nobody else** |
-| `evidence.prmproof` | no — handed over deliberately | Single-file bundle a lawyer or records officer can verify offline |
-| `notice.md` | — | The cover letter |
+## The offline acceptance test
 
-The plate appears in exactly one artifact: the authorization delivered to the named agency. That is
-the selective-disclosure design working — the agency can confirm which vehicle the notice concerns,
-and no PRM server ever holds the value.
+`verify.mjs` sabotages `fetch`, `XMLHttpRequest`, `WebSocket`, `http.request` and `https.request`
+before importing anything, with a control test proving the sabotage bites. It then establishes, using
+only the portable files:
 
-## The argument the policy makes
+- the policy signature is valid, and the issuer key chain self-certifies
+- the notice references the correct policy by **both** digests
+- delivery and response records reference the correct notice
+- every manifest entry matches its artifact byte for byte
+- no private identifier reached any published artifact
 
-**Authorized:** the plate scan itself, the immediate hotlist comparison at the moment of capture, use
-tied to a valid individualized investigation with legal process, and genuine emergencies.
+and that tampering is detected: a modified policy, reserialized policy bytes, a modified manifest, a
+missing artifact, an artifact smuggled in without a manifest entry, and a modified delivery timestamp.
+A control test confirms the untouched bundle still verifies.
 
-**Objected to:** retention of non-hit reads, historical movement storage and search, aggregation,
-cross-database correlation, cross-agency and network sharing, profiling, derived movement inference,
-sale, commercialization, advertising, AI/model training, and biometric processing of occupants.
-
-The line is the moment of comparison. Everything before it is conceded; everything after it is
-addressed separately. That distinction is what makes the notice answerable on its merits rather than
-dismissible as a blanket refusal.
-
-## On legal effect
-
-The policy states **standing authorization, objection, non-consent, and requested restrictions**. It
-does not claim PRM creates rights, that every restriction binds the recipient, or that non-compliance
-is unlawful. California has ALPR-specific statute (Civil Code § 1798.90.5 et seq.), but whether any
-particular restriction is enforceable is a question for a lawyer and a court.
-
-The cover letter also makes a **records request** — the agency's ALPR usage and privacy policy,
-reads associated with the vehicle, the retention period for non-hits, and the list of agencies and
-networks the data has been shared with. A request has a defined process and tends to get answered;
-an objection alone may not.
+The same bundle has been verified by the CLI inside a Linux network namespace with no interfaces.
 
 ## Verifying, as a recipient
 
 ```console
-npx @prm/cli verify evidence.prmproof
+npx @prm/cli verify notice.prmproof
 ```
 
-No PRM service is contacted, and none is trusted. This works with `prm.app` unreachable.
+No PRM service is contacted, and none is trusted. `verification/instructions.txt` inside the bundle
+explains every check, including how to verify RFC 3161 timestamp tokens with `openssl` when present.
+
+## Two digests, and why both are recorded
+
+| | Identifies | Changes when |
+|---|---|---|
+| Policy digest | the document | its meaning changes |
+| Byte digest | the exact bytes | any byte moves, including whitespace |
+
+A reserialized policy keeps its policy digest but gets a different byte digest. Recording both lets
+the issuer show not only which policy was issued, but which exact file was delivered.
+
+While building this example, the offline suite caught a real instance: the generator was appending a
+trailing newline when writing `policy.json`, so the file on disk no longer matched the byte digest the
+notice pinned. A recipient running the very check the notice invites would have seen a mismatch.
 
 ## Relationship to the normative test vectors
 
-These artifacts are **not** normative test vectors and do not participate in the digest guard. They
-illustrate the flow and are validated by CI, so they can be regenerated freely as the template
-evolves. The vectors in `spec/` are deliberately synthetic and jurisdiction-neutral: they pin the wire
-format, not any jurisdiction's law.
+These artifacts are **not** normative test vectors and do not participate in the digest guard. The
+vectors in `spec/` are deliberately synthetic and jurisdiction-neutral: they pin the wire format, not
+any jurisdiction's law.

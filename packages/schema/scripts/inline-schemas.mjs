@@ -18,7 +18,10 @@ const names = {
   'prm-policy-v1.schema.json': 'policySchema',
   'prm-authorization-v1.schema.json': 'authorizationSchema',
   'prm-key-event-v1.schema.json': 'keyEventSchema',
-  'prm-ledger-entry-v1.schema.json': 'ledgerEntrySchema'
+  'prm-ledger-entry-v1.schema.json': 'ledgerEntrySchema',
+  'prm-notice-v1.schema.json': 'noticeSchema',
+  'prm-delivery-v1.schema.json': 'deliverySchema',
+  'prm-response-v1.schema.json': 'responseSchema'
 }
 
 let out = `// GENERATED FILE — do not edit.
@@ -29,7 +32,7 @@ for (const [file, ident] of Object.entries(names)) {
   const json = JSON.parse(fs.readFileSync(path.join(SPEC, file), 'utf8'))
   out += `export const ${ident} = ${JSON.stringify(json, null, 2)} as const\n\n`
 }
-out += `export const allSchemas = [policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema]\n`
+out += `export const allSchemas = [policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema, noticeSchema, deliverySchema, responseSchema]\n`
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true })
 fs.writeFileSync(OUT, out)

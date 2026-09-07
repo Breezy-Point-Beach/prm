@@ -40,6 +40,9 @@ members are added *after* signing, so including them would make the signature un
 | Key Event | `proof` |
 | Ledger Entry | `proof`, **`logInclusion`** |
 | Signed Tree Head | `signature` |
+| Notice | `id`, `proof` |
+| Delivery Record | `id`, `proof` |
+| Response Record | `id`, `proof` |
 
 ```
 digest(doc) = SHA-256( PRM-JCS( doc without its non-hashed members ) )
@@ -75,6 +78,9 @@ sig     = Ed25519_sign(key, message)
 | Key Event | `PRM-KEYEVENT-v1` |
 | Ledger Entry | `PRM-LEDGER-v1` |
 | Signed Tree Head | `PRM-STH-v1` |
+| Notice | `PRM-NOTICE-v1` |
+| Delivery Record | `PRM-DELIVERY-v1` |
+| Response Record | `PRM-RESPONSE-v1` |
 
 This is what makes a policy signature invalid as an authorization signature. Implementations MUST NOT
 offer a "verify with any domain" mode.
@@ -179,6 +185,51 @@ Two labels acknowledge a digest change, and they are not interchangeable:
 
 Using `vector-regeneration` while modifying `spec/schemas/` fails the build. That trap exists so a
 canonicalization change can never ride in under a fixture label.
+
+---
+
+## 11. Notice, delivery, and response (added 2026-09-07)
+
+Three document types were ADDED alongside the existing four. No existing schema, canonicalization
+rule, derivation, or signing domain changed, so every previously signed document verifies exactly as
+before.
+
+| Type | Purpose |
+|---|---|
+| **Notice** | A recipient-specific notice directing a standing policy at one named organization |
+| **Delivery Record** | The issuer's signed statement of how and when they delivered a notice |
+| **Response Record** | What came back, and how the issuer characterised it |
+
+### Why a notice is separate from the policy
+
+The policy is public and general. A notice is targeted, and may carry a **private matching
+identifier** — a plate, an account number — so the recipient can associate the policy with the right
+records. That value must never appear in the published policy, which carries only a salted commitment
+to it. Keeping them as distinct signed artifacts makes the separation structural rather than a habit.
+
+A notice records BOTH policy digests:
+
+- `policyDigest` — which document was issued
+- `policyByteDigest` — which exact serialization was delivered
+
+That pair is what lets a recipient show not merely which policy they were told about, but which file
+they actually received.
+
+### What these records do NOT assert
+
+- A delivery record's `deliveredAt` is **user-asserted**. PRM does not witness delivery and makes no
+  claim to. Corroboration comes from transparency log inclusion of the record and from private
+  supporting evidence, not from PRM's word.
+- A response `status` is the **issuer's characterisation**. PRM preserves the response; it does not
+  adjudicate whether the recipient's legal position is correct.
+- A notice's `legalEffect` field is REQUIRED. A notice without it would imply PRM supplies legal
+  authority it does not have.
+
+### Adding schemas versus changing them
+
+Adding a new schema file is additive and requires no label. **Modifying an existing schema changes
+what already-signed documents validate against** and is a protocol change requiring the
+`spec-version-bump` process. CI enforces the distinction.
 
 ---
 

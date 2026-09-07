@@ -6,8 +6,13 @@ import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.
 import addFormatsModule from 'ajv-formats'
 
 const addFormats = addFormatsModule.default
-import { policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema } from './generated/schemas.js'
-import type { Authorization, KeyEvent, LedgerEntry, Policy } from './types.js'
+import {
+  policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema,
+  noticeSchema, deliverySchema, responseSchema
+} from './generated/schemas.js'
+import type {
+  Authorization, KeyEvent, LedgerEntry, Policy, Notice, DeliveryRecord, ResponseRecord
+} from './types.js'
 
 export interface ValidationResult<T> {
   valid: boolean
@@ -19,7 +24,10 @@ export interface ValidationResult<T> {
 // `strict: false` because the schemas use $comment and annotation keywords intentionally.
 const ajv = new Ajv2020({ strict: false, allErrors: true, allowUnionTypes: true })
 addFormats(ajv)
-for (const s of [policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema]) {
+for (const s of [
+  policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema,
+  noticeSchema, deliverySchema, responseSchema
+]) {
   ajv.addSchema(s as object)
 }
 
@@ -58,6 +66,9 @@ export const validatePolicy = (d: unknown) => run<Policy>(`${BASE}/prm-policy-v1
 export const validateAuthorization = (d: unknown) => run<Authorization>(`${BASE}/prm-authorization-v1.schema.json`, d)
 export const validateKeyEvent = (d: unknown) => run<KeyEvent>(`${BASE}/prm-key-event-v1.schema.json`, d)
 export const validateLedgerEntry = (d: unknown) => run<LedgerEntry>(`${BASE}/prm-ledger-entry-v1.schema.json`, d)
+export const validateNotice = (d: unknown) => run<Notice>(`${BASE}/prm-notice-v1.schema.json`, d)
+export const validateDelivery = (d: unknown) => run<DeliveryRecord>(`${BASE}/prm-delivery-v1.schema.json`, d)
+export const validateResponse = (d: unknown) => run<ResponseRecord>(`${BASE}/prm-response-v1.schema.json`, d)
 
 /** Throwing variants, for call sites where an invalid document is a programmer error. */
 function assertValid<T> (r: ValidationResult<T>, kind: string): T {
@@ -76,6 +87,9 @@ export const assertPolicy = (d: unknown) => assertValid(validatePolicy(d), 'poli
 export const assertAuthorization = (d: unknown) => assertValid(validateAuthorization(d), 'authorization')
 export const assertKeyEvent = (d: unknown) => assertValid(validateKeyEvent(d), 'key event')
 export const assertLedgerEntry = (d: unknown) => assertValid(validateLedgerEntry(d), 'ledger entry')
+export const assertNotice = (d: unknown) => assertValid(validateNotice(d), 'notice')
+export const assertDelivery = (d: unknown) => assertValid(validateDelivery(d), 'delivery record')
+export const assertResponse = (d: unknown) => assertValid(validateResponse(d), 'response record')
 
 /**
  * Structural checks the JSON Schema cannot express.

@@ -71,22 +71,12 @@ describe('verification works with the network sabotaged', () => {
     expect(r.warnings.join(' ')).toMatch(/offline/)
   })
 
-  it('verifies a full proof bundle offline', async () => {
-    const { verifyBundle, buildBundle } = await import('../src/index.js')
-    const bundle = buildBundle({
-      policy: load('examples/policies/policy-v1.json'),
-      policyChain: [load('examples/policies/policy-v1.json')],
-      keyEventLog: [load('examples/key-events/genesis.json')],
-      ledgerEntries: load('examples/ledger/entries.json'),
-      signedTreeHead: load('examples/ledger/signed-tree-head.json'),
-      logPublicKeyMultibase: load('test-vectors/vectors.json').merkleLog.logPublicKeyMultibase,
-      timestamp: { notLaterThan: '2026-11-20T01:00:00Z', source: 'rfc3161', authority: 'FreeTSA' }
-    })
-    const r = verifyBundle(bundle, { now: new Date('2026-12-01T00:00:00Z') })
-    expect(r.errors).toEqual([])
-    expect(r.valid).toBe(true)
-    expect(r.conclusion).toMatch(/^Verified: PRM account prm:/)
-    expect(r.conclusion).toMatch(/no later than 2026-11-20T01:00:00Z/)
+  it('rejects a malformed proof bundle offline, without reaching for the network', async () => {
+    // Full bundle round-trip coverage is in @prm/notice; what matters here is that the bundle path
+    // never touches the network even on the failure branches.
+    const { verifyProofBundle } = await import('../src/index.js')
+    expect(verifyProofBundle({ prmproof: 2, manifest: null, artifacts: {} }).valid).toBe(false)
+    expect(verifyProofBundle({ prmproof: 1 }).conclusion).toMatch(/version 1/)
   })
 
   it('verifies the key event log and inclusion proofs offline', async () => {

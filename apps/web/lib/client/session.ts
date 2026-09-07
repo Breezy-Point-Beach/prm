@@ -31,7 +31,8 @@ const KEY = {
   genesis: 'prm.genesis.v1',
   handle: 'prm.handle.v1',
   draft: 'prm.draft.v1',
-  published: 'prm.published.v1'
+  published: 'prm.published.v1',
+  notices: 'prm.notices.v1'
 } as const
 
 /** Unlocked material. Module-scoped so it cannot be reached from a serialized structure. */
@@ -135,6 +136,18 @@ export interface PolicyDraftState {
 export const getDraft = (): PolicyDraftState | null => read<PolicyDraftState>(KEY.draft)
 export const saveDraft = (draft: PolicyDraftState): void => write(KEY.draft, draft)
 
+export interface NoticeState {
+  noticeDigest: string
+  recipientName: string
+  issued: string
+  manifestDigest: string
+  /** Signed artifacts, kept as EXACT strings so nothing is re-serialized on the way to a download. */
+  noticeJson: string
+  bundleJson: string
+  deliveryJson?: string
+  responseJson?: string
+}
+
 export interface PublishedState {
   handle: string
   digest: string
@@ -146,6 +159,13 @@ export interface PublishedState {
 
 export const getPublished = (): PublishedState | null => read<PublishedState>(KEY.published)
 export const savePublished = (state: PublishedState): void => write(KEY.published, state)
+
+export const getNotices = (): NoticeState[] => read<NoticeState[]>(KEY.notices) ?? []
+
+export function saveNotice (notice: NoticeState): void {
+  const existing = getNotices().filter((n) => n.noticeDigest !== notice.noticeDigest)
+  write(KEY.notices, [...existing, notice])
+}
 
 /** Wipe everything this device holds. Irreversible without the backup phrase. */
 export function forgetEverything (): void {

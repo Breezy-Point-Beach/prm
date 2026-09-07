@@ -3,7 +3,7 @@ import type { NextConfig } from 'next'
 const config: NextConfig = {
   reactStrictMode: true,
   // Workspace packages ship as ESM TypeScript builds; Next must not try to externalize them.
-  transpilePackages: ['@prm/schema', '@prm/crypto', '@prm/vault', '@prm/verify'],
+  transpilePackages: ['@prm/schema', '@prm/crypto', '@prm/vault', '@prm/verify', '@prm/notice'],
   async headers () {
     return [
       {
@@ -20,7 +20,7 @@ const config: NextConfig = {
               "default-src 'self'",
               "script-src 'self' 'wasm-unsafe-eval'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''),
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data:",
+              "img-src 'self' data: blob:",
               "connect-src 'self'",
               "frame-ancestors 'none'",
               "object-src 'none'",

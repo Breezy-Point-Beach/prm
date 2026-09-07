@@ -1137,4 +1137,529 @@ export const ledgerEntrySchema = {
   }
 } as const
 
-export const allSchemas = [policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema]
+export const noticeSchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-notice-v1.schema.json",
+  "title": "PRM Recipient Notice v1",
+  "description": "A signed, recipient-specific notice directing a standing Personal Data Policy at one named organization. Distinct from the policy itself: the policy is public and general, a notice is targeted and may carry a private matching identifier that MUST NOT appear in the published policy. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-NOTICE-v1\\u0000'.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "policyChainId",
+    "policyDigest",
+    "policyByteDigest",
+    "policyVersion",
+    "issuer",
+    "recipient",
+    "issued",
+    "requestedTreatment",
+    "legalEffect",
+    "proof"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "https://www.w3.org/ns/credentials/v2"
+        },
+        {
+          "const": "https://prm.dev/ns/policy/v1"
+        }
+      ],
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "type": {
+      "type": "array",
+      "contains": {
+        "const": "PRMNotice"
+      },
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:prm:notice:u[A-Za-z0-9_-]{40,}$"
+    },
+    "policyChainId": {
+      "type": "string",
+      "pattern": "^urn:prm:chain:u[A-Za-z0-9_-]{40,}$"
+    },
+    "policyDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "PROTOCOL identity of the policy: SHA-256(JCS(policy minus id, proof)). Stable across reserialization."
+    },
+    "policyByteDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "STORAGE identity: SHA-256 of the exact policy bytes delivered. Changes if a single byte moves. Recording both is what lets a recipient prove which serialization they received."
+    },
+    "policyVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "policyUrl": {
+      "type": "string",
+      "format": "uri"
+    },
+    "issuer": {
+      "type": "object",
+      "required": [
+        "id",
+        "did",
+        "keyEventHash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^prm:[a-z2-7]{26,52}$"
+        },
+        "did": {
+          "type": "string",
+          "pattern": "^did:(key|web):"
+        },
+        "keyEventLog": {
+          "type": "string",
+          "format": "uri"
+        },
+        "keyEventHash": {
+          "$ref": "#/$defs/multihash"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 128
+        }
+      }
+    },
+    "recipient": {
+      "type": "object",
+      "required": [
+        "name",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "type": {
+          "enum": [
+            "government-agency",
+            "law-enforcement",
+            "company",
+            "data-processor",
+            "vendor",
+            "attorney",
+            "other"
+          ],
+          "description": "Descriptive only. Carries no legal consequence and asserts nothing about the recipient's obligations."
+        },
+        "id": {
+          "type": "string"
+        },
+        "did": {
+          "type": "string",
+          "pattern": "^did:"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "contact": {
+          "type": "string"
+        },
+        "postalAddress": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "department": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "jurisdiction": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$"
+        }
+      }
+    },
+    "purpose": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Why this notice was sent to this recipient. Not a demand and not a request for information."
+    },
+    "issued": {
+      "$ref": "#/$defs/utcInstant"
+    },
+    "matchingIdentifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "namespace",
+          "value",
+          "salt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "namespace": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "salt": {
+            "type": "string",
+            "description": "base64url; opens the matching identifierCommitment in the signed policy."
+          }
+        }
+      },
+      "description": "PRIVATE. Present so the recipient can associate the policy with the right records, and only where that is genuinely needed. MUST NOT be copied into the published policy, any public page, transparency log, server log, or analytics."
+    },
+    "requestedTreatment": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "What the issuer asks the recipient to do. Must be phrased as a request qualified by applicable law, policy, contract and technical capability — never as an assertion of obligation."
+    },
+    "legalEffect": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "REQUIRED disclaimer. A notice that omits it would imply PRM supplies legal authority it does not."
+    },
+    "note": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "proof": {
+      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+    }
+  },
+  "$defs": {
+    "multihash": {
+      "type": "string",
+      "pattern": "^u[A-Za-z0-9_-]{40,}$"
+    },
+    "utcInstant": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+    }
+  }
+} as const
+
+export const deliverySchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-delivery-v1.schema.json",
+  "title": "PRM Delivery Record v1",
+  "description": "A signed record that the issuer delivered a specific notice packet to a specific recipient, by a stated method, at a stated time. The timestamp is USER-ASSERTED: it records what the issuer says they did, and is evidence of their claim rather than proof of receipt. Independent corroboration comes from the transparency log (when the record was published) and from private supporting evidence. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-DELIVERY-v1\\u0000'.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "noticeDigest",
+    "policyDigest",
+    "recipient",
+    "method",
+    "deliveredAt",
+    "recorded",
+    "proof"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "https://www.w3.org/ns/credentials/v2"
+        },
+        {
+          "const": "https://prm.dev/ns/policy/v1"
+        }
+      ],
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "type": {
+      "type": "array",
+      "contains": {
+        "const": "PRMDeliveryRecord"
+      },
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:prm:delivery:u[A-Za-z0-9_-]{40,}$"
+    },
+    "noticeDigest": {
+      "$ref": "#/$defs/multihash"
+    },
+    "policyDigest": {
+      "$ref": "#/$defs/multihash"
+    },
+    "manifestDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the proof-bundle manifest that was delivered, when a bundle accompanied the notice. Pins exactly which packet went out."
+    },
+    "packetDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the delivered PDF or other packet file, if one was produced."
+    },
+    "recipient": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "id": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "contact": {
+          "type": "string",
+          "description": "The address actually used, e.g. the email or postal address."
+        }
+      }
+    },
+    "method": {
+      "enum": [
+        "email",
+        "certified-mail",
+        "postal-mail",
+        "hand-delivery",
+        "web-form",
+        "other"
+      ]
+    },
+    "deliveredAt": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "USER-ASSERTED time of delivery. PRM does not and cannot witness this."
+    },
+    "recorded": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "When the issuer signed this record. Independently corroborated once the record is included in the transparency log."
+    },
+    "reference": {
+      "type": "string",
+      "maxLength": 256,
+      "description": "External tracking or reference id: certified mail number, message id, web form confirmation."
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "digest"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "smtp-receipt",
+              "email-headers",
+              "sent-message",
+              "usps-tracking",
+              "certified-mail-receipt",
+              "screenshot",
+              "web-form-confirmation",
+              "photo",
+              "other"
+            ]
+          },
+          "digest": {
+            "$ref": "#/$defs/multihash"
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      },
+      "description": "DIGESTS ONLY. The artifacts themselves stay in the encrypted personal ledger and are never published by default."
+    },
+    "proof": {
+      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+    }
+  },
+  "$defs": {
+    "multihash": {
+      "type": "string",
+      "pattern": "^u[A-Za-z0-9_-]{40,}$"
+    },
+    "utcInstant": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+    }
+  }
+} as const
+
+export const responseSchema = {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-response-v1.schema.json",
+  "title": "PRM Response Record v1",
+  "description": "A signed record that the issuer received (or did not receive) a response to a notice. PRM PRESERVES the response; it does not evaluate it. The status is the issuer's own characterisation, and carries no assertion that the recipient's legal position is right or wrong. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-RESPONSE-v1\\u0000'.",
+  "type": "object",
+  "required": [
+    "@context",
+    "type",
+    "noticeDigest",
+    "status",
+    "recorded",
+    "proof"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "https://www.w3.org/ns/credentials/v2"
+        },
+        {
+          "const": "https://prm.dev/ns/policy/v1"
+        }
+      ],
+      "items": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "type": {
+      "type": "array",
+      "contains": {
+        "const": "PRMResponseRecord"
+      },
+      "items": {
+        "type": "string"
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^urn:prm:response:u[A-Za-z0-9_-]{40,}$"
+    },
+    "noticeDigest": {
+      "$ref": "#/$defs/multihash"
+    },
+    "deliveryDigest": {
+      "$ref": "#/$defs/multihash"
+    },
+    "recipient": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "id": {
+          "type": "string"
+        },
+        "domain": {
+          "type": "string"
+        },
+        "contact": {
+          "type": "string"
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "acknowledged",
+        "accepted",
+        "partially-accepted",
+        "declined",
+        "no-response",
+        "superseded"
+      ],
+      "description": "The ISSUER'S characterisation of what came back. Not an adjudication, and PRM attaches no legal meaning to it."
+    },
+    "receivedAt": {
+      "$ref": "#/$defs/utcInstant",
+      "description": "Omitted for status 'no-response', where nothing arrived to date."
+    },
+    "recorded": {
+      "$ref": "#/$defs/utcInstant"
+    },
+    "responseDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "Digest of the recipient's actual response, if one was received and preserved. The artifact itself stays private unless the issuer chooses otherwise."
+    },
+    "responseMediaType": {
+      "type": "string",
+      "maxLength": 128
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 8000,
+      "description": "The issuer's own words about the response. PRM does not interpret them."
+    },
+    "proof": {
+      "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "no-response"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "receivedAt"
+          ]
+        }
+      },
+      "else": {
+        "required": [
+          "receivedAt"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "multihash": {
+      "type": "string",
+      "pattern": "^u[A-Za-z0-9_-]{40,}$"
+    },
+    "utcInstant": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"
+    }
+  }
+} as const
+
+export const allSchemas = [policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema, noticeSchema, deliverySchema, responseSchema]

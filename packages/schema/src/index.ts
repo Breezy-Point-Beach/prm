@@ -9,11 +9,15 @@ export * from './normalize.js'
 export * from './validate.js'
 export * from './prose.js'
 export * from './templates/alpr.js'
+export * from './notice-language.js'
 export {
   policySchema,
   authorizationSchema,
   keyEventSchema,
   ledgerEntrySchema,
+  noticeSchema,
+  deliverySchema,
+  responseSchema,
   allSchemas
 } from './generated/schemas.js'
 
@@ -23,7 +27,10 @@ export const SIGNING_DOMAINS = {
   authorization: 'PRM-AUTHZ-v1',
   keyEvent: 'PRM-KEYEVENT-v1',
   ledgerEntry: 'PRM-LEDGER-v1',
-  signedTreeHead: 'PRM-STH-v1'
+  signedTreeHead: 'PRM-STH-v1',
+  notice: 'PRM-NOTICE-v1',
+  delivery: 'PRM-DELIVERY-v1',
+  response: 'PRM-RESPONSE-v1'
 } as const
 
 /**
@@ -35,7 +42,10 @@ export const NON_HASHED_MEMBERS = {
   authorization: ['id', 'proof'],
   keyEvent: ['proof'],
   ledgerEntry: ['proof', 'logInclusion'],
-  signedTreeHead: ['signature']
+  signedTreeHead: ['signature'],
+  notice: ['id', 'proof'],
+  delivery: ['id', 'proof'],
+  response: ['id', 'proof']
 } as const
 
 export const PRM_CONTEXT = [

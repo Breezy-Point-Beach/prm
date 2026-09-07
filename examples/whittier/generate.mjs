@@ -32,7 +32,11 @@ import {
   hashString, leafHash, merkleRoot, inclusionProof, keyPairFromSeed, jcsBytes, hash, signBytes,
   signingMessage, encodeSignature
 } from '@prm/crypto'
-import { buildBundle, verifyBundle } from '@prm/verify'
+import { verifyProofBundle } from '@prm/verify'
+import {
+  buildNotice, buildDeliveryRecord, buildResponseRecord, buildProofBundle, serializeBundle,
+  renderNoticePdf
+} from '@prm/notice'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const local = process.argv.includes('--local')
@@ -304,43 +308,117 @@ async function main () {
     kind: 'authorization', created: grant.issued
   })
 
-  // ---- 7. Portable evidence bundle -----------------------------------------
-  const bundle = buildBundle({
-    generatedAt: now,
+  // ---- 7. Recipient-specific notice ----------------------------------------
+  // Distinct from the standing policy: the policy is public and general, this is targeted and
+  // carries the plate so the agency can find the right records. The plate is HERE and nowhere public.
+  const policyJson = JSON.stringify(policy, null, 2)
+  const notice = buildNotice({
     policy,
-    policyChain: [policy],
-    keyEventLog: [genesis],
-    ledgerEntries: entries,
-    signedTreeHead: sth,
-    logPublicKeyMultibase: logKey.publicKeyMultibase,
-    authorizations: [grant],
-    note:
-      `Notice delivered to ${AGENCY.name} by certified mail and to the ALPR vendor by email. ` +
-      'Timestamp evidence is attached by the PRM service after the tree head is anchored; this ' +
-      'example bundle carries none, so timestamp status reads as unproven.'
+    policyJson,
+    recipient: {
+      name: AGENCY.name,
+      type: 'law-enforcement',
+      department: 'Records Division',
+      domain: AGENCY.domain,
+      contact: AGENCY.contact,
+      postalAddress: AGENCY.postal,
+      jurisdiction: 'US-CA'
+    },
+    purpose: 'To place my standing personal data policy on record with the recipient.',
+    matchingIdentifiers: [{ namespace: plate.namespace, value: plate.value, salt: plate.salt }],
+    policyUrl: 'https://prm.app/u/user0001',
+    issued: local ? new Date() : new Date('2026-09-16T16:00:00Z')
+  }, keys.signing)
+
+  // ---- 8. Delivery record ---------------------------------------------------
+  const delivery = buildDeliveryRecord({
+    notice: notice.document,
+    noticeDigest: notice.digest,
+    recipient: { name: AGENCY.name, domain: AGENCY.domain, contact: AGENCY.postal },
+    method: 'certified-mail',
+    deliveredAt: local ? new Date() : new Date('2026-09-17T16:00:00Z'),
+    reference: local ? undefined : 'PLACEHOLDER-TRACKING-0000',
+    notes: 'Certified mail, return receipt requested. Receipt retained privately.',
+    recorded: local ? new Date() : new Date('2026-09-17T17:00:00Z')
+  }, keys.signing)
+
+  // ---- 9. Response record (optional) ---------------------------------------
+  // PRM preserves what came back and how the issuer characterised it. It does not evaluate whether
+  // the recipient's position is legally correct.
+  const response = buildResponseRecord({
+    noticeDigest: notice.digest,
+    deliveryDigest: delivery.digest,
+    recipient: { name: AGENCY.name },
+    status: 'acknowledged',
+    receivedAt: local ? new Date() : new Date('2026-09-24T15:00:00Z'),
+    notes: 'Placeholder: receipt acknowledged, no position stated on the individual objections.',
+    recorded: local ? new Date() : new Date('2026-09-24T16:00:00Z')
+  }, keys.signing)
+
+  // ---- 10. Portable evidence bundle ----------------------------------------
+  const bundle = buildProofBundle({
+    policy,
+    policyJson,
+    keyEventLogJson: JSON.stringify([genesis], null, 2),
+    noticeJson: notice.json,
+    noticeDigest: notice.digest,
+    policyChainJson: [{ version: policy.version, json: policyJson }],
+    ledgerJson: JSON.stringify(entries, null, 2),
+    signedTreeHeadJson: JSON.stringify(sth, null, 2),
+    deliveryJson: [delivery.json],
+    responseJson: [response.json],
+    generatedAt: local ? new Date() : new Date('2026-09-24T17:00:00Z'),
+    verifyCommand: 'npx @prm/cli verify notice.prmproof'
   })
 
-  // ---- 8. Write, then verify what we wrote ---------------------------------
+  // ---- 11. Write, then verify what we wrote --------------------------------
   mkdirSync(OUT, { recursive: true })
   const write = (name, data) =>
     writeFileSync(resolve(OUT, name), JSON.stringify(data, null, 2) + '\n')
 
   write('kel.json', [genesis])
-  write('policy.json', policy)
   write('ledger.json', entries)
   write('signed-tree-head.json', sth)
-  write('authorization-whittier-pd.json', grant)
-  write('evidence.prmproof', bundle)
-  writeFileSync(resolve(OUT, 'notice.md'), noticeLetter({ policy, policyDigest, accountId, plate }))
 
-  const result = verifyBundle(bundle, { now: new Date(local ? Date.now() : '2026-10-01T00:00:00Z') })
+  // NO trailing newline on any signed artifact. The byte digest recorded in the notice and the
+  // bundle manifest describes these exact bytes, so a stray newline written here would make the
+  // file on disk fail the very check the notice invites the recipient to run. The offline suite
+  // caught precisely that.
+  writeFileSync(resolve(OUT, 'policy.json'), policyJson)
+  writeFileSync(resolve(OUT, 'notice.json'), notice.json)
+  writeFileSync(resolve(OUT, 'delivery.json'), delivery.json)
+  writeFileSync(resolve(OUT, 'response.json'), response.json)
+  writeFileSync(resolve(OUT, 'notice.prmproof'), serializeBundle(bundle))
+  writeFileSync(resolve(OUT, 'cover-letter.md'), coverLetter({ policy, policyDigest, accountId, notice: notice.document }))
 
-  console.log(`\n  account      ${accountId}`)
-  console.log(`  policy       v${policy.version}  ${policyDigest}`)
-  console.log(`  chain        ${chainId}`)
-  console.log(`  ledger       ${entries.length} entries, root ${sth.rootHash}`)
-  console.log(`  pairwise id  ${grant.subjectRef.pairwiseId}  (for ${AGENCY.name})`)
-  console.log(`  written to   ${OUT}`)
+  const pdf = await renderNoticePdf({
+    policy,
+    policyJson,
+    notice: notice.document,
+    noticeDigest: notice.digest,
+    policyDigest: notice.document.policyDigest,
+    policyByteDigest: notice.document.policyByteDigest,
+    manifestDigest: bundle.manifestDigest,
+    verificationUrl: 'https://prm.app/u/user0001',
+    verifyCommand: 'npx @prm/cli verify notice.prmproof',
+    includeMatchingIdentifiers: true,
+    generatedAt: local ? new Date() : new Date('2026-09-16T16:00:00Z')
+  })
+  writeFileSync(resolve(OUT, 'notice.pdf'), pdf)
+
+  const result = verifyProofBundle(bundle, {
+    now: new Date(local ? Date.now() : '2026-10-01T00:00:00Z')
+  })
+
+  console.log(`\n  account       ${accountId}`)
+  console.log(`  policy        v${policy.version}  ${policyDigest}`)
+  console.log(`  policy bytes  ${notice.document.policyByteDigest}`)
+  console.log(`  notice        ${notice.digest}`)
+  console.log(`  delivery      ${delivery.digest}  (${delivery.document.method})`)
+  console.log(`  response      ${response.digest}  (${response.document.status})`)
+  console.log(`  bundle        ${bundle.manifestDigest}  ${bundle.manifest.entries.length} artifacts`)
+  console.log(`  PDF           ${(pdf.length / 1024).toFixed(1)} KB`)
+  console.log(`  written to    ${OUT}`)
   console.log(`\n  bundle verifies: ${result.valid ? 'YES' : 'NO'}`)
   if (!result.valid) {
     for (const e of result.errors) console.log(`    error: ${e}`)
@@ -361,71 +439,64 @@ function strip (entry) {
   return rest
 }
 
-function noticeLetter ({ policy, policyDigest, accountId, plate }) {
+/**
+ * The cover letter.
+ *
+ * DELIBERATELY NOT A RECORDS REQUEST. Earlier correspondence already asked about retention periods,
+ * sharing lists, and technical capability; repeating those here would turn a focused notice into a
+ * second information request, and invite it to be routed and answered as one. This packet is a
+ * notice and an evidentiary artifact.
+ */
+function coverLetter ({ policy, policyDigest, accountId, notice }) {
   return `# Notice of Personal Data Policy
 
 **To:** ${AGENCY.name}
-**Attn:** Records Division / Custodian of Records
+**Attn:** Records Division
 **Address:** ${AGENCY.postal}
 **Copy to:** ${VENDOR.name} — ${VENDOR.contact}
 
 **From:** PRM account \`${accountId}\`
-**Date:** ${policy.effectiveDate.slice(0, 10)}
-**Re:** Personal data policy and records request concerning automated license plate reader data
+**Date:** ${notice.issued.slice(0, 10)}
+**Re:** Personal data policy concerning automated license plate reader records
 
 ---
 
-I am writing about automated license plate reader (ALPR) data your department collects, and about
-records associated with one vehicle I operate.
+${notice.legalEffect.split('\n\n')[0]}
 
-Enclosed is my personal data policy. In short: **I do not object to the plate scan itself, or to the
-immediate hotlist comparison at the moment of capture.** I do object to what happens afterwards — the
-retention of reads that produced no match, the accumulation of those reads into a searchable history
-of my movements, their correlation with other databases, their disclosure to other agencies or
-sharing networks, their use in profiling or movement inference, and their use in training machine
-learning models.
+I recognize that lawful initial observation may occur. My policy distinguishes that initial
+observation from subsequent retention, historical search, aggregation, correlation, sharing,
+profiling, inference, commercialization, and other secondary processing.
 
-The enclosed document is signed and independently timestamped, so that you or any third party can
-confirm precisely what it said and on what date, without relying on me or on any service.
+## What I am asking
 
-**I would also like to request, as a separate matter:**
+${notice.requestedTreatment}
 
-1. A copy of your ALPR usage and privacy policy.
-2. The reads currently associated with the vehicle identified in the enclosed authorization.
-3. Your retention period for reads that produce no hotlist match.
-4. A list of the agencies, networks, or vendors with whom ALPR data has been shared.
-
-I recognize that some of what I have asked for may be subject to statutory requirements that override
-my preferences, and that some restrictions I have stated may not be ones you are obliged to honour. I
-am not asserting otherwise. A partial response that tells me which restrictions your systems can and
-cannot honour, and why, is more useful to me than no response.
+If any portion of this policy cannot or will not be honored, this notice should still be treated as a
+record of my express position and non-consent regarding those downstream uses.
 
 ## Enclosures
 
 | File | What it is |
 |---|---|
+| \`notice.pdf\` | This notice, in full |
 | \`policy.json\` | The signed policy. Digest \`${policyDigest}\` |
-| \`kel.json\` | The key history proving the policy was signed by this account |
-| \`authorization-whittier-pd.json\` | Identifies the vehicle to you, and to no one else |
-| \`evidence.prmproof\` | A single-file evidence bundle covering all of the above |
-| \`notice.md\` | This letter |
+| \`notice.json\` | The signed recipient-specific notice |
+| \`kel.json\` | Key history proving the policy was signed by this account |
+| \`notice.prmproof\` | A single-file evidence bundle covering all of the above |
 
-## Verifying this notice independently
+## Verifying this independently
 
 No PRM service is required, and none is trusted:
 
 \`\`\`
-npx @prm/cli verify evidence.prmproof
+npx @prm/cli verify notice.prmproof
 \`\`\`
-
-Vehicle identified to you: \`${plate.value}\`
-(The published policy contains only a salted commitment to this value. Disclosing it to you does not
-disclose it to anyone else, and no PRM server holds it.)
 
 ---
 
-*This document records my instructions and the date I gave them. It does not purport to create legal
-rights that do not already exist.*
+*This document records my instructions and the date I gave them. It does not create legal rights or
+obligations that do not otherwise exist, and nothing in it overrides a valid court order, statutory
+mandate, or other controlling legal authority.*
 `
 }
 

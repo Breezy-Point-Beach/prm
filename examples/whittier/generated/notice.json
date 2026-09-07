@@ -1,0 +1,50 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://prm.dev/ns/policy/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "PRMNotice"
+  ],
+  "policyChainId": "urn:prm:chain:uEiAS72lEsH_jjv-pVEQDAsha8xgPHEJ_5leXHgGr65hg-Q",
+  "policyDigest": "uEiC9_iVQZ_-ozuxuwrl4Uzo79pURYmwFNpB156ELrcV-rg",
+  "policyByteDigest": "uEiDpKM6hLHAqJeMEKx5bJAGEdP_wbjmkOepSc3T1A7mC6Q",
+  "policyVersion": 1,
+  "policyUrl": "https://prm.app/u/user0001",
+  "issuer": {
+    "id": "prm:eob7fei7x3ji5vnqu4kezaeh65",
+    "did": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
+    "keyEventLog": "https://prm.app/u/user0001/kel.json",
+    "keyEventHash": "uEiAjg_KRH77SjtWwpxRMgIf3TJHH96Y_kkV4j3QSA0sOUg"
+  },
+  "recipient": {
+    "name": "City of Whittier Police Department",
+    "type": "law-enforcement",
+    "department": "Records Division",
+    "domain": "whittierpd.org",
+    "contact": "records@whittierpd.org",
+    "postalAddress": "Records Division, Whittier Police Department, 13200 Penn St, Whittier, CA 90602",
+    "jurisdiction": "US-CA"
+  },
+  "purpose": "To place my standing personal data policy on record with the recipient.",
+  "issued": "2026-09-16T16:00:00Z",
+  "matchingIdentifiers": [
+    {
+      "namespace": "us-license-plate",
+      "value": "US-CA-0EXAMPLE",
+      "salt": "qMNe3DAjqBbp0fBQzvWTJw"
+    }
+  ],
+  "requestedTreatment": "Please associate this Personal Rights Management policy with records reasonably identifiable as relating to me and honor the stated instructions and objections to the extent permitted by applicable law, policy, contract, and technical capability.",
+  "legalEffect": "Personal Rights Management records my standing instructions, authorizations, and objections concerning downstream processing of personal information associated with me. This notice does not independently create legal rights or obligations where none otherwise exist, and nothing in it overrides a valid court order, statutory mandate, or other controlling legal authority.\n\nIf any portion of this policy cannot or will not be honored, this notice should still be treated as a record of my express position and non-consent regarding those downstream uses.",
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-jcs-2022",
+    "created": "2026-09-16T16:00:00Z",
+    "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z57eA4qdq4An8fVYVBCFgr5tZtxTuiRcUo7zUMEXf6vRC4EL9a9Sy7H2hF4ZdgzBx15ur39cCJ3BGYoHqn2h1Kbje"
+  },
+  "id": "urn:prm:notice:uEiChZOKuWZmJ3mynJqdmnjQk5NFRrn07VjGxgvS35A53wQ"
+}

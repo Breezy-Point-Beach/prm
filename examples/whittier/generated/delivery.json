@@ -1,0 +1,31 @@
+{
+  "@context": [
+    "https://www.w3.org/ns/credentials/v2",
+    "https://prm.dev/ns/policy/v1"
+  ],
+  "type": [
+    "VerifiableCredential",
+    "PRMDeliveryRecord"
+  ],
+  "noticeDigest": "uEiChZOKuWZmJ3mynJqdmnjQk5NFRrn07VjGxgvS35A53wQ",
+  "policyDigest": "uEiC9_iVQZ_-ozuxuwrl4Uzo79pURYmwFNpB156ELrcV-rg",
+  "recipient": {
+    "name": "City of Whittier Police Department",
+    "domain": "whittierpd.org",
+    "contact": "Records Division, Whittier Police Department, 13200 Penn St, Whittier, CA 90602"
+  },
+  "method": "certified-mail",
+  "deliveredAt": "2026-09-17T16:00:00Z",
+  "recorded": "2026-09-17T17:00:00Z",
+  "reference": "PLACEHOLDER-TRACKING-0000",
+  "notes": "Certified mail, return receipt requested. Receipt retained privately.",
+  "proof": {
+    "type": "DataIntegrityProof",
+    "cryptosuite": "eddsa-jcs-2022",
+    "created": "2026-09-17T17:00:00Z",
+    "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
+    "proofPurpose": "assertionMethod",
+    "proofValue": "z3hdhNqvzeakbe8oQgEtEFPuP5aV4HpmVohjpqdKXZnFXU6xB8JMTf4d31mq3uTJQzpm6q6rU6peyWA9nGCMLYxRL"
+  },
+  "id": "urn:prm:delivery:uEiATiGNyXmf5d1AjBiLaemWIcfSKkoThu4iX7VAjsMi89A"
+}

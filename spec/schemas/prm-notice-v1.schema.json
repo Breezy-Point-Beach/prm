@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prm.dev/schemas/prm-notice-v1.schema.json",
+  "title": "PRM Recipient Notice v1",
+  "description": "A signed, recipient-specific notice directing a standing Personal Data Policy at one named organization. Distinct from the policy itself: the policy is public and general, a notice is targeted and may carry a private matching identifier that MUST NOT appear in the published policy. Digest = SHA-256(JCS(doc minus 'id' and 'proof')); signature domain prefix 'PRM-NOTICE-v1\\u0000'.",
+  "type": "object",
+  "required": ["@context", "type", "policyChainId", "policyDigest", "policyByteDigest", "policyVersion", "issuer", "recipient", "issued", "requestedTreatment", "legalEffect", "proof"],
+  "additionalProperties": false,
+  "properties": {
+    "@context": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "https://www.w3.org/ns/credentials/v2" },
+        { "const": "https://prm.dev/ns/policy/v1" }
+      ],
+      "items": { "type": "string", "format": "uri" }
+    },
+    "type": { "type": "array", "contains": { "const": "PRMNotice" }, "items": { "type": "string" } },
+    "id": { "type": "string", "pattern": "^urn:prm:notice:u[A-Za-z0-9_-]{40,}$" },
+
+    "policyChainId": { "type": "string", "pattern": "^urn:prm:chain:u[A-Za-z0-9_-]{40,}$" },
+    "policyDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "PROTOCOL identity of the policy: SHA-256(JCS(policy minus id, proof)). Stable across reserialization."
+    },
+    "policyByteDigest": {
+      "$ref": "#/$defs/multihash",
+      "description": "STORAGE identity: SHA-256 of the exact policy bytes delivered. Changes if a single byte moves. Recording both is what lets a recipient prove which serialization they received."
+    },
+    "policyVersion": { "type": "integer", "minimum": 1 },
+    "policyUrl": { "type": "string", "format": "uri" },
+
+    "issuer": {
+      "type": "object",
+      "required": ["id", "did", "keyEventHash"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^prm:[a-z2-7]{26,52}$" },
+        "did": { "type": "string", "pattern": "^did:(key|web):" },
+        "keyEventLog": { "type": "string", "format": "uri" },
+        "keyEventHash": { "$ref": "#/$defs/multihash" },
+        "displayName": { "type": "string", "maxLength": 128 }
+      }
+    },
+
+    "recipient": {
+      "type": "object",
+      "required": ["name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "type": {
+          "enum": ["government-agency", "law-enforcement", "company", "data-processor", "vendor", "attorney", "other"],
+          "description": "Descriptive only. Carries no legal consequence and asserts nothing about the recipient's obligations."
+        },
+        "id": { "type": "string" },
+        "did": { "type": "string", "pattern": "^did:" },
+        "domain": { "type": "string" },
+        "contact": { "type": "string" },
+        "postalAddress": { "type": "string", "maxLength": 512 },
+        "department": { "type": "string", "maxLength": 256 },
+        "jurisdiction": { "type": "string", "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$" }
+      }
+    },
+
+    "purpose": {
+      "type": "string",
+      "maxLength": 2000,
+      "description": "Why this notice was sent to this recipient. Not a demand and not a request for information."
+    },
+    "issued": { "$ref": "#/$defs/utcInstant" },
+
+    "matchingIdentifiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["namespace", "value", "salt"],
+        "additionalProperties": false,
+        "properties": {
+          "namespace": { "type": "string" },
+          "value": { "type": "string" },
+          "salt": { "type": "string", "description": "base64url; opens the matching identifierCommitment in the signed policy." }
+        }
+      },
+      "description": "PRIVATE. Present so the recipient can associate the policy with the right records, and only where that is genuinely needed. MUST NOT be copied into the published policy, any public page, transparency log, server log, or analytics."
+    },
+
+    "requestedTreatment": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "What the issuer asks the recipient to do. Must be phrased as a request qualified by applicable law, policy, contract and technical capability — never as an assertion of obligation."
+    },
+    "legalEffect": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000,
+      "description": "REQUIRED disclaimer. A notice that omits it would imply PRM supplies legal authority it does not."
+    },
+    "note": { "type": "string", "maxLength": 4000 },
+
+    "proof": { "$ref": "https://prm.dev/schemas/prm-policy-v1.schema.json#/$defs/dataIntegrityProof" }
+  },
+  "$defs": {
+    "multihash": { "type": "string", "pattern": "^u[A-Za-z0-9_-]{40,}$" },
+    "utcInstant": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$" }
+  }
+}
