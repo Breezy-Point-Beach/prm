@@ -19,5 +19,5 @@
     "@prm/crypto": "workspace:*",
     "@prm/schema": "workspace:*"
   },
-  "devDependencies": { "typescript": "^5.7.2", "vitest": "^2.1.8" }
+  "devDependencies": { "typescript": "^5.7.2", "vitest": "^3.2.6" }
 }
