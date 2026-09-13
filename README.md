@@ -38,6 +38,15 @@ files, signatures, ledger, and proofs remain independently verifiable.
 
 ---
 
+## Verify a document without us
+
+```
+npx @rightsroot/prm-cli verify notice.prmproof
+npx @rightsroot/prm-cli verify policy.json --kel kel.json --offline
+```
+
+One self-contained file, no dependencies, no network. Source: `packages/cli`.
+
 ## Documentation map
 
 | # | Document | Covers |

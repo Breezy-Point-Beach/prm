@@ -455,7 +455,7 @@ export default function PublishPage () {
           <LogEvidence logged={logged} onRefresh={refreshEvidence} refreshing={refreshing} />
 
           <h3>Anyone can check this without us</h3>
-          <pre>npx @prm/cli verify policy.json --kel kel.json --offline</pre>
+          <pre>npx @rightsroot/prm-cli verify policy.json --kel kel.json --offline</pre>
           <p className="small muted">
             Download both files from your page. Verification runs offline and does not contact PRM.
           </p>

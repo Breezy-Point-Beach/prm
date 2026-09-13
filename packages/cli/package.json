@@ -1,21 +1,24 @@
 {
-  "name": "@prm/cli",
+  "name": "@rightsroot/prm-cli",
   "version": "0.1.0",
-  "description": "PRM command-line tool: verify policies, key events, ledgers and .prmproof bundles offline, without contacting PRM.",
+  "description": "Verify PRM policies, key events, ledgers and .prmproof bundles offline \u2014 without contacting RightsRoot or anyone else.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "prm": "./dist/cli.js"
+    "prm": "./dist/prm.mjs"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist/prm.mjs",
+    "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js",
+    "build": "tsc -p tsconfig.json && chmod +x dist/cli.js && pnpm bundle",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "bundle": "node scripts/bundle.mjs",
+    "prepack": "pnpm bundle"
   },
   "dependencies": {
     "@prm/crypto": "workspace:*",
@@ -24,7 +27,28 @@
   },
   "devDependencies": {
     "@prm/notice": "workspace:*",
+    "esbuild": "0.25.4",
     "typescript": "^5.7.2",
     "vitest": "^5.0.0"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Breezy-Point-Beach/prm.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://rightsroot.org/spec/prm",
+  "keywords": [
+    "prm",
+    "rightsroot",
+    "verify",
+    "rfc3161",
+    "merkle",
+    "personal-data-policy"
+  ]
 }

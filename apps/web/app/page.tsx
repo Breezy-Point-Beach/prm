@@ -49,7 +49,7 @@ export default function Home () {
           Anything published here can be checked offline with an open-source verifier and no request
           to this site. If RightsRoot disappeared tomorrow, your documents would still verify.
         </p>
-        <pre>npx @prm/cli verify policy.json --kel kel.json --offline</pre>
+        <pre>npx @rightsroot/prm-cli verify policy.json --kel kel.json --offline</pre>
       </div>
 
       <p className="small muted" style={{ marginTop: '2rem' }}>

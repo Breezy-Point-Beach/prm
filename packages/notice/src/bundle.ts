@@ -155,7 +155,7 @@ export function buildProofBundle (input: BundleInput): PrmProofBundleV2 {
     }
   }
 
-  const verifyCommand = input.verifyCommand ?? 'npx @prm/cli verify notice.prmproof'
+  const verifyCommand = input.verifyCommand ?? 'npx @rightsroot/prm-cli verify notice.prmproof'
   add(PATHS.verification, verificationInstructions(verifyCommand), 'text/plain',
     'How to verify everything in this bundle without contacting PRM.')
   add(PATHS.readme, readme(input, verifyCommand), 'text/plain',
@@ -210,6 +210,13 @@ Nothing below requires the PRM website, an account, or a network connection.
 
    Exit code 0 means verified, 1 means verified with warnings (for example, no
    timestamp evidence was included), 2 means it failed.
+
+   The package is a single file with no dependencies. To run the same tool from
+   source instead of npm:
+
+     git clone https://github.com/Breezy-Point-Beach/prm && cd prm
+     pnpm install && pnpm build
+     node packages/cli/dist/prm.mjs verify <bundle>
 
 
 2. WHAT THAT CHECKS

@@ -72,9 +72,13 @@ Workspace packages keep the `@prm/*` scope: they implement the protocol, and `@p
 protocol verifier that ought to be usable by anyone, including people with no relationship to
 RightsRoot.
 
-**Unverified:** whether the `@prm` npm scope is actually available. If it is not, the fallback is
-`@rightsroot/prm-*` — the scope name changes, the import surface does not. Worth checking before the
-first publish, since renaming a scope afterwards is disruptive.
+**Verified 2026-09-13 — the `@prm` npm scope is NOT available.** It belongs to an unrelated,
+deprecated package (`@prm/cli` is the Portland Rescue Mission CLI). Worse than unavailable: for a
+while every verification instruction in the product said `npx @prm/cli`, which installed and ran that
+stranger's package silently. The fallback named above is now in force: the published CLI is
+**`@rightsroot/prm-cli`** (binary `prm`), shipped as a single self-contained file so it has no
+dependencies that could resolve to anyone else's `@prm/*`. The workspace packages keep their
+internal `@prm/*` names; they are not published, and nothing outside this repository imports them.
 
 ## Repository
 

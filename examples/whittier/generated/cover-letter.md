@@ -40,7 +40,7 @@ record of my express position and non-consent regarding those downstream uses.
 No PRM service is required, and none is trusted:
 
 ```
-npx @prm/cli verify notice.prmproof
+npx @rightsroot/prm-cli verify notice.prmproof
 ```
 
 ---

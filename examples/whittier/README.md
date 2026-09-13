@@ -79,7 +79,7 @@ The same bundle has been verified by the CLI inside a Linux network namespace wi
 ## Verifying, as a recipient
 
 ```console
-npx @prm/cli verify notice.prmproof
+npx @rightsroot/prm-cli verify notice.prmproof
 ```
 
 No PRM service is contacted, and none is trusted. `verification/instructions.txt` inside the bundle

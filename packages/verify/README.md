@@ -16,8 +16,8 @@ const result = verifyPolicy(policyJson, { keyEventLog })
 Or from the command line, with no install:
 
 ```console
-npx @prm/cli verify policy.json --kel kel.json --offline
-npx @prm/cli verify evidence.prmproof
+npx @rightsroot/prm-cli verify policy.json --kel kel.json --offline
+npx @rightsroot/prm-cli verify evidence.prmproof
 ```
 
 ## Why this package exists
