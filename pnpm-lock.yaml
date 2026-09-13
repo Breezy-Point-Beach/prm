@@ -28,7 +28,7 @@ importers:
         version: 8.2.2(@types/node@22.20.2)(esbuild@0.25.4)
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   apps/web:
     dependencies:
@@ -80,7 +80,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   examples/whittier:
     dependencies:
@@ -98,20 +98,19 @@ importers:
         version: link:../../packages/verify
 
   packages/cli:
-    dependencies:
+    devDependencies:
       '@prm/crypto':
         specifier: workspace:*
         version: link:../crypto
+      '@prm/notice':
+        specifier: workspace:*
+        version: link:../notice
       '@prm/schema':
         specifier: workspace:*
         version: link:../schema
       '@prm/verify':
         specifier: workspace:*
         version: link:../verify
-    devDependencies:
-      '@prm/notice':
-        specifier: workspace:*
-        version: link:../notice
       esbuild:
         specifier: 0.25.4
         version: 0.25.4
@@ -120,7 +119,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   packages/crypto:
     dependencies:
@@ -142,7 +141,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   packages/notice:
     dependencies:
@@ -173,7 +172,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   packages/schema:
     dependencies:
@@ -189,7 +188,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   packages/vault:
     dependencies:
@@ -220,7 +219,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
   packages/verify:
     dependencies:
@@ -236,7 +235,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^5.0.0
-        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2))
+        version: 5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
 
 packages:
 
@@ -1774,7 +1773,7 @@ snapshots:
       '@vercel/cli-exec': 1.0.1
       jose: 5.10.0
 
-  '@vitest/mocker@5.0.0(vite@8.2.2(@types/node@22.20.2))':
+  '@vitest/mocker@5.0.0(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.0
@@ -2229,10 +2228,10 @@ snapshots:
       esbuild: 0.25.4
       fsevents: 2.3.3
 
-  vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)):
+  vitest@5.0.0(@types/node@22.20.2)(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.0(vite@8.2.2(@types/node@22.20.2))
+      '@vitest/mocker': 5.0.0(vite@8.2.2(@types/node@22.20.2)(esbuild@0.25.4))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0

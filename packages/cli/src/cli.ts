@@ -9,6 +9,7 @@
  * This tool never makes a network request, in any mode. `--offline` is accepted for clarity and to
  * make the guarantee explicit in scripts, but it changes nothing: offline is the only mode there is.
  */
+import { realpathSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 import { cmdVerify, cmdDigest, cmdInspect, cmdVerifyChain, UsageError, type CommandResult } from './commands.js'
 import { bold, dim } from './render.js'
@@ -139,6 +140,8 @@ export function main (argv: string[]): number {
 
 // Only auto-run when invoked as a program, so the module stays importable by tests.
 const entry = process.argv[1]
-if (entry !== undefined && import.meta.url === pathToFileURL(entry).href) {
+// realpath: a bin is reached through node_modules/.bin/prm, a symlink, while import.meta.url is
+// the real file. Comparing the two unresolved made an installed `prm` exit silently.
+if (entry !== undefined && import.meta.url === pathToFileURL(realpathSync(entry)).href) {
   process.exitCode = main(process.argv.slice(2))
 }
