@@ -7,9 +7,9 @@
     "VerifiableCredential",
     "PRMNotice"
   ],
-  "policyChainId": "urn:prm:chain:uEiAn4zfGoS7XwqrvlllM_DdOeqFeumqrIhOlh5vQlTp3kw",
-  "policyDigest": "uEiApNabq-0lnrwSeusO-io4zprjILwGqX5KtAxazF4onIA",
-  "policyByteDigest": "uEiBZWYQdCsYyGctmdFzNtKRA732cdFBfMwl302RLuhnXqA",
+  "policyChainId": "urn:prm:chain:uEiDvRgzy0aV11g-h-BuMD9gbYTrA3EP7eKrFyeOeyn_VGw",
+  "policyDigest": "uEiCCVYqo5goptwm4lS1RN_8WgOwJ5A8un4JTasreIyS9JA",
+  "policyByteDigest": "uEiCKt6706NwzOf5Som7k6H20_z_DEh6Gwq8rH-IhM8yEeQ",
   "policyVersion": 1,
   "policyUrl": "https://rightsroot.com/u/user0001",
   "issuer": {
@@ -44,7 +44,7 @@
     "created": "2026-09-16T16:00:00Z",
     "verificationMethod": "did:key:z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH#z6MkfCwPTWq3SKbw4AVj7j8t8oFBiFp6CvZiTnXAw24nVkLH",
     "proofPurpose": "assertionMethod",
-    "proofValue": "zE7bKCTmMtpfwJ42LzWE8JbrPV7xShayv4DYMixeEoNh1iF7Ma4oZr2WfJToD46hHRYnjx1UaSWFABeB82vFginx"
+    "proofValue": "zyd8ikNvfNrXgHEhhmehd635XtLTokRLRQC82mTmccJyCBCQGEhdx1dPAFCxmEtZkGbpaAYpUe73bwuaBJqr8R6e"
   },
-  "id": "urn:prm:notice:uEiAl1IInO9WpSRUDdyeMXECasrlzjC5sjzfN94TOr4B2Bg"
+  "id": "urn:prm:notice:uEiC5IVcL4rLIEItGi5JPCBeTyfp__1e7h9yL3Z_vJO3tRg"
 }

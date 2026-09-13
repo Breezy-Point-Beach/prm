@@ -30,7 +30,7 @@ record of my express position and non-consent regarding those downstream uses.
 | File | What it is |
 |---|---|
 | `notice.pdf` | This notice, in full |
-| `policy.json` | The signed policy. Digest `uEiApNabq-0lnrwSeusO-io4zprjILwGqX5KtAxazF4onIA` |
+| `policy.json` | The signed policy. Digest `uEiCCVYqo5goptwm4lS1RN_8WgOwJ5A8un4JTasreIyS9JA` |
 | `notice.json` | The signed recipient-specific notice |
 | `kel.json` | Key history proving the policy was signed by this account |
 | `notice.prmproof` | A single-file evidence bundle covering all of the above |

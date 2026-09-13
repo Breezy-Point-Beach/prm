@@ -1,17 +1,25 @@
 const STEPS = [
-  { id: 'create', label: '1. Create' },
-  { id: 'author', label: '2. Author' },
-  { id: 'publish', label: '3. Sign & publish' }
+  { id: 'create', label: 'Create' },
+  { id: 'author', label: 'Author' },
+  { id: 'publish', label: 'Sign & publish' }
 ] as const
 
-export function Steps ({ current }: { current: (typeof STEPS)[number]['id'] }) {
+type StepId = (typeof STEPS)[number]['id']
+
+/** Progress through the three screens. Steps before the current one render as done. */
+export function Steps ({ current }: { current: StepId }) {
+  const at = STEPS.findIndex((s) => s.id === current)
   return (
-    <nav className="steps" aria-label="Progress">
-      {STEPS.map((s, i) => (
-        <span key={s.id} className={s.id === current ? 'on' : ''}>
-          {s.label}{i < STEPS.length - 1 ? '  ›' : ''}
-        </span>
-      ))}
-    </nav>
+    <ol className="steps" aria-label="Progress">
+      {STEPS.map((s, i) => {
+        const state = i < at ? 'done' : i === at ? 'on' : ''
+        return (
+          <li key={s.id} className={`step ${state}`} aria-current={i === at ? 'step' : undefined}>
+            <span className="step-index" aria-hidden="true"><span>{i + 1}</span></span>
+            {s.label}
+          </li>
+        )
+      })}
+    </ol>
   )
 }

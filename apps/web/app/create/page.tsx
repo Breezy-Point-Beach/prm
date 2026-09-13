@@ -1,12 +1,16 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   createAccount, backupChallengePositions, checkBackupChallenge, type NewAccount
 } from '@prm/vault'
 import { verifyKeyEventLog } from '@prm/verify'
-import { sealAccount, saveAccount, setUnlocked, hasAccount } from '../../lib/client/session'
+import { deriveAccountId } from '@prm/crypto'
+import {
+  sealAccount, saveAccount, setUnlocked, hasAccount, getGenesis, getHandle, forgetEverything
+} from '../../lib/client/session'
 import { Steps } from '../../components/Steps'
 
 /**
@@ -18,12 +22,24 @@ import { Steps } from '../../components/Steps'
  *
  * The backup challenge is BLOCKING by design. The dominant failure mode of a system with no provider
  * recovery is not key theft, it is a user who skipped writing the phrase down and lost their account.
+ *
+ * THIS PAGE MUST NEVER OVERWRITE AN EXISTING VAULT. A device that already holds an identity shows
+ * that identity and offers to write a policy; creating a second key is only reachable after the user
+ * has explicitly forgotten the first. Both `generate` and `seal` re-check this independently of the
+ * UI stage, because the stage is a rendering decision and the invariant is not.
  */
 type Stage = 'intro' | 'phrase' | 'challenge' | 'passphrase' | 'done'
 
+const FORGET_WORD = 'forget'
+
 export default function CreatePage () {
   const router = useRouter()
-  const [stage, setStage] = useState<Stage>(hasAccount() ? 'done' : 'intro')
+  // null until mounted. localStorage does not exist during server rendering, and deciding the stage
+  // from it during render made the server say "intro" while the client said "done". React discards
+  // the server tree on that mismatch — and in the gap a returning user briefly saw a live "Generate
+  // my key" button, which, followed through, would have replaced their vault.
+  const [stage, setStage] = useState<Stage | null>(null)
+  const [existing, setExisting] = useState<{ accountId: string; handle: string | null } | null>(null)
   const [account, setAccount] = useState<NewAccount | null>(null)
   const [positions, setPositions] = useState<number[]>([])
   const [answers, setAnswers] = useState<Record<number, string>>({})
@@ -32,11 +48,28 @@ export default function CreatePage () {
   const [confirm, setConfirm] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [forgetText, setForgetText] = useState('')
+  const [forgetOpen, setForgetOpen] = useState(false)
 
   const words = useMemo(() => account?.backupPhrase.split(' ') ?? [], [account])
 
+  useEffect(() => {
+    if (!hasAccount()) { setStage('intro'); return }
+    const genesis = getGenesis()
+    setExisting({ accountId: genesis ? deriveAccountId(genesis) : '', handle: getHandle() })
+    setStage('done')
+  }, [])
+
+  function refuseOverwrite (): boolean {
+    if (!hasAccount()) return false
+    setError('This device already holds an identity. To create a different one, forget this device first.')
+    setStage('done')
+    return true
+  }
+
   function generate () {
     setError(null)
+    if (refuseOverwrite()) return
     const created = createAccount({ deviceLabel: 'this device' })
     // Never publish an account whose own key event log does not verify.
     const check = verifyKeyEventLog([created.genesis])
@@ -64,6 +97,7 @@ export default function CreatePage () {
     setError(null)
     if (passphrase.length < 10) { setError('Use at least 10 characters.'); return }
     if (passphrase !== confirm) { setError('The two passphrases do not match.'); return }
+    if (refuseOverwrite()) return
 
     setBusy(true)
     // Argon2id at 64 MiB blocks the main thread for about a second. Yield first so the button state
@@ -73,12 +107,34 @@ export default function CreatePage () {
       const vault = sealAccount(account.masterSeed, passphrase, account.accountId)
       saveAccount({ vault, genesis: account.genesis })
       setUnlocked(account.masterSeed)
+      setExisting({ accountId: account.accountId, handle: null })
       setStage('done')
     } catch (e) {
       setError((e as Error).message)
     } finally {
       setBusy(false)
     }
+  }
+
+  function forget () {
+    if (forgetText.trim().toLowerCase() !== FORGET_WORD) return
+    forgetEverything()
+    setExisting(null)
+    setAccount(null)
+    setForgetText('')
+    setForgetOpen(false)
+    setError(null)
+    setStage('intro')
+  }
+
+  if (stage === null) {
+    return (
+      <main>
+        <Steps current="create" />
+        <h1>Create your identity</h1>
+        <div className="skeleton" aria-hidden="true" />
+      </main>
+    )
   }
 
   return (
@@ -88,13 +144,13 @@ export default function CreatePage () {
 
       {stage === 'intro' && (
         <>
-          <p className="muted">
+          <p className="lede">
             Your signing key is created in this browser and never sent anywhere. That is what lets
             anyone check your policy without trusting us — and it is also why we cannot recover it
             for you.
           </p>
           <div className="panel">
-            <h3 style={{ marginTop: 0 }}>Before you start</h3>
+            <h3>Before you start</h3>
             <p className="small">
               You will be shown 24 words. They are the <b>only</b> way to recover this account. Write
               them on paper. We will ask you for three of them before you can continue.
@@ -105,17 +161,20 @@ export default function CreatePage () {
             </p>
           </div>
           {error && <div className="note bad small">{error}</div>}
-          <div className="row"><button onClick={generate}>Generate my key</button></div>
-          <p className="small muted" style={{ marginTop: '1rem' }}>
-            By continuing you agree to the <a href="/terms">Terms</a>. We collect no account details
-            — see <a href="/privacy">Privacy</a>.
+          <div className="row">
+            <button onClick={generate}>Generate my key</button>
+            <Link href="/restore" className="btn secondary">I already have 24 words</Link>
+          </div>
+          <p className="small muted" style={{ marginTop: '1.25rem' }}>
+            By continuing you agree to the <Link href="/terms">Terms</Link>. We collect no account
+            details — see <Link href="/privacy">Privacy</Link>.
           </p>
         </>
       )}
 
       {stage === 'phrase' && account && (
         <>
-          <p>Write these 24 words down, in order, on paper.</p>
+          <p className="lede">Write these 24 words down, in order, on paper.</p>
           <div className="words">
             {words.map((w, i) => (
               <div className="word" key={i}><b>{i + 1}</b>{w}</div>
@@ -133,17 +192,19 @@ export default function CreatePage () {
 
       {stage === 'challenge' && account && (
         <>
-          <p>Confirm you have the phrase. Type the words at these positions.</p>
-          {positions.map((p) => (
-            <div key={p}>
-              <label htmlFor={`w${p}`}>Word {p}</label>
-              <input
-                id={`w${p}`} type="text" autoComplete="off" autoCapitalize="none" spellCheck={false}
-                value={answers[p] ?? ''}
-                onChange={(e) => setAnswers({ ...answers, [p]: e.target.value })}
-              />
-            </div>
-          ))}
+          <p className="lede">Confirm you have the phrase. Type the words at these positions.</p>
+          <div className="panel">
+            {positions.map((p) => (
+              <div key={p}>
+                <label htmlFor={`w${p}`}>Word {p}</label>
+                <input
+                  id={`w${p}`} type="text" autoComplete="off" autoCapitalize="none" spellCheck={false}
+                  value={answers[p] ?? ''}
+                  onChange={(e) => setAnswers({ ...answers, [p]: e.target.value })}
+                />
+              </div>
+            ))}
+          </div>
           {wrong.length > 0 && (
             <div className="note bad small">
               Not right at position{wrong.length > 1 ? 's' : ''} {wrong.join(', ')}. Check your paper.
@@ -158,26 +219,26 @@ export default function CreatePage () {
 
       {stage === 'passphrase' && (
         <>
-          <p>
+          <p className="lede">
             Now choose a passphrase. It encrypts your key on this device so that someone with access
             to this browser still cannot sign as you.
           </p>
-          <div>
+          <div className="panel">
             <label htmlFor="pp">Passphrase</label>
             <input id="pp" type="password" value={passphrase} autoComplete="new-password"
               onChange={(e) => setPassphrase(e.target.value)} />
             <label htmlFor="pp2">Type it again</label>
             <input id="pp2" type="password" value={confirm} autoComplete="new-password"
               onChange={(e) => setConfirm(e.target.value)} />
+            <p className="small muted field-hint">
+              This protects the key on this device. Your 24 words are what recover the account
+              everywhere else.
+            </p>
           </div>
-          <p className="small muted">
-            This protects the key on this device. Your 24 words are what recover the account
-            everywhere else.
-          </p>
           {error && <div className="note bad small">{error}</div>}
           <div className="row">
             <button onClick={seal} disabled={busy}>
-              {busy ? 'Encrypting...' : 'Encrypt and continue'}
+              {busy ? 'Encrypting…' : 'Encrypt and continue'}
             </button>
           </div>
         </>
@@ -186,19 +247,52 @@ export default function CreatePage () {
       {stage === 'done' && (
         <>
           <div className="note ok">
-            <b>Your identity exists.</b>{' '}
-            <span className="small muted">
-              It is stored encrypted on this device only.
-            </span>
+            <b>Your identity exists on this device.</b>{' '}
+            <span className="small muted">It is stored encrypted here, and nowhere else.</span>
           </div>
-          <p className="small muted mono">{account?.accountId ?? ''}</p>
-          <p className="small muted">
-            This identifier is derived from your key, not assigned by us. Anyone holding your key
-            history can recompute it.
-          </p>
+          <div className="panel">
+            <table>
+              <tbody>
+                <tr><th>Account</th><td className="mono">{account?.accountId ?? existing?.accountId ?? ''}</td></tr>
+                {existing?.handle && (
+                  <tr><th>Address</th><td><Link href={`/u/${existing.handle}`}>/u/{existing.handle}</Link></td></tr>
+                )}
+              </tbody>
+            </table>
+            <p className="small muted field-hint">
+              This identifier is derived from your key, not assigned by us. Anyone holding your key
+              history can recompute it.
+            </p>
+          </div>
+          {error && <div className="note bad small">{error}</div>}
           <div className="row">
-            <button onClick={() => router.push('/author')}>Write my policy</button>
+            <button onClick={() => router.push('/author')}>
+              {existing?.handle ? 'Update my policy' : 'Write my policy'}
+            </button>
+            {existing?.handle && (
+              <Link href="/notice" className="btn secondary">Create a notice</Link>
+            )}
           </div>
+
+          <details className="disclosure" open={forgetOpen} onToggle={(e) => setForgetOpen((e.target as HTMLDetailsElement).open)}>
+            <summary className="small muted">This is not my account, or I want to start over</summary>
+            <div className="panel danger-zone">
+              <p className="small">
+                Forgetting removes the encrypted vault, the key history, and any draft from this
+                device. It does not touch anything you have published. You can get back in later with
+                your 24 words at <Link href="/restore">Restore</Link>.
+              </p>
+              <label htmlFor="forget">Type <span className="mono">{FORGET_WORD}</span> to confirm</label>
+              <input id="forget" type="text" value={forgetText} autoComplete="off" spellCheck={false}
+                onChange={(e) => setForgetText(e.target.value)} />
+              <div className="row">
+                <button className="danger" onClick={forget}
+                  disabled={forgetText.trim().toLowerCase() !== FORGET_WORD}>
+                  Forget this device
+                </button>
+              </div>
+            </div>
+          </details>
         </>
       )}
     </main>

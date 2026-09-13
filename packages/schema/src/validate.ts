@@ -1,15 +1,14 @@
-// ajv and ajv-formats ship CommonJS, so a default import resolves to the module namespace under
-// NodeNext rather than to the callable. ajv exposes the class as a named export; ajv-formats only
-// has a default, which is reachable at `.default`. Both forms are correct at runtime in Node ESM,
-// Vitest, and a browser bundle, and both typecheck without an `any`.
-import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.js'
-import addFormatsModule from 'ajv-formats'
-
-const addFormats = addFormatsModule.default
-import {
-  policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema,
-  noticeSchema, deliverySchema, responseSchema
-} from './generated/schemas.js'
+// Validation runs against AHEAD-OF-TIME compiled validators (src/generated/validators.ts), not against
+// an Ajv instance built here at run time.
+//
+// Ajv's normal mode compiles a schema by handing a generated source string to `new Function`, which a
+// browser treats as eval. Signing happens in this browser, so a Content-Security-Policy that allowed
+// 'unsafe-eval' would hand any XSS the ability to run code beside an unlocked key. Precompiling keeps
+// the identical validation logic and removes the run-time eval, so the policy can forbid it outright.
+//
+// `ErrorObject` is a type-only import: it is erased at build time and pulls no Ajv code into the bundle.
+import type { ErrorObject } from 'ajv'
+import * as compiled from './generated/validators.js'
 import type {
   Authorization, KeyEvent, LedgerEntry, Policy, Notice, DeliveryRecord, ResponseRecord
 } from './types.js'
@@ -21,25 +20,8 @@ export interface ValidationResult<T> {
   value?: T
 }
 
-// `strict: false` because the schemas use $comment and annotation keywords intentionally.
-const ajv = new Ajv2020({ strict: false, allErrors: true, allowUnionTypes: true })
-addFormats(ajv)
-for (const s of [
-  policySchema, authorizationSchema, keyEventSchema, ledgerEntrySchema,
-  noticeSchema, deliverySchema, responseSchema
-]) {
-  ajv.addSchema(s as object)
-}
-
-const compiled = new Map<string, ValidateFunction>()
-function validator (id: string): ValidateFunction {
-  const cached = compiled.get(id)
-  if (cached) return cached
-  const found = ajv.getSchema(id)
-  if (!found) throw new Error(`schema not registered: ${id}`)
-  compiled.set(id, found)
-  return found
-}
+/** Shape of a precompiled Ajv validator: a predicate that parks its errors on itself. */
+type CompiledValidator = ((doc: unknown) => boolean) & { errors?: ErrorObject[] | null }
 
 function format (errors: ErrorObject[] | null | undefined): string[] {
   if (!errors) return []
@@ -52,23 +34,20 @@ function format (errors: ErrorObject[] | null | undefined): string[] {
   })
 }
 
-function run<T> (id: string, doc: unknown): ValidationResult<T> {
-  const v = validator(id)
-  const valid = v(doc) as boolean
+function run<T> (validate: CompiledValidator, doc: unknown): ValidationResult<T> {
+  const valid = validate(doc)
   return valid
     ? { valid: true, errors: [], value: doc as T }
-    : { valid: false, errors: format(v.errors) }
+    : { valid: false, errors: format(validate.errors) }
 }
 
-const BASE = 'https://rightsroot.org/spec/prm/schemas'
-
-export const validatePolicy = (d: unknown) => run<Policy>(`${BASE}/prm-policy-v1.schema.json`, d)
-export const validateAuthorization = (d: unknown) => run<Authorization>(`${BASE}/prm-authorization-v1.schema.json`, d)
-export const validateKeyEvent = (d: unknown) => run<KeyEvent>(`${BASE}/prm-key-event-v1.schema.json`, d)
-export const validateLedgerEntry = (d: unknown) => run<LedgerEntry>(`${BASE}/prm-ledger-entry-v1.schema.json`, d)
-export const validateNotice = (d: unknown) => run<Notice>(`${BASE}/prm-notice-v1.schema.json`, d)
-export const validateDelivery = (d: unknown) => run<DeliveryRecord>(`${BASE}/prm-delivery-v1.schema.json`, d)
-export const validateResponse = (d: unknown) => run<ResponseRecord>(`${BASE}/prm-response-v1.schema.json`, d)
+export const validatePolicy = (d: unknown) => run<Policy>(compiled.policy, d)
+export const validateAuthorization = (d: unknown) => run<Authorization>(compiled.authorization, d)
+export const validateKeyEvent = (d: unknown) => run<KeyEvent>(compiled.keyEvent, d)
+export const validateLedgerEntry = (d: unknown) => run<LedgerEntry>(compiled.ledgerEntry, d)
+export const validateNotice = (d: unknown) => run<Notice>(compiled.notice, d)
+export const validateDelivery = (d: unknown) => run<DeliveryRecord>(compiled.delivery, d)
+export const validateResponse = (d: unknown) => run<ResponseRecord>(compiled.response, d)
 
 /** Throwing variants, for call sites where an invalid document is a programmer error. */
 function assertValid<T> (r: ValidationResult<T>, kind: string): T {

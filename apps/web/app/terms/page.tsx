@@ -17,7 +17,7 @@ export const metadata = {
 export default function TermsPage () {
   return (
     <main>
-      <p className="small muted" style={{ margin: 0 }}>RightsRoot</p>
+      <p className="eyebrow">RightsRoot</p>
       <h1>Terms of Service</h1>
       <p className="muted small">Last updated 7 September 2026</p>
 
@@ -41,7 +41,9 @@ export default function TermsPage () {
           backup phrase and your device, your account is gone permanently. There is no password
           reset, no support recovery, and no copy on our servers. This is the same property that
           prevents us from acting as you, and it cannot be had one way without the other. Write the
-          phrase down and keep it somewhere safe.
+          phrase down and keep it somewhere safe. With the phrase, you can get back into your account
+          on any device at <Link href="/restore">Restore</Link> — even if this service has gone away,
+          using the documents you published or exported.
         </div>
       </div>
 

@@ -242,13 +242,13 @@ export default function NoticePage () {
     }
   }
 
-  if (!ready) return <main><p className="muted">Loading…</p></main>
+  if (!ready) return <main><Steps current="publish" /><h1>Create a notice</h1><div className="skeleton" aria-hidden="true" /></main>
 
   return (
     <main>
       <Steps current="publish" />
       <h1>Create a notice</h1>
-      <p className="muted">
+      <p className="lede">
         A notice tells one organization about your policy. It is a separate document from the policy
         itself, so it can carry details only they need.
       </p>
@@ -256,7 +256,7 @@ export default function NoticePage () {
       {phase !== 'done' && (
         <>
           <div className="panel">
-            <h3 style={{ marginTop: 0 }}>Who is it for?</h3>
+            <h3>Who is it for?</h3>
             <label htmlFor="rname">Organization</label>
             <input id="rname" type="text" value={recipient.name}
               onChange={(e) => setRecipient({ ...recipient, name: e.target.value })} />
@@ -279,7 +279,7 @@ export default function NoticePage () {
           </div>
 
           <div className="panel">
-            <h3 style={{ marginTop: 0 }}>How will you send it?</h3>
+            <h3>How will you send it?</h3>
             <select aria-label="Delivery method" value={method}
               onChange={(e) => setMethod(e.target.value as DeliveryMethod)}>
               {Object.entries(DELIVERY_METHOD_LABELS).map(([v, l]) => (
@@ -316,7 +316,7 @@ export default function NoticePage () {
             <button onClick={generate} disabled={phase === 'working' || phase === 'unlock'}>
               {phase === 'working' ? 'Generating…' : 'Generate notice packet'}
             </button>
-            <Link href="/publish"><button className="secondary">Back</button></Link>
+            <Link href="/publish" className="btn secondary">Back</Link>
           </div>
         </>
       )}
