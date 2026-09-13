@@ -1,7 +1,7 @@
 import { resolve } from 'node:path'
 import type { Storage } from './types'
 import { createFileStorage } from './file'
-import { BlobArtifactStore, PostgresMetadataStore, PostgresLogStore, type BlobClient, type SqlQuery } from './blob'
+import { BlobArtifactStore, PostgresMetadataStore, PostgresLogStore, namespaced, type BlobClient, type SqlQuery } from './blob'
 
 export * from './types'
 export * from './digest'
@@ -9,10 +9,36 @@ export { createFileStorage } from './file'
 export { createMemoryStorage, MemoryArtifactStore, MemoryMetadataStore, MemoryLogStore, contentTypeFor } from './memory'
 export {
   BlobArtifactStore, PostgresMetadataStore, PostgresLogStore, createBlobStorage, SCHEMA_SQL, ensureSchema,
+  namespaceSql, namespaced, TABLES,
   type BlobClient, type BlobFetcher, type SqlQuery
 } from './blob'
 
 let singleton: Storage | undefined
+
+export interface StorageNamespace {
+  environment: 'development' | 'preview' | 'production'
+  /** Prepended to every Postgres relation name. */
+  tablePrefix: string
+  /** Prepended to every blob object path. */
+  blobPrefix: string
+}
+
+/**
+ * Where an environment's data lives, decided by VERCEL_ENV alone.
+ *
+ * A preview must never write to production data (docs/16 §4). Rather than trusting that the
+ * Preview environment was given different credentials — it was not, once — a preview is confined
+ * by construction: its tables are `preview_*` and its objects live under `preview/`, so the same
+ * DATABASE_URL and BLOB_READ_WRITE_TOKEN cannot reach a production row or object from a preview,
+ * and production code never names a preview relation. A separate Neon branch per preview remains
+ * the stronger setup and composes with this; this is the floor, not the ceiling.
+ */
+export function storageNamespace (env: Record<string, string | undefined> = process.env): StorageNamespace {
+  const environment = (env.VERCEL_ENV as StorageNamespace['environment'] | undefined) ?? 'development'
+  return environment === 'preview'
+    ? { environment, tablePrefix: 'preview_', blobPrefix: 'preview/' }
+    : { environment, tablePrefix: '', blobPrefix: '' }
+}
 
 /**
  * Select a storage adapter.
@@ -58,11 +84,15 @@ async function createProductionStorage (token: string, databaseUrl: string): Pro
   const { neon } = await import('@neondatabase/serverless')
   const client = neon(databaseUrl)
 
-  const sql: SqlQuery = async <T>(text: string, values: unknown[] = []) =>
+  const raw: SqlQuery = async <T>(text: string, values: unknown[] = []) =>
     (await client.query(text, values)) as T[]
+  const ns = storageNamespace()
+  // One namespaced connection shared by both stores, so the schema is ensured once and both
+  // address the same relations.
+  const sql = namespaced(raw, ns.tablePrefix)
 
   return {
-    name: 'blob',
+    name: ns.environment === 'preview' ? 'blob (preview namespace)' : 'blob',
     artifacts: new BlobArtifactStore({
       client: blob,
       fetcher: async (url) => {
@@ -70,7 +100,8 @@ async function createProductionStorage (token: string, databaseUrl: string): Pro
         if (!response.ok) throw new Error(`blob fetch failed: ${response.status}`)
         return new Uint8Array(await response.arrayBuffer())
       },
-      token
+      token,
+      ...(ns.blobPrefix ? { pathPrefix: ns.blobPrefix } : {})
     }),
     metadata: new PostgresMetadataStore(sql),
     log: new PostgresLogStore(sql)

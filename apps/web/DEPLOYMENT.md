@@ -3,6 +3,15 @@
 The application deploys to **rightsroot.com**. The open PRM specification is published separately at
 **rightsroot.org/spec/prm** — see `docs/naming.md` for why the two are deliberately separate.
 
+## Previews and production data
+
+A preview deployment can never write to production data, whatever credentials it has: on
+`VERCEL_ENV=preview` every Postgres relation is `preview_*` and every blob object lives under
+`preview/` (D79). So sharing `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN` with Preview is *safe*, but a
+Neon branch per preview is still the better setup — it also keeps preview rows out of the production
+database entirely. Preview tables are created on first use and can be dropped at any time; nothing
+in production references them.
+
 ## Required environment variables
 
 | Variable | Where from | Why |
