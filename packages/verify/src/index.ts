@@ -26,3 +26,4 @@ export * from './authorization.js'
  * v1 bundle and says plainly why it cannot be checked.
  */
 export * from './proof-bundle.js'
+export * from './timestamp.js'

@@ -82,7 +82,12 @@ export interface BundleInput {
   signedTreeHeadJson?: string
   deliveryJson?: string[]
   responseJson?: string[]
-  /** RFC 3161 tokens, base64, keyed by a file name such as "sth-148223.tsr.b64". */
+  /**
+   * RFC 3161 evidence, keyed by file name. Tokens are the TSA's full TimeStampResp, base64, named
+   * like "sth-148223-freetsa.tsr.b64"; a TSA's certificate chain is PEM text named like
+   * "freetsa-chain.pem". Every token's imprint is SHA-256 over the 32 raw bytes of the tree head's
+   * root hash (spec/NORMATIVE.md §9), which is what lets a verifier bind token to tree head.
+   */
   timestamps?: Record<string, string>
   generatedAt?: Date
   verifyCommand?: string
@@ -140,9 +145,14 @@ export function buildProofBundle (input: BundleInput): PrmProofBundleV2 {
     add(PATHS.response(i + 1), json, 'application/json',
       'Signed response record. Preserves what came back; PRM does not evaluate it.')
   }
-  for (const [name, token] of Object.entries(input.timestamps ?? {})) {
-    add(PATHS.timestamp(name), token, 'application/timestamp-reply',
-      'RFC 3161 timestamp token, base64. Verifiable with standard tooling; see verification/instructions.txt.')
+  for (const [name, content] of Object.entries(input.timestamps ?? {})) {
+    if (name.endsWith('.pem')) {
+      add(PATHS.timestamp(name), content, 'application/x-pem-file',
+        'TSA certificate chain, archived when the token was acquired so it stays verifiable after the certificates expire.')
+    } else {
+      add(PATHS.timestamp(name), content, 'application/timestamp-reply',
+        'RFC 3161 timestamp token (the TSA\'s full reply), base64. Binds to log/signed-tree-head.json; see verification/instructions.txt.')
+    }
   }
 
   const verifyCommand = input.verifyCommand ?? 'npx @prm/cli verify notice.prmproof'
@@ -231,17 +241,32 @@ Nothing below requires the PRM website, an account, or a network connection.
 
 4. TIMESTAMP EVIDENCE, IF PRESENT
 
-   Tokens under timestamps/ are RFC 3161 and are base64 encoded. To check one
-   with standard tooling:
+   Files under timestamps/ are RFC 3161 replies, base64 encoded, from independent
+   time-stamp authorities. Each one was issued over the tree head in
+   log/signed-tree-head.json. The imprint the authority signed is:
 
-     base64 -d < timestamps/<name> > token.tsr
-     openssl ts -reply -in token.tsr -text          # read it
-     openssl ts -verify -in token.tsr \\
-       -queryfile <query> -CAfile <tsa-chain.pem>   # verify it
+     SHA-256( the 32 raw bytes of rootHash )
 
-   The token attests that the referenced hash existed no later than the time it
-   states. It says nothing about who created the content, which is what the
-   signature above is for.
+   where rootHash is decoded from its multibase/multihash form (drop the leading
+   "u", base64url-decode, drop the 2-byte multihash prefix 0x12 0x20). The verifier above
+   checks that binding for you and prints the attested time. It does NOT check the
+   authority's signature — which roots you trust is your decision, so that step is
+   yours, with standard tooling:
+
+     base64 -d < timestamps/<name>.tsr.b64 > token.tsr
+     openssl ts -reply -in token.tsr -text                 # read it
+     openssl ts -verify -in token.tsr -digest <imprint-hex> -sha256 \\
+       -CAfile timestamps/<authority>-chain.pem            # verify it
+
+   The chain file is the authority's certificate chain as archived when the token
+   was acquired; keep it with the token, because a token whose signer certificate
+   has since expired is still verifiable only with the chain that was current.
+   FreeTSA's root is also published at https://freetsa.org/files/cacert.pem.
+
+   What the token attests: that this exact tree head existed no later than the
+   time it states. The inclusion proof ties this policy's ledger entry to that
+   tree head; the signature on the policy ties the entry's subject to its author.
+   No step in that chain relies on PRM.
 
 
 5. IF SOMETHING FAILS

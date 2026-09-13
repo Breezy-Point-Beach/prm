@@ -1,11 +1,12 @@
 import type {
-  DeliveryRecord, KeyEvent, Notice, Policy, ResponseRecord, SignedTreeHead
+  DeliveryRecord, KeyEvent, LedgerEntry, Notice, Policy, ResponseRecord, SignedTreeHead
 } from '@prm/schema'
 import { validateNotice, validateDelivery, validateResponse } from '@prm/schema'
 import { digest, hash, encodeMultihash, jcs, verifyProofSelfContained } from '@prm/crypto'
 import { verifyPolicy, verifyPolicyChain } from './policy.js'
 import { verifyKeyEventLog } from './kel.js'
-import { verifySignedTreeHead } from './ledger.js'
+import { verifySignedTreeHead, verifyLedgerChain, verifyLogInclusion } from './ledger.js'
+import { verifyTimestampBinding } from './timestamp.js'
 import type { VerificationResult } from './types.js'
 
 /**
@@ -285,34 +286,104 @@ export function verifyProofBundle (
     }
   }
 
-  // ---- 8. Transparency log head -------------------------------------------
+  // ---- 8. Transparency log ------------------------------------------------
+  //
+  // The evidentiary chain, link by link (docs/07 §4):
+  //   token -> root -> leaf -> ledger entry -> policy.
+  // Each link is checked; a timestamp is only reported as PROVEN for the policy when every link
+  // holds. A token that merely sits in the bundle proves nothing about this policy.
+  let sth: SignedTreeHead | undefined
   const sthJson = bundle.artifacts['log/signed-tree-head.json']
   if (sthJson) {
+    try {
+      sth = JSON.parse(sthJson) as SignedTreeHead
+    } catch (e) {
+      fail('transparency log', `could not parse the signed tree head: ${(e as Error).message}`)
+    }
+  }
+  if (sth) {
     if (!opts.logPublicKeyMultibase) {
       out.warnings.push('a signed tree head is included but no log public key was supplied to check it')
+    } else if (verifySignedTreeHead(sth, opts.logPublicKeyMultibase)) {
+      pass('transparency log', `tree head at size ${sth.treeSize}, signed by the published log key`)
     } else {
-      try {
-        const sth = JSON.parse(sthJson) as SignedTreeHead
-        if (verifySignedTreeHead(sth, opts.logPublicKeyMultibase)) {
-          pass('transparency log', `tree head at size ${sth.treeSize}, signed by the published log key`)
+      fail('transparency log', 'the signed tree head signature is not valid')
+    }
+  }
+
+  // The policy's own ledger entry, if the bundle carries the user's ledger.
+  let includedRoot: string | undefined
+  const ledgerJson = bundle.artifacts['log/ledger.json']
+  if (ledgerJson) {
+    try {
+      const parsed = JSON.parse(ledgerJson) as LedgerEntry | LedgerEntry[]
+      const entries = Array.isArray(parsed) ? parsed : [parsed]
+      const chain = verifyLedgerChain(entries)
+      if (!chain.valid) {
+        fail('ledger', chain.errors.join('; '))
+      } else {
+        const mine = entries.find((e) => e.entryType === 'policy.published' && e.subjectHash === out.policyDigest)
+        if (!mine) {
+          out.warnings.push('the ledger in this bundle has no policy.published entry for this policy')
+        } else if (!mine.logInclusion) {
+          out.warnings.push('the policy\'s ledger entry has not been logged (no inclusion proof)')
         } else {
-          fail('transparency log', 'the signed tree head signature is not valid')
+          const inc = verifyLogInclusion(mine, sth)
+          if (!inc.valid) fail('log inclusion', inc.errors.join('; '))
+          else {
+            includedRoot = mine.logInclusion.rootHash
+            pass('log inclusion',
+              `entry ${mine.sequence} (leaf ${mine.logInclusion.leafIndex} of ${mine.logInclusion.treeSize}) names this policy and is in the tree`)
+          }
         }
-      } catch (e) {
-        fail('transparency log', (e as Error).message)
       }
+    } catch (e) {
+      fail('ledger', (e as Error).message)
     }
   }
 
   // ---- 9. Timestamp evidence ----------------------------------------------
-  const tokens = bundle.manifest.entries.filter((e) => e.path.startsWith('timestamps/'))
+  const tokens = bundle.manifest.entries.filter((e) => e.path.startsWith('timestamps/') && e.path.endsWith('.tsr.b64'))
   if (tokens.length === 0) {
     out.warnings.push('no independent timestamp evidence is included in this bundle')
+  } else if (!sth) {
+    out.warnings.push(`${tokens.length} RFC 3161 token(s) included, but no tree head to bind them to — they prove nothing about this policy`)
   } else {
-    // Deliberately not parsed here. Verifying an RFC 3161 token requires the TSA certificate chain,
-    // which is exactly the kind of trust decision that belongs with the person doing the checking.
-    // The bundle carries the tokens and instructions/openssl commands rather than a verdict.
-    pass('timestamps', `${tokens.length} RFC 3161 token(s) included — verify with openssl, see verification/instructions.txt`)
+    let proven: { genTime: string; tsa: string } | undefined
+    for (const entry of tokens) {
+      const binding = verifyTimestampBinding(bundle.artifacts[entry.path] as string, sth)
+      if (!binding.valid) {
+        fail('timestamp', `${entry.path}: ${binding.errors.join('; ')}`)
+        continue
+      }
+      const tsa = binding.tsaName ?? 'the TSA'
+      // Binding to the tree head is structural. The TSA's signature is deliberately not checked
+      // here: that needs the TSA's chain and a decision about which roots to trust, which belongs
+      // with the person verifying. The instructions carry the openssl command.
+      pass('timestamp',
+        `${entry.path}: ${tsa} attests the tree head's root existed by ${binding.genTime} ` +
+        `(serial ${binding.serialNumberHex}) — TSA signature not checked here; see instructions`)
+      if (includedRoot && includedRoot === sth.rootHash && binding.genTime) {
+        if (!proven || binding.genTime < proven.genTime) proven = { genTime: binding.genTime, tsa }
+      }
+    }
+    if (proven) {
+      // Every link held: token -> root -> leaf -> entry -> this policy.
+      const stale = 'no independent timestamp evidence was supplied'
+      policyResult.timestamp = {
+        proven: true,
+        notLaterThan: proven.genTime,
+        source: 'rfc3161',
+        detail: `${proven.tsa} timestamped a tree head that includes this policy's ledger entry`
+      }
+      policyResult.warnings = policyResult.warnings.filter((w) => w !== stale)
+      out.warnings = out.warnings.filter((w) => w !== stale)
+      if (policyResult.summary !== 'failed') {
+        policyResult.summary = policyResult.warnings.length > 0 ? 'verified-with-warnings' : 'verified'
+      }
+    } else if (!includedRoot) {
+      out.warnings.push('timestamp token(s) bind to the tree head, but nothing ties this policy to that tree — no logged ledger entry')
+    }
   }
 
   out.valid = out.errors.length === 0

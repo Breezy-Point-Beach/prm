@@ -113,6 +113,13 @@ Guard every cron route with `CRON_SECRET` (Vercel sends it as a bearer token) an
 — crons can fire twice. The hourly timestamp job is the one that actually matters; alert if it fails
 twice consecutively, because a gap in timestamping is a gap in the evidentiary chain.
 
+**Implemented today:** only `/api/cron/timestamp`, declared in `apps/web/vercel.json` (the project's
+root directory is `apps/web`). It asks every configured authority for a token over the newest tree
+head and skips any that already issued one, so a double fire is harmless. It returns 502 when *every*
+authority failed, which is the condition to alert on. Tokens are also acquired opportunistically by
+the proof endpoints when the newest head has been unanchored for more than an hour (D75), so a
+missed cron delays a token rather than losing it.
+
 Hobby-plan cron granularity is limited to daily; the hourly and 5-minute schedules require Pro. Budget
 for Pro from the start — this is a $20/month dependency, not an architectural one.
 

@@ -1,14 +1,14 @@
 import { resolve } from 'node:path'
 import type { Storage } from './types'
 import { createFileStorage } from './file'
-import { BlobArtifactStore, PostgresMetadataStore, type BlobClient, type SqlQuery } from './blob'
+import { BlobArtifactStore, PostgresMetadataStore, PostgresLogStore, type BlobClient, type SqlQuery } from './blob'
 
 export * from './types'
 export * from './digest'
 export { createFileStorage } from './file'
-export { createMemoryStorage, MemoryArtifactStore, MemoryMetadataStore, contentTypeFor } from './memory'
+export { createMemoryStorage, MemoryArtifactStore, MemoryMetadataStore, MemoryLogStore, contentTypeFor } from './memory'
 export {
-  BlobArtifactStore, PostgresMetadataStore, createBlobStorage, SCHEMA_SQL,
+  BlobArtifactStore, PostgresMetadataStore, PostgresLogStore, createBlobStorage, SCHEMA_SQL, ensureSchema,
   type BlobClient, type BlobFetcher, type SqlQuery
 } from './blob'
 
@@ -72,7 +72,8 @@ async function createProductionStorage (token: string, databaseUrl: string): Pro
       },
       token
     }),
-    metadata: new PostgresMetadataStore(sql)
+    metadata: new PostgresMetadataStore(sql),
+    log: new PostgresLogStore(sql)
   }
 }
 

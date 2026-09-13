@@ -1,5 +1,6 @@
 import type {
-  ArtifactKind, ArtifactRef, ArtifactStore, MetadataStore, PolicyRecord, Storage
+  ArtifactKind, ArtifactRef, ArtifactStore, LogLeaf, LogStore, MetadataStore, PolicyLogLink,
+  PolicyRecord, Storage, TimestampRecord, TreeHeadRecord
 } from './types'
 import { ArtifactNotFoundError, DigestMismatchError } from './types'
 import { artifactKey, byteDigestOf, byteDigestMatches } from './digest'
@@ -82,6 +83,74 @@ export class MemoryMetadataStore implements MetadataStore {
   async handleOwner (handle: string): Promise<string | null> {
     return (await this.currentVersion(handle))?.accountId ?? null
   }
+
+  readonly links = new Map<string, PolicyLogLink>()
+
+  async recordLogLink (link: PolicyLogLink): Promise<void> {
+    // Write-once: a policy's entry is logged once. A second link for the same digest is ignored.
+    if (!this.links.has(link.policyDigest)) this.links.set(link.policyDigest, link)
+  }
+
+  async logLink (policyDigest: string): Promise<PolicyLogLink | null> {
+    return this.links.get(policyDigest) ?? null
+  }
+}
+
+/**
+ * In-memory transparency log.
+ *
+ * Append is serialized through a promise chain — the in-process equivalent of the advisory lock the
+ * Postgres adapter needs — so the contract's concurrent-append test means the same thing here.
+ */
+export class MemoryLogStore implements LogStore {
+  readonly leafList: LogLeaf[] = []
+  readonly heads = new Map<number, TreeHeadRecord>()
+  readonly tokens: TimestampRecord[] = []
+  private chain: Promise<unknown> = Promise.resolve()
+
+  append (leafHash: string, appendedAt: string): Promise<LogLeaf> {
+    const run = async (): Promise<LogLeaf> => {
+      const existing = this.leafList.find((l) => l.leafHash === leafHash)
+      if (existing) return existing
+      const leaf = { leafIndex: this.leafList.length, leafHash, appendedAt }
+      this.leafList.push(leaf)
+      return leaf
+    }
+    const next = this.chain.then(run, run)
+    this.chain = next.catch(() => undefined)
+    return next
+  }
+
+  async leaves (): Promise<LogLeaf[]> { return [...this.leafList] }
+  async size (): Promise<number> { return this.leafList.length }
+
+  async putTreeHead (record: TreeHeadRecord): Promise<void> {
+    if (!this.heads.has(record.treeSize)) this.heads.set(record.treeSize, record)
+  }
+
+  async treeHead (treeSize: number): Promise<TreeHeadRecord | null> {
+    return this.heads.get(treeSize) ?? null
+  }
+
+  async latestTreeHead (): Promise<TreeHeadRecord | null> {
+    if (this.heads.size === 0) return null
+    return this.heads.get(Math.max(...this.heads.keys())) ?? null
+  }
+
+  async putTimestamp (record: TimestampRecord): Promise<void> {
+    const i = this.tokens.findIndex((t) => t.treeSize === record.treeSize && t.tsa === record.tsa)
+    if (i >= 0) this.tokens[i] = record
+    else this.tokens.push(record)
+  }
+
+  async timestamps (treeSize: number): Promise<TimestampRecord[]> {
+    return this.tokens.filter((t) => t.treeSize === treeSize)
+  }
+
+  async latestTimestamp (): Promise<TimestampRecord | null> {
+    return [...this.tokens].sort((a, b) =>
+      b.acquiredAt.localeCompare(a.acquiredAt) || b.treeSize - a.treeSize)[0] ?? null
+  }
 }
 
 export function createMemoryStorage (
@@ -90,7 +159,8 @@ export function createMemoryStorage (
   return {
     name: 'memory',
     artifacts: new MemoryArtifactStore(tamper),
-    metadata: new MemoryMetadataStore()
+    metadata: new MemoryMetadataStore(),
+    log: new MemoryLogStore()
   }
 }
 

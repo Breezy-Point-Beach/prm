@@ -4,6 +4,7 @@ import { categoryLabel } from '@prm/schema'
 import { verifyPolicy } from '@prm/verify'
 import { getStorage, isValidHandle } from '../../../lib/storage'
 import { readPolicyBytes, readKelBytes } from '../../../lib/publish'
+import { proofForLeaf, type LogProof } from '../../../lib/log'
 import { Markdown } from '../../../components/Markdown'
 import { IntegrityCheck } from './IntegrityCheck'
 
@@ -61,6 +62,17 @@ export default async function PublicPolicyPage (
     )
   }
 
+  // Transparency-log evidence for this version, if its issuer logged it. Served for convenience,
+  // like the verification status; the token itself is the evidence, and it is downloadable.
+  let logProof: (LogProof & { entryDigest: string }) | null = null
+  try {
+    const link = await storage.metadata.logLink(record.policyDigest)
+    if (link) {
+      const p = await proofForLeaf(storage, link.leafIndex)
+      if (p) logProof = { ...p, entryDigest: link.entryDigest }
+    }
+  } catch { /* the page must render without the log */ }
+
   const result = verifyPolicy(policy, { keyEventLog })
   const permitted = policy.rules.filter((r) => r.decision === 'allow')
   const conditional = policy.rules.filter((r) => r.decision === 'conditional')
@@ -116,6 +128,39 @@ export default async function PublicPolicyPage (
           <div className="panel"><Markdown text={policy.humanReadable.text} /></div>
         </>
       )}
+
+      <h2>Independent timestamp</h2>
+      <div className="panel">
+        {!logProof
+          ? (
+            <p className="small muted" style={{ margin: 0 }}>
+              This version has not been recorded in the transparency log. The signature and its date are
+              the issuer&rsquo;s own statement.
+            </p>
+            )
+          : logProof.timestampedAt
+            ? (
+              <>
+                <p style={{ marginTop: 0 }}>
+                  <b>Existed no later than {logProof.timestampedAt}</b>
+                  <span className="small muted"> — attested by {logProof.authorities.map((a) => a.tsa).join(' and ')} under RFC 3161</span>
+                </p>
+                <p className="small muted">
+                  The issuer&rsquo;s ledger entry for this policy is leaf {logProof.leafIndex} of the{' '}
+                  <span className="mono">{logProof.logId}</span> transparency log (tree size {logProof.treeSize}).
+                  The authority signed the log&rsquo;s tree head; the tree head commits to the entry; the entry
+                  names this policy by digest. The token and the chain to check it are at{' '}
+                  <a href={`/u/${handle}/log.json`}>log.json</a>.
+                </p>
+              </>
+              )
+            : (
+              <p className="small muted" style={{ margin: 0 }}>
+                Recorded in the transparency log as leaf {logProof.leafIndex}. An independent timestamp is
+                requested within the hour and will appear here.
+              </p>
+              )}
+      </div>
 
       <h2>Version history</h2>
       <div className="panel">
