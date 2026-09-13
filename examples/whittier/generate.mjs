@@ -368,7 +368,7 @@ async function main () {
     deliveryJson: [delivery.json],
     responseJson: [response.json],
     generatedAt: local ? new Date() : new Date('2026-09-24T17:00:00Z'),
-    verifyCommand: 'npx @prm/cli verify notice.prmproof'
+    verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof'
   })
 
   // ---- 11. Write, then verify what we wrote --------------------------------
@@ -403,7 +403,7 @@ async function main () {
     policyByteDigest: notice.document.policyByteDigest,
     manifestDigest: bundle.manifestDigest,
     verificationUrl: 'https://rightsroot.com/u/user0001',
-    verifyCommand: 'npx @prm/cli verify notice.prmproof',
+    verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof',
     includeMatchingIdentifiers: true,
     generatedAt: local ? new Date() : new Date('2026-09-16T16:00:00Z')
   })
@@ -492,7 +492,7 @@ record of my express position and non-consent regarding those downstream uses.
 No PRM service is required, and none is trusted:
 
 \`\`\`
-npx @prm/cli verify notice.prmproof
+npx @rightsroot/prm-cli verify notice.prmproof
 \`\`\`
 
 ---

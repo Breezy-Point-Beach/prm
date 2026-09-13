@@ -229,7 +229,7 @@ export default async function PublicPolicyPage (
         The status above was computed on this server, so treat it as convenience. If you would rather
         not take our word for it, download both documents and verify them offline. It contacts nobody.
       </p>
-      <pre>npx @prm/cli verify policy.json --kel kel.json --offline</pre>
+      <pre>npx @rightsroot/prm-cli verify policy.json --kel kel.json --offline</pre>
 
       <p className="small muted" style={{ marginTop: '2rem' }}>
         This document records the issuer&rsquo;s instructions and the date they were given. It does not

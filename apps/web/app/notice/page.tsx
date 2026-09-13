@@ -187,7 +187,7 @@ export default function NoticePage () {
         noticeDigest: notice.digest,
         policyChainJson: [{ version: policy.version, json: policyJson }],
         ...evidence,
-        verifyCommand: 'npx @prm/cli verify notice.prmproof'
+        verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof'
       })
 
       // Verify what we just built before offering it for download. Handing someone an unverifiable
@@ -204,7 +204,7 @@ export default function NoticePage () {
         policyByteDigest: notice.document.policyByteDigest,
         manifestDigest: bundle.manifestDigest,
         verificationUrl: `${window.location.origin}/u/${handle}#sha256=${published.digest}`,
-        verifyCommand: 'npx @prm/cli verify notice.prmproof',
+        verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof',
         includeMatchingIdentifiers: matchingIdentifiers.length > 0
       })
 
@@ -271,7 +271,7 @@ export default function NoticePage () {
         ...(responseJson ? { responseJson: [responseJson] } : {}),
         // Carry the log evidence forward exactly as it was — or newer, if a token has arrived since.
         ...(await logEvidence(policy, bundle.artifacts as Record<string, string>)),
-        verifyCommand: 'npx @prm/cli verify notice.prmproof'
+        verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof'
       })
       const check = verifyProofBundle(rebuilt, logKeyOption())
       if (!check.valid) throw new Error(check.errors.join('; '))
@@ -446,7 +446,7 @@ export default function NoticePage () {
           {error && <div className="note bad small">{error}</div>}
 
           <h2>Anyone can check this without us</h2>
-          <pre>npx @prm/cli verify notice.prmproof</pre>
+          <pre>npx @rightsroot/prm-cli verify notice.prmproof</pre>
           <p className="small muted">
             Verification displayed by PRM is provided for convenience. The underlying artifacts are
             independently verifiable without PRM.

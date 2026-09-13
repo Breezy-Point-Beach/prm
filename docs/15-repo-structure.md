@@ -77,7 +77,7 @@ boundary that keeps the "verification doesn't need PRM" claim true.
 
 - **Org:** `Breezy-Point-Beach`
 - **Primary repo:** `prm` — short, and `Breezy-Point-Beach/prm` reads well.
-- **npm scope:** `@prm/*` if available, else `@breezy-point-beach/prm-*` with `@prm/*` reserved later.
+- **npm scope:** `@rightsroot/prm-*`. `@prm/*` turned out to be taken (see `docs/naming.md`); the workspace packages keep `@prm/*` as internal names and are not published. Only the CLI is published, as `@rightsroot/prm-cli`, bundled into one dependency-free file.
   Check availability before writing import paths everywhere; renaming a scope later is tedious.
 - **Vercel projects:** `prm-web` (production), previews auto-named per branch.
 - **Domains:** `rightsroot.com` (product: the app, policy pages, short links) and

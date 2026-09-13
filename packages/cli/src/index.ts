@@ -1,5 +1,5 @@
 /**
- * @prm/cli — programmatic access to the same commands the `prm` binary runs.
+ * @rightsroot/prm-cli — programmatic access to the same commands the `prm` binary runs.
  *
  * All verification comes from @prm/verify. This package adds argument parsing and rendering only.
  */

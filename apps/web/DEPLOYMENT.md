@@ -25,7 +25,7 @@ Local development needs neither. `pnpm dev` uses a filesystem store that require
 | `NEXT_PUBLIC_LOG_ID` | both | `prm-log-1` in production; must contain `preview` on previews; defaults to `prm-log-dev` locally |
 | `NEXT_PUBLIC_LOG_PUBLIC_KEY` | both | Public half, multibase. Boot refuses if it does not match the signing key. Derive with `node apps/web/scripts/log-key.mjs <seed>` |
 | `CRON_SECRET` | server | Bearer token Vercel sends to `/api/cron/timestamp` |
-| `TSA_PRIMARY_URL`, `TSA_SECONDARY_URL` | server | RFC 3161 endpoints (FreeTSA, DigiCert) |
+| `TSA_PRIMARY_URL`, `TSA_SECONDARY_URL` | server | RFC 3161 endpoints: `https://freetsa.org/tsr` and `http://timestamp.digicert.com` — DigiCert is HTTP only; the token is signed, so the transport is not load-bearing |
 | `TSA_PRIMARY_CA_URL`, `TSA_SECONDARY_CA_URL` | server | Optional PEM chain to archive beside each token |
 
 After the first deploy with these set, run the migration (or let the first append create the

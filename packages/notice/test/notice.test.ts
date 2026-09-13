@@ -408,7 +408,7 @@ describe('PDF rendering', () => {
       policyByteDigest: notice.document.policyByteDigest,
       manifestDigest: bundle.manifestDigest,
       verificationUrl: 'https://rightsroot.com/u/user0001',
-      verifyCommand: 'npx @prm/cli verify notice.prmproof',
+      verifyCommand: 'npx @rightsroot/prm-cli verify notice.prmproof',
       generatedAt: LATER
     })
     expect(pdf.length).toBeGreaterThan(2000)

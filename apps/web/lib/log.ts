@@ -272,8 +272,14 @@ export async function anchorLatest (
       results.push({ tsa: authority.tsa, ok: true, genTime: acquired.genTime })
     } catch (e) {
       // One authority failing must not stop the other: that independence is the reason there are two.
+      // Logged, not just returned: the proof endpoints call this on a reader's behalf and discard the
+      // result, and a silently missing token is the failure docs/16 §12 says to alert on.
+      console.error(`[log] timestamp authority ${authority.tsa} failed for tree size ${head.treeSize}: ${(e as Error).message}`)
       results.push({ tsa: authority.tsa, ok: false, error: (e as Error).message })
     }
+  }
+  if (results.some((r) => r.ok)) {
+    console.info(`[log] anchored tree size ${head.treeSize}: ${results.filter((r) => r.ok).map((r) => `${r.tsa}@${r.genTime}`).join(', ')}`)
   }
   return { treeSize: head.treeSize, results }
 }
