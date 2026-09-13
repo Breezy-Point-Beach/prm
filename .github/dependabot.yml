@@ -14,6 +14,13 @@ updates:
       - dependency-name: '@noble/*'
       - dependency-name: '@scure/*'
 
+      # Major compiler migrations are deliberate engineering work, not routine
+      # dependency maintenance. TypeScript 7 currently breaks the build because
+      # @prm/crypto no longer sees TextEncoder under the new compiler defaults.
+      # Keep receiving 5.x minor/patch updates; revisit the next major manually.
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+
   - package-ecosystem: github-actions
     directory: /
     schedule: { interval: monthly }
