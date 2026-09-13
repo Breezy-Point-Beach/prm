@@ -230,8 +230,10 @@ I object to, and do not consent to:
 
 ## What this document is, and is not
 
-This is a record of my instructions and the date on which I gave them. It is signed and independently
-timestamped so that a third party can confirm exactly what it said and when it existed.
+This is a record of my instructions and the date on which I gave them. It is signed, so that a third
+party can confirm exactly what it says and that it was issued under my key. The date is my own
+statement; independent evidence of when this document existed, where it has been obtained,
+accompanies it separately.
 
 It does not purport to create rights that do not already exist, and I make no claim here about which
 of these restrictions ${stateName} law obliges you to honour. Where a court order or a specific
