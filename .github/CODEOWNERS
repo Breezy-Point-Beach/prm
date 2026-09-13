@@ -1,6 +1,3 @@
-# Default owner.
-*                       @Breezy-Point-Beach
-
 # Signature-breaking surface. Changes here can retroactively invalidate every
 # signature ever produced, so they get a deliberate second look even when the
 # author is the only committer. See docs/17-github-workflow.md §4.
@@ -17,3 +14,9 @@
 /.env.example           @Breezy-Point-Beach
 /SECURITY.md            @Breezy-Point-Beach
 /.github/workflows/     @Breezy-Point-Beach
+/.github/dependabot.yml @Breezy-Point-Beach
+
+# Intentionally no catch-all owner. Routine dependency PRs that only touch
+# non-sensitive application/package metadata should not request an explicit
+# review from the sole repository owner. Changes to the trust boundary above
+# still do.
