@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest'
-import type { ArtifactStore, MetadataStore, PolicyRecord, Storage } from './types'
+import type { ArtifactStore, LogStore, MetadataStore, PolicyRecord, Storage } from './types'
 import { DigestMismatchError, ImmutabilityError } from './types'
 import { byteDigestOf, utf8, fromUtf8 } from './digest'
 
@@ -316,5 +316,90 @@ export function runHostileBackendContract (
       await storage.artifacts.put('policy', utf8(original), digest)
       expect(fromUtf8(await storage.artifacts.get(digest))).toBe(original)
     })
+  })
+}
+
+
+/**
+ * LogAdapterContract — the suite every transparency-log adapter must pass.
+ *
+ * What is being protected: leaf indices are the coordinates every inclusion proof ever issued
+ * refers to. An adapter that assigns the same index twice under concurrency, or that lets a leaf
+ * move, silently invalidates evidence that has already been handed to third parties.
+ */
+export function runLogContract (name: string, subject: StorageContractSubject): void {
+  describe(`${name} satisfies the log contract`, () => {
+    let storage: Storage
+    let log: LogStore
+    const leafHash = (n: number): string => `uEiA${String(n).padStart(43, 'x').replace(/x/g, 'A')}`.slice(0, 47)
+
+    beforeEach(async () => {
+      storage = await subject.create()
+      log = storage.log
+    })
+
+    it('assigns contiguous indices from zero, in append order', async () => {
+      expect((await log.append(leafHash(1), '2026-09-15T10:00:00Z')).leafIndex).toBe(0)
+      expect((await log.append(leafHash(2), '2026-09-15T10:00:01Z')).leafIndex).toBe(1)
+      expect((await log.append(leafHash(3), '2026-09-15T10:00:02Z')).leafIndex).toBe(2)
+      expect((await log.leaves()).map((l) => l.leafIndex)).toEqual([0, 1, 2])
+      expect(await log.size()).toBe(3)
+    })
+
+    it('append is idempotent on the leaf hash — a retried append is one leaf, not two', async () => {
+      const first = await log.append(leafHash(9), '2026-09-15T10:00:00Z')
+      const again = await log.append(leafHash(9), '2026-09-15T11:00:00Z')
+      expect(again.leafIndex).toBe(first.leafIndex)
+      expect(await log.size()).toBe(1)
+    })
+
+    it('CONCURRENT appends get unique, contiguous indices', async () => {
+      const results = await Promise.all(
+        Array.from({ length: 20 }, (_, i) => log.append(leafHash(100 + i), '2026-09-15T10:00:00Z')))
+      const indices = results.map((r) => r.leafIndex).sort((a, b) => a - b)
+      expect(indices).toEqual(Array.from({ length: 20 }, (_, i) => i))
+      expect(await log.size()).toBe(20)
+    })
+
+    it('stores tree heads by size, returns the largest as latest, and never overwrites one', async () => {
+      await log.putTreeHead({ treeSize: 1, sthJson: '{"treeSize":1}', createdAt: '2026-09-15T10:00:00Z' })
+      await log.putTreeHead({ treeSize: 3, sthJson: '{"treeSize":3}', createdAt: '2026-09-15T10:00:05Z' })
+      await log.putTreeHead({ treeSize: 1, sthJson: '{"treeSize":1,"forged":true}', createdAt: '2026-09-15T12:00:00Z' })
+      expect((await log.treeHead(1))?.sthJson).toBe('{"treeSize":1}')
+      expect((await log.latestTreeHead())?.treeSize).toBe(3)
+      expect(await log.treeHead(2)).toBeNull()
+    })
+
+    it('stores timestamp tokens per (tree size, authority) and finds the most recent', async () => {
+      await log.putTreeHead({ treeSize: 2, sthJson: '{"treeSize":2}', createdAt: '2026-09-15T10:00:00Z' })
+      await log.putTimestamp({ treeSize: 2, tsa: 'freetsa', tokenBase64: 'AAAA', genTime: '2026-09-15T11:00:00Z', acquiredAt: '2026-09-15T11:00:01Z', chainPem: '-----BEGIN CERTIFICATE-----\n' })
+      await log.putTimestamp({ treeSize: 2, tsa: 'digicert', tokenBase64: 'BBBB', genTime: '2026-09-15T11:00:02Z', acquiredAt: '2026-09-15T11:00:03Z' })
+      const both = await log.timestamps(2)
+      expect(both.map((t) => t.tsa).sort()).toEqual(['digicert', 'freetsa'])
+      expect(both.find((t) => t.tsa === 'freetsa')?.chainPem).toContain('BEGIN CERTIFICATE')
+      expect((await log.latestTimestamp())?.tsa).toBe('digicert')
+      expect(await log.timestamps(5)).toEqual([])
+    })
+
+    it('links a policy digest to the leaf its entry became, write-once', async () => {
+      const policyDigest = leafHash(500)
+      await storage.metadata.recordLogLink({ policyDigest, accountId: 'prm:x', entryDigest: leafHash(501), leafIndex: 4, linkedAt: '2026-09-15T10:00:00Z' })
+      await storage.metadata.recordLogLink({ policyDigest, accountId: 'prm:y', entryDigest: leafHash(502), leafIndex: 9, linkedAt: '2026-09-15T10:00:01Z' })
+      expect(await storage.metadata.logLink(policyDigest)).toMatchObject({ accountId: 'prm:x', leafIndex: 4 })
+      expect(await storage.metadata.logLink(leafHash(999))).toBeNull()
+    })
+
+    if (subject.reopen) {
+      it('is durable across a restart', async () => {
+        await log.append(leafHash(1), '2026-09-15T10:00:00Z')
+        await log.putTreeHead({ treeSize: 1, sthJson: '{"treeSize":1}', createdAt: '2026-09-15T10:00:00Z' })
+        await log.putTimestamp({ treeSize: 1, tsa: 'freetsa', tokenBase64: 'AAAA', genTime: '2026-09-15T11:00:00Z', acquiredAt: '2026-09-15T11:00:01Z' })
+        const reopened = await (subject.reopen as NonNullable<typeof subject.reopen>)(storage)
+        expect((await reopened.log.leaves())).toHaveLength(1)
+        expect((await reopened.log.append(leafHash(2), '2026-09-15T10:00:01Z')).leafIndex).toBe(1)
+        expect((await reopened.log.latestTreeHead())?.treeSize).toBe(1)
+        expect((await reopened.log.latestTimestamp())?.tsa).toBe('freetsa')
+      })
+    }
   })
 }

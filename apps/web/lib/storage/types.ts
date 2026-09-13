@@ -63,19 +63,90 @@ export interface PolicyRecord {
   contentType: string
 }
 
+/**
+ * Which log leaf a published policy's ledger entry became.
+ *
+ * The server never sees the ledger entry itself (docs/07 §1: the global log holds only opaque
+ * hashes). What it records is the ENTRY DIGEST the client appended and the leaf it landed at, keyed
+ * by policy digest, so the public policy page can point a reader at the inclusion proof and the
+ * timestamp token. Both digests are already public; the link between them reveals only what the
+ * page's publishedAt already does.
+ */
+export interface PolicyLogLink {
+  policyDigest: string
+  accountId: string
+  entryDigest: string
+  leafIndex: number
+  linkedAt: string
+}
+
 export interface MetadataStore {
   publish (record: PolicyRecord): Promise<void>
   currentVersion (handle: string): Promise<PolicyRecord | null>
   version (handle: string, version: number): Promise<PolicyRecord | null>
   versions (handle: string): Promise<PolicyRecord[]>
   handleOwner (handle: string): Promise<string | null>
+  recordLogLink (link: PolicyLogLink): Promise<void>
+  logLink (policyDigest: string): Promise<PolicyLogLink | null>
 }
 
-/** What the application uses. A pairing of the two, so adapters can mix and match. */
+// ---- transparency log --------------------------------------------------------
+
+export interface LogLeaf {
+  leafIndex: number
+  /** Multihash of the RFC 6962 leaf hash. Opaque: SHA-256(0x00 || entryDigest). */
+  leafHash: string
+  appendedAt: string
+}
+
+export interface TreeHeadRecord {
+  treeSize: number
+  /** The signed tree head, as the EXACT JSON text that was signed and will be served. */
+  sthJson: string
+  createdAt: string
+}
+
+export interface TimestampRecord {
+  treeSize: number
+  /** Short operator label, e.g. "freetsa". Doubles as the file stem in a .prmproof. */
+  tsa: string
+  /** The TSA's full TimeStampResp, base64 — what `openssl ts -verify -in` reads. */
+  tokenBase64: string
+  /** genTime from the token, RFC 3339. */
+  genTime: string
+  acquiredAt: string
+  /** The TSA's certificate chain, PEM, archived at acquisition (docs/08 §5). */
+  chainPem?: string
+}
+
+/**
+ * The global transparency log — docs/07 §3.
+ *
+ * Implementations must:
+ *   - assign leaf indices contiguously from 0, in append order, under concurrency
+ *   - treat append as IDEMPOTENT on leafHash: the same leaf appended twice is one leaf
+ *   - never remove or reorder a leaf; a tree head, once stored, never changes
+ */
+export interface LogStore {
+  append (leafHash: string, appendedAt: string): Promise<LogLeaf>
+  /** Every leaf, ordered by index. The tree is small at this scale (docs/07 §6). */
+  leaves (): Promise<LogLeaf[]>
+  size (): Promise<number>
+  putTreeHead (record: TreeHeadRecord): Promise<void>
+  treeHead (treeSize: number): Promise<TreeHeadRecord | null>
+  latestTreeHead (): Promise<TreeHeadRecord | null>
+  putTimestamp (record: TimestampRecord): Promise<void>
+  timestamps (treeSize: number): Promise<TimestampRecord[]>
+  /** The most recently acquired token, whatever tree size it covers. */
+  latestTimestamp (): Promise<TimestampRecord | null>
+}
+
+/** What the application uses. A pairing of the three, so adapters can mix and match. */
 export interface Storage {
   readonly name: string
   readonly artifacts: ArtifactStore
   readonly metadata: MetadataStore
+  readonly log: LogStore
 }
 
 export class StorageError extends Error {}

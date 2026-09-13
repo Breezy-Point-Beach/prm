@@ -1,6 +1,6 @@
 'use client'
 
-import type { KeyEvent, Rule } from '@prm/schema'
+import type { KeyEvent, LedgerEntry, Rule } from '@prm/schema'
 import type { AccountKeys } from '@prm/crypto'
 import {
   createPassphraseVault, openVaultWithPassphrase, type EncryptedVault
@@ -32,7 +32,8 @@ const KEY = {
   handle: 'prm.handle.v1',
   draft: 'prm.draft.v1',
   published: 'prm.published.v1',
-  notices: 'prm.notices.v1'
+  notices: 'prm.notices.v1',
+  ledger: 'prm.ledger.v1'
 } as const
 
 /** Unlocked material. Module-scoped so it cannot be reached from a serialized structure. */
@@ -181,6 +182,35 @@ export const getNotices = (): NoticeState[] => read<NoticeState[]>(KEY.notices) 
 export function saveNotice (notice: NoticeState): void {
   const existing = getNotices().filter((n) => n.noticeDigest !== notice.noticeDigest)
   write(KEY.notices, [...existing, notice])
+}
+
+// ---- personal ledger --------------------------------------------------------
+
+/**
+ * A signed ledger entry plus what the transparency log said about it.
+ *
+ * The entry is the user's own record (docs/07 §2) and stays on this device. `leafIndex` is where
+ * its digest landed in the global log; `proof` is the last inclusion proof fetched for it, including
+ * the signed tree head and any RFC 3161 tokens, kept as EXACT strings for the .prmproof bundle.
+ */
+export interface LoggedEntry {
+  entry: LedgerEntry
+  leafIndex?: number
+  proof?: {
+    signedTreeHead: string
+    timestamps: Record<string, string>
+    chains: Record<string, string>
+    timestampedAt: string | null
+    authorities: Array<{ tsa: string; genTime: string }>
+  }
+}
+
+export const getLedger = (): LoggedEntry[] => read<LoggedEntry[]>(KEY.ledger) ?? []
+export const saveLedger = (entries: LoggedEntry[]): void => write(KEY.ledger, entries)
+
+export function upsertLoggedEntry (logged: LoggedEntry): void {
+  const rest = getLedger().filter((e) => e.entry.sequence !== logged.entry.sequence)
+  saveLedger([...rest, logged].sort((a, b) => a.entry.sequence - b.entry.sequence))
 }
 
 /** Wipe everything this device holds. Irreversible without the backup phrase. */

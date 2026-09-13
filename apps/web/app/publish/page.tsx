@@ -14,6 +14,9 @@ import {
   unlockWithPassphrase, isUnlocked, requireKeys, hasAccount, type PublishedState
 } from '../../lib/client/session'
 import { Steps } from '../../components/Steps'
+import { logPublishedPolicy, fetchInclusion, loggedEntryFor } from '../../lib/client/ledger'
+import type { LoggedEntry } from '../../lib/client/session'
+import { LogEvidence } from '../../components/LogEvidence'
 
 /**
  * Sign & publish.
@@ -64,13 +67,16 @@ export default function PublishPage () {
   const [current, setCurrent] = useState<Current | null>(null)
   const [changes, setChanges] = useState<string[]>([])
   const [loadingCurrent, setLoadingCurrent] = useState(false)
+  /** The transparency-log record for the published policy, if this device made one. */
+  const [logged, setLogged] = useState<LoggedEntry | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
     if (!hasAccount()) { router.replace('/create'); return }
     if (!getDraft()) { router.replace('/author'); return }
     setHandle(getHandle() ?? '')
     const already = getPublished()
-    if (already) { setOutcome(already); setPhase('done') }
+    if (already) { setOutcome(already); setPhase('done'); setLogged(loggedEntryFor(already.digest) ?? null) }
     setReady(true)
     // Arriving from the author screen with a published version means "publish an update": go
     // straight into update mode rather than showing the previous result and asking again.
@@ -299,6 +305,31 @@ export default function PublishPage () {
     setOutcome(done)
     setCurrent(null)
     setPhase('done')
+
+    // Record it in the transparency log. A failure here does not un-publish anything: the policy
+    // is live and verifiable; what is missing is the independent timestamp, which can be retried.
+    try {
+      const keys = requireKeys()
+      const entry = await logPublishedPolicy({
+        accountId: deriveAccountId(genesis), policyDigest, handle, key: keys.signing
+      })
+      setLogged(entry)
+      note(true, `Logged as leaf ${entry.leafIndex} — independent timestamp ${entry.proof?.timestampedAt ? 'attached' : 'within the hour'}`)
+    } catch (e) {
+      note(false, `Published, but not yet logged: ${(e as Error).message}`)
+    }
+  }
+
+  async function refreshEvidence () {
+    if (!logged) return
+    setRefreshing(true)
+    try {
+      setLogged(await fetchInclusion(logged))
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setRefreshing(false)
+    }
   }
 
   if (!ready) {
@@ -420,6 +451,8 @@ export default function PublishPage () {
               </tbody>
             </table>
           </div>
+
+          <LogEvidence logged={logged} onRefresh={refreshEvidence} refreshing={refreshing} />
 
           <h3>Anyone can check this without us</h3>
           <pre>npx @prm/cli verify policy.json --kel kel.json --offline</pre>

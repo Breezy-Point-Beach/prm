@@ -17,6 +17,22 @@ discovering that a week later.
 
 Local development needs neither. `pnpm dev` uses a filesystem store that requires no configuration.
 
+### Transparency log and timestamping
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `LOG_SIGNING_KEY_B64` | server, production + preview (distinct values) | 32-byte seed for the Ed25519 key that signs tree heads. Required outside development; a preview must have its own |
+| `NEXT_PUBLIC_LOG_ID` | both | `prm-log-1` in production; must contain `preview` on previews; defaults to `prm-log-dev` locally |
+| `NEXT_PUBLIC_LOG_PUBLIC_KEY` | both | Public half, multibase. Boot refuses if it does not match the signing key. Derive with `node apps/web/scripts/log-key.mjs <seed>` |
+| `CRON_SECRET` | server | Bearer token Vercel sends to `/api/cron/timestamp` |
+| `TSA_PRIMARY_URL`, `TSA_SECONDARY_URL` | server | RFC 3161 endpoints (FreeTSA, DigiCert) |
+| `TSA_PRIMARY_CA_URL`, `TSA_SECONDARY_CA_URL` | server | Optional PEM chain to archive beside each token |
+
+After the first deploy with these set, run the migration (or let the first append create the
+`log_*` tables — every statement is `if not exists`), then confirm `/.well-known/prm-log` shows the
+expected `logId` and public key, and that `/api/cron/timestamp` returns `ok: true` with a token from
+each authority.
+
 ## Database schema
 
 Apply it with the migration script, which reads the SQL from `lib/storage/blob.ts` so there is exactly

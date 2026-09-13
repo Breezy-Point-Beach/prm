@@ -1,5 +1,6 @@
 import type {
-  ArtifactKind, ArtifactRef, ArtifactStore, MetadataStore, PolicyRecord, Storage
+  ArtifactKind, ArtifactRef, ArtifactStore, LogLeaf, LogStore, MetadataStore, PolicyLogLink,
+  PolicyRecord, Storage, TimestampRecord, TreeHeadRecord
 } from './types'
 import { ArtifactNotFoundError, DigestMismatchError, StorageError } from './types'
 import { artifactKey, byteDigestOf, byteDigestMatches } from './digest'
@@ -162,7 +163,50 @@ create table if not exists published_policies (
 );
 create index if not exists published_policies_account
   on published_policies (account_id);
+create table if not exists log_leaves (
+  leaf_index  integer     primary key,
+  leaf_hash   text        not null unique,
+  appended_at timestamptz not null default now()
+);
+create table if not exists log_tree_heads (
+  tree_size  integer     primary key,
+  sth_json   text        not null,
+  created_at timestamptz not null default now()
+);
+create table if not exists log_timestamps (
+  tree_size   integer     not null,
+  tsa         text        not null,
+  token_b64   text        not null,
+  gen_time    timestamptz not null,
+  chain_pem   text,
+  acquired_at timestamptz not null default now(),
+  primary key (tree_size, tsa)
+);
+create table if not exists published_policy_log (
+  policy_digest text        primary key,
+  account_id    text        not null,
+  entry_digest  text        not null,
+  leaf_index    integer     not null,
+  linked_at     timestamptz not null default now()
+);
 `
+
+/**
+ * Apply the schema once per process. Every statement is `if not exists`, so this is the same thing
+ * scripts/migrate.mjs does, run lazily — a deployment whose migration has not been run yet must not
+ * fail its first append with "relation does not exist".
+ */
+const ensured = new WeakMap<object, Promise<void>>()
+export function ensureSchema (sql: SqlQuery): Promise<void> {
+  let p = ensured.get(sql)
+  if (!p) {
+    p = (async () => {
+      for (const statement of SCHEMA_SQL.split(';').map((x) => x.trim()).filter(Boolean)) await sql(statement)
+    })()
+    ensured.set(sql, p)
+  }
+  return p
+}
 
 export class PostgresMetadataStore implements MetadataStore {
   constructor (private readonly sql: SqlQuery) {}
@@ -206,7 +250,139 @@ export class PostgresMetadataStore implements MetadataStore {
       'select account_id from published_policies where handle = $1 limit 1', [handle])
     return rows[0]?.account_id ?? null
   }
+
+  async recordLogLink (link: PolicyLogLink): Promise<void> {
+    await ensureSchema(this.sql)
+    await this.sql(
+      `insert into published_policy_log (policy_digest, account_id, entry_digest, leaf_index, linked_at)
+       values ($1,$2,$3,$4,$5) on conflict (policy_digest) do nothing`,
+      [link.policyDigest, link.accountId, link.entryDigest, link.leafIndex, link.linkedAt])
+  }
+
+  async logLink (policyDigest: string): Promise<PolicyLogLink | null> {
+    await ensureSchema(this.sql)
+    const rows = await this.sql(
+      'select * from published_policy_log where policy_digest = $1', [policyDigest])
+    const r = rows[0]
+    return r
+      ? {
+          policyDigest: String(r.policy_digest),
+          accountId: String(r.account_id),
+          entryDigest: String(r.entry_digest),
+          leafIndex: Number(r.leaf_index),
+          linkedAt: instant(r.linked_at)
+        }
+      : null
+  }
 }
+
+const instant = (v: unknown): string =>
+  v instanceof Date ? v.toISOString().replace(/\.\d{3}Z$/, 'Z') : String(v)
+
+/**
+ * Postgres transparency log.
+ *
+ * APPEND SERIALIZATION. docs/07 §3.2 specifies an advisory lock, which needs a transaction spanning
+ * two statements. The serverless HTTP driver issues one statement per request, so the equivalent
+ * here is a single INSERT that computes its own index, with the primary key as the arbiter: two
+ * concurrent appends that compute the same index collide, one fails, and the loser retries with the
+ * new maximum. Correct at any concurrency, and lock-free. The unique leaf_hash makes a retried
+ * append of the same leaf a no-op rather than a duplicate.
+ */
+export class PostgresLogStore implements LogStore {
+  constructor (private readonly sql: SqlQuery) {}
+
+  async append (leafHash: string, appendedAt: string): Promise<LogLeaf> {
+    await ensureSchema(this.sql)
+    for (let attempt = 0; attempt < 8; attempt++) {
+      try {
+        const rows = await this.sql<{ leaf_index: number }>(
+          `insert into log_leaves (leaf_index, leaf_hash, appended_at)
+           select coalesce(max(leaf_index) + 1, 0), $1, $2 from log_leaves
+           on conflict (leaf_hash) do nothing
+           returning leaf_index`,
+          [leafHash, appendedAt])
+        if (rows[0]) return { leafIndex: Number(rows[0].leaf_index), leafHash, appendedAt }
+        // Nothing returned: the leaf already existed. Return it.
+        const existing = await this.sql(
+          'select * from log_leaves where leaf_hash = $1', [leafHash])
+        if (existing[0]) return toLeaf(existing[0])
+        throw new StorageError('append returned no row and the leaf is not present')
+      } catch (e) {
+        // A primary-key collision on leaf_index means another append won the race. Retry.
+        if (!/duplicate key|unique constraint|log_leaves_pkey/i.test(String((e as Error).message))) throw e
+        await new Promise((r) => setTimeout(r, 5 + Math.random() * 20))
+      }
+    }
+    throw new StorageError('could not append to the log after repeated collisions')
+  }
+
+  async leaves (): Promise<LogLeaf[]> {
+    await ensureSchema(this.sql)
+    return (await this.sql('select * from log_leaves order by leaf_index asc')).map(toLeaf)
+  }
+
+  async size (): Promise<number> {
+    await ensureSchema(this.sql)
+    const rows = await this.sql<{ n: unknown }>('select count(*) as n from log_leaves')
+    return Number(rows[0]?.n ?? 0)
+  }
+
+  async putTreeHead (record: TreeHeadRecord): Promise<void> {
+    await ensureSchema(this.sql)
+    await this.sql(
+      `insert into log_tree_heads (tree_size, sth_json, created_at) values ($1,$2,$3)
+       on conflict (tree_size) do nothing`,
+      [record.treeSize, record.sthJson, record.createdAt])
+  }
+
+  async treeHead (treeSize: number): Promise<TreeHeadRecord | null> {
+    await ensureSchema(this.sql)
+    const rows = await this.sql('select * from log_tree_heads where tree_size = $1', [treeSize])
+    return rows[0] ? toHead(rows[0]) : null
+  }
+
+  async latestTreeHead (): Promise<TreeHeadRecord | null> {
+    await ensureSchema(this.sql)
+    const rows = await this.sql('select * from log_tree_heads order by tree_size desc limit 1')
+    return rows[0] ? toHead(rows[0]) : null
+  }
+
+  async putTimestamp (record: TimestampRecord): Promise<void> {
+    await ensureSchema(this.sql)
+    await this.sql(
+      `insert into log_timestamps (tree_size, tsa, token_b64, gen_time, chain_pem, acquired_at)
+       values ($1,$2,$3,$4,$5,$6)
+       on conflict (tree_size, tsa) do update
+         set token_b64 = excluded.token_b64, gen_time = excluded.gen_time,
+             chain_pem = excluded.chain_pem, acquired_at = excluded.acquired_at`,
+      [record.treeSize, record.tsa, record.tokenBase64, record.genTime, record.chainPem ?? null, record.acquiredAt])
+  }
+
+  async timestamps (treeSize: number): Promise<TimestampRecord[]> {
+    await ensureSchema(this.sql)
+    return (await this.sql('select * from log_timestamps where tree_size = $1 order by tsa asc', [treeSize])).map(toTimestamp)
+  }
+
+  async latestTimestamp (): Promise<TimestampRecord | null> {
+    await ensureSchema(this.sql)
+    const rows = await this.sql('select * from log_timestamps order by acquired_at desc, tree_size desc limit 1')
+    return rows[0] ? toTimestamp(rows[0]) : null
+  }
+}
+
+const toLeaf = (r: Record<string, unknown>): LogLeaf =>
+  ({ leafIndex: Number(r.leaf_index), leafHash: String(r.leaf_hash), appendedAt: instant(r.appended_at) })
+const toHead = (r: Record<string, unknown>): TreeHeadRecord =>
+  ({ treeSize: Number(r.tree_size), sthJson: String(r.sth_json), createdAt: instant(r.created_at) })
+const toTimestamp = (r: Record<string, unknown>): TimestampRecord => ({
+  treeSize: Number(r.tree_size),
+  tsa: String(r.tsa),
+  tokenBase64: String(r.token_b64),
+  genTime: instant(r.gen_time),
+  acquiredAt: instant(r.acquired_at),
+  ...(r.chain_pem ? { chainPem: String(r.chain_pem) } : {})
+})
 
 function toRecord (row: Record<string, unknown>): PolicyRecord {
   const at = row.published_at
@@ -231,10 +407,12 @@ function toRecord (row: Record<string, unknown>): PolicyRecord {
 export function createBlobStorage (opts: {
   artifacts: BlobArtifactStoreOptions
   metadata: MetadataStore
+  log: LogStore
 }): Storage {
   return {
     name: 'blob',
     artifacts: new BlobArtifactStore(opts.artifacts),
-    metadata: opts.metadata
+    metadata: opts.metadata,
+    log: opts.log
   }
 }

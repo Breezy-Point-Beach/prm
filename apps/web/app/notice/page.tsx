@@ -7,7 +7,7 @@ import {
   normalizeIdentifier, RECIPIENT_TYPE_LABELS, DELIVERY_METHOD_LABELS, RESPONSE_STATUS_LABELS,
   type DeliveryMethod, type Policy, type RecipientType, type ResponseStatus
 } from '@prm/schema'
-import { deriveIdentifierSalt, encodeSalt } from '@prm/crypto'
+import { deriveIdentifierSalt, encodeSalt, digest } from '@prm/crypto'
 import { verifyProofBundle } from '@prm/verify'
 import {
   buildNotice, buildDeliveryRecord, buildResponseRecord, buildProofBundle, serializeBundle,
@@ -18,6 +18,7 @@ import {
   isUnlocked, unlockWithPassphrase, requireKeys, type NoticeState
 } from '../../lib/client/session'
 import { Steps } from '../../components/Steps'
+import { loggedEntryFor, fetchInclusion } from '../../lib/client/ledger'
 
 /**
  * Create Notice.
@@ -49,6 +50,45 @@ function download (name: string, content: string | Uint8Array, type: string): vo
   a.download = name
   a.click()
   URL.revokeObjectURL(url)
+}
+
+/** The log's public key, if this build knows it, so the local bundle check can verify the tree head. */
+function logKeyOption (): { logPublicKeyMultibase?: string } {
+  const key = process.env.NEXT_PUBLIC_LOG_PUBLIC_KEY
+  return key ? { logPublicKeyMultibase: key } : {}
+}
+
+/**
+ * Ledger entry, signed tree head and timestamp tokens for a policy, as bundle inputs.
+ *
+ * Prefers a fresh proof (a token may have arrived); falls back to what an earlier bundle carried,
+ * so re-signing a bundle to add a delivery record never loses evidence it already had.
+ */
+async function logEvidence (
+  policy: Policy,
+  previous: Record<string, string> = {}
+): Promise<{ ledgerJson?: string; signedTreeHeadJson?: string; timestamps?: Record<string, string> }> {
+  const policyDigest = digest(policy, 'policy')
+  let logged = loggedEntryFor(policyDigest)
+  if (logged?.leafIndex !== undefined) {
+    try { logged = await fetchInclusion(logged) } catch { /* use what we have */ }
+  }
+  if (logged?.proof && logged.entry.logInclusion) {
+    return {
+      ledgerJson: JSON.stringify([logged.entry], null, 2),
+      signedTreeHeadJson: logged.proof.signedTreeHead,
+      timestamps: { ...logged.proof.timestamps, ...logged.proof.chains }
+    }
+  }
+  const carried: Record<string, string> = {}
+  for (const [path, content] of Object.entries(previous)) {
+    if (path.startsWith('timestamps/')) carried[path.slice('timestamps/'.length)] = content
+  }
+  return {
+    ...(previous['log/ledger.json'] ? { ledgerJson: previous['log/ledger.json'] } : {}),
+    ...(previous['log/signed-tree-head.json'] ? { signedTreeHeadJson: previous['log/signed-tree-head.json'] } : {}),
+    ...(Object.keys(carried).length ? { timestamps: carried } : {})
+  }
 }
 
 export default function NoticePage () {
@@ -134,6 +174,11 @@ export default function NoticePage () {
         policyUrl: `${window.location.origin}/u/${handle}`
       }, keys.signing)
 
+      // The evidentiary chain, if this device logged the policy: its signed ledger entry, the tree
+      // head, and whatever RFC 3161 tokens exist by now. Refreshed first so the newest token rides
+      // along. Absence is not an error — the bundle says so, and the policy still verifies.
+      const evidence = await logEvidence(policy)
+
       const bundle = buildProofBundle({
         policy,
         policyJson,
@@ -141,12 +186,13 @@ export default function NoticePage () {
         noticeJson: notice.json,
         noticeDigest: notice.digest,
         policyChainJson: [{ version: policy.version, json: policyJson }],
+        ...evidence,
         verifyCommand: 'npx @prm/cli verify notice.prmproof'
       })
 
       // Verify what we just built before offering it for download. Handing someone an unverifiable
       // packet would be worse than failing here.
-      const check = verifyProofBundle(bundle)
+      const check = verifyProofBundle(bundle, logKeyOption())
       if (!check.valid) throw new Error(`the generated bundle did not verify: ${check.errors.join('; ')}`)
 
       const pdfBytes = await renderNoticePdf({
@@ -223,9 +269,11 @@ export default function NoticePage () {
         policyChainJson: [{ version: policy.version, json: policyJson }],
         ...(deliveryJson ? { deliveryJson: [deliveryJson] } : {}),
         ...(responseJson ? { responseJson: [responseJson] } : {}),
+        // Carry the log evidence forward exactly as it was — or newer, if a token has arrived since.
+        ...(await logEvidence(policy, bundle.artifacts as Record<string, string>)),
         verifyCommand: 'npx @prm/cli verify notice.prmproof'
       })
-      const check = verifyProofBundle(rebuilt)
+      const check = verifyProofBundle(rebuilt, logKeyOption())
       if (!check.valid) throw new Error(check.errors.join('; '))
 
       const next: NoticeState = {

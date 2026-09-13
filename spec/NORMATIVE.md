@@ -150,6 +150,30 @@ All instants are RFC 3339, UTC, `Z`-suffixed, **second precision, no fractional 
 `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$`. This is schema-enforced because a fractional second is a
 canonicalization difference and therefore a different signature.
 
+### 9.1 RFC 3161 tokens over tree heads — **normative** (added 2026-09-13)
+
+Independent proof of existence is an RFC 3161 time-stamp token issued over a **signed tree head**,
+never over an individual document (docs/08 §3–4). The token's `messageImprint` is:
+
+```
+hashAlgorithm  = SHA-256 (2.16.840.1.101.3.4.2.1)
+hashedMessage  = SHA-256( rootHashBytes )
+rootHashBytes  = the 32-byte digest decoded from the tree head's multibase/multihash `rootHash`
+                 (drop the "u", base64url-decode, drop the 2-byte multihash prefix `0x12 0x20`, per §3)
+```
+
+The imprint is over the **raw root bytes**, not over the multihash string and not over the JSON of
+the tree head. A token is *bound* to a tree head iff its imprint equals this value; a verifier MUST
+check the binding and MUST NOT report a timestamp as proven for a document unless every link holds:
+token → root (binding) → leaf (inclusion proof, §8) → ledger entry (entry digest, §2) → document
+(`subjectHash`). Verifying the token's CMS signature requires the authority's certificate chain and
+a trust decision about that authority; implementations MAY leave that step to standard tooling
+(`openssl ts -verify -digest <hex> -sha256 -CAfile <chain>`) and SHOULD carry the chain archived at
+acquisition beside the token.
+
+A stored token is the authority's full `TimeStampResp`, base64. `genTime`, at second precision in
+UTC, is the instant the tree head — and therefore every leaf it commits to — existed no later than.
+
 ---
 
 ## 10. Fixture policy — normative vectors are jurisdiction-neutral
