@@ -22,8 +22,15 @@ export async function POST (request: Request): Promise<Response> {
   }
 
   const origin = new URL(request.url).origin
-  const result = await handlePublish(body, await getStorage(), origin)
-  return json(result, result.ok ? 200 : 400)
+  try {
+    const result = await handlePublish(body, await getStorage(), origin)
+    return json(result, result.ok ? 200 : 400)
+  } catch (e) {
+    // Always JSON, even for a storage failure: the client reports the reason instead of
+    // "Unexpected end of JSON input", and nothing was stored, so "refused" is accurate.
+    console.error('[publish] failed:', (e as Error).message)
+    return json({ ok: false, error: `Publishing was refused by the server: ${(e as Error).message}` }, 500)
+  }
 }
 
 function json (payload: unknown, status: number): Response {

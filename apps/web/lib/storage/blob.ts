@@ -244,7 +244,12 @@ export function ensureSchema (sql: SqlQuery): Promise<void> {
 export class PostgresMetadataStore implements MetadataStore {
   constructor (private readonly sql: SqlQuery) {}
 
+  // Every method ensures the schema first (memoised: one round-trip per process). Production's
+  // tables were migrated by hand, which hid that a fresh namespace — a preview's — starts with
+  // nothing; the first query there failed with "relation does not exist".
+
   async publish (record: PolicyRecord): Promise<void> {
+    await ensureSchema(this.sql)
     await this.sql(
       `insert into published_policies
          (handle, version, account_id, policy_chain_id, policy_digest, policy_byte_digest,
@@ -261,24 +266,28 @@ export class PostgresMetadataStore implements MetadataStore {
   }
 
   async currentVersion (handle: string): Promise<PolicyRecord | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 order by version desc limit 1', [handle])
     return rows[0] ? toRecord(rows[0]) : null
   }
 
   async version (handle: string, version: number): Promise<PolicyRecord | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 and version = $2', [handle, version])
     return rows[0] ? toRecord(rows[0]) : null
   }
 
   async versions (handle: string): Promise<PolicyRecord[]> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 order by version asc', [handle])
     return rows.map(toRecord)
   }
 
   async handleOwner (handle: string): Promise<string | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql<{ account_id: string }>(
       'select account_id from published_policies where handle = $1 limit 1', [handle])
     return rows[0]?.account_id ?? null
