@@ -1,11 +1,11 @@
 {
   "name": "@rightsroot/prm-cli",
-  "version": "0.1.0",
-  "description": "Verify PRM policies, key events, ledgers and .prmproof bundles offline \u2014 without contacting RightsRoot or anyone else.",
+  "version": "0.1.1",
+  "description": "Verify PRM policies, key events, ledgers and .prmproof bundles offline — without contacting RightsRoot or anyone else.",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
-    "prm": "./dist/prm.mjs"
+    "prm": "dist/prm.mjs"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,13 +20,11 @@
     "bundle": "node scripts/bundle.mjs",
     "prepack": "pnpm bundle"
   },
-  "dependencies": {
-    "@prm/crypto": "workspace:*",
-    "@prm/schema": "workspace:*",
-    "@prm/verify": "workspace:*"
-  },
   "devDependencies": {
+    "@prm/crypto": "workspace:*",
     "@prm/notice": "workspace:*",
+    "@prm/schema": "workspace:*",
+    "@prm/verify": "workspace:*",
     "esbuild": "0.25.4",
     "typescript": "^5.7.2",
     "vitest": "^5.0.0"
@@ -39,7 +37,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Breezy-Point-Beach/prm.git",
+    "url": "git+https://github.com/Breezy-Point-Beach/prm.git",
     "directory": "packages/cli"
   },
   "homepage": "https://rightsroot.org/spec/prm",
