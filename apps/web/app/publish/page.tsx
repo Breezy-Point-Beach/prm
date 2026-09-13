@@ -3,15 +3,15 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { composeHumanReadable, normalizeIdentifier } from '@prm/schema'
+import { composeHumanReadable, normalizeIdentifier, type Policy } from '@prm/schema'
 import {
   digest, deriveAccountId, deriveIdentifierSalt, computeCommitment, encodeMultihash
 } from '@prm/crypto'
 import { verifyPolicy } from '@prm/verify'
-import { buildPolicyDocument, signPolicyDocument } from '../../lib/policy-builder'
+import { buildPolicyDocument, signPolicyDocument, diffRules } from '../../lib/policy-builder'
 import {
   getDraft, getGenesis, getHandle, saveHandle, savePublished, getPublished,
-  unlockWithPassphrase, isUnlocked, requireKeys, hasAccount
+  unlockWithPassphrase, isUnlocked, requireKeys, hasAccount, type PublishedState
 } from '../../lib/client/session'
 import { Steps } from '../../components/Steps'
 
@@ -28,6 +28,12 @@ import { Steps } from '../../components/Steps'
  *
  * Step 4 is not a formality. A signature check alone would pass a server that re-serialized the
  * document, because canonicalization erases formatting — so the comparison is on raw bytes.
+ *
+ * UPDATES. A second version chains to the first by digest (docs/decisions.md D15). The "previous"
+ * used for that chain is not taken from local storage: the CURRENT published document is fetched,
+ * verified against this account's key history, and its digest, version and chain id are read from
+ * the verified bytes. Local state can be stale — a restore on another device, or a publish from one —
+ * and a v2 that chains to the wrong v1 is refused by the server anyway; better to never build it.
  */
 type Phase = 'review' | 'unlock' | 'signing' | 'publishing' | 'checking' | 'done' | 'failed'
 
@@ -37,6 +43,12 @@ interface Outcome {
   policyUrl: string
   canonicalUrl: string
   version: number
+  policyChainId?: string
+}
+
+interface Current {
+  policy: Policy
+  digest: string
 }
 
 export default function PublishPage () {
@@ -48,6 +60,10 @@ export default function PublishPage () {
   const [log, setLog] = useState<Array<{ ok: boolean; text: string }>>([])
   const [error, setError] = useState<string | null>(null)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
+  /** Set when this device has already published: the next publish is an update, not a first. */
+  const [current, setCurrent] = useState<Current | null>(null)
+  const [changes, setChanges] = useState<string[]>([])
+  const [loadingCurrent, setLoadingCurrent] = useState(false)
 
   useEffect(() => {
     if (!hasAccount()) { router.replace('/create'); return }
@@ -56,9 +72,55 @@ export default function PublishPage () {
     const already = getPublished()
     if (already) { setOutcome(already); setPhase('done') }
     setReady(true)
+    // Arriving from the author screen with a published version means "publish an update": go
+    // straight into update mode rather than showing the previous result and asking again.
+    if (already && new URLSearchParams(window.location.search).get('update') === '1') {
+      void beginUpdateFor(already.handle)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router])
 
   const note = (ok: boolean, text: string) => setLog((l) => [...l, { ok, text }])
+
+  /**
+   * Fetch the currently published document and verify it against this account before treating it as
+   * the thing to chain to. Returns null (with an error set) if anything about it is off.
+   */
+  async function loadCurrent (h: string): Promise<Current | null> {
+    const genesis = getGenesis()
+    if (!genesis) { setError('Key history missing on this device.'); return null }
+    try {
+      const response = await fetch(`/u/${h}/policy.json`, { cache: 'no-store' })
+      if (!response.ok) throw new Error(`the server returned ${response.status}`)
+      const policy = JSON.parse(await response.text()) as Policy
+      if (policy.issuer.id !== deriveAccountId(genesis)) {
+        throw new Error(`/u/${h} is published by a different account`)
+      }
+      const check = verifyPolicy(policy, { keyEventLog: [genesis] })
+      if (check.summary === 'failed') throw new Error(check.errors.join('; '))
+      return { policy, digest: digest(policy, 'policy') }
+    } catch (e) {
+      setError(`Could not read the published version to chain to: ${(e as Error).message}`)
+      return null
+    }
+  }
+
+  async function beginUpdateFor (h: string) {
+    setError(null)
+    setLoadingCurrent(true)
+    const loaded = await loadCurrent(h)
+    setLoadingCurrent(false)
+    if (!loaded) return
+    const draft = getDraft()
+    setCurrent(loaded)
+    setChanges(draft ? diffRules(loaded.policy.rules, draft.rules) : [])
+    setLog([])
+    setPhase('review')
+  }
+
+  async function beginUpdate () {
+    if (outcome) await beginUpdateFor(outcome.handle)
+  }
 
   async function run () {
     setError(null)
@@ -70,6 +132,14 @@ export default function PublishPage () {
     if (!/^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/.test(handle)) {
       setError('Choose a handle: 3-32 lowercase letters, digits, or hyphens.')
       return
+    }
+
+    // For an update, re-read the published version at the moment of signing, not the one loaded when
+    // the screen opened. It is the same request; the cost is nothing and the staleness window is zero.
+    let previous: Current | null = null
+    if (current) {
+      previous = await loadCurrent(handle)
+      if (!previous) return
     }
 
     if (!isUnlocked()) {
@@ -86,6 +156,7 @@ export default function PublishPage () {
     setPhase('signing')
     let policyJson: string
     let policyDigest: string
+    let policyChainId: string
     try {
       const keys = requireKeys()
 
@@ -111,13 +182,24 @@ export default function PublishPage () {
         humanReadable: composeHumanReadable(draft.narrative, draft.rules),
         effectiveDate: `${draft.effectiveDate}T00:00:00Z`,
         ...(commitments.length > 0 ? { identifierCommitments: commitments } : {}),
-        ...(draft.displayName ? { displayName: draft.displayName } : {})
+        ...(draft.displayName ? { displayName: draft.displayName } : {}),
+        ...(previous
+          ? {
+              previous: {
+                policyChainId: previous.policy.policyChainId,
+                digest: previous.digest,
+                version: previous.policy.version
+              }
+            }
+          : {})
       })
 
       const signed = signPolicyDocument(unsigned, keys.signing)
       policyJson = signed.policyJson
       policyDigest = signed.digest
-      note(true, `Signed on this device — ${policyDigest}`)
+      policyChainId = signed.policy.policyChainId
+      note(true, `Signed version ${signed.policy.version} on this device — ${policyDigest}`)
+      if (previous) note(true, `Chained to version ${previous.policy.version} — ${previous.digest}`)
 
       // Step 2: verify locally BEFORE anything is sent.
       const local = verifyPolicy(signed.policy, { keyEventLog: [genesis] })
@@ -208,42 +290,72 @@ export default function PublishPage () {
       handle,
       policyUrl: result.policyUrl ?? `/u/${handle}/policy.json`,
       canonicalUrl: result.canonicalUrl ?? `/u/${handle}`,
-      version: result.version ?? 1
+      version: result.version ?? 1,
+      policyChainId
     }
     saveHandle(handle)
-    savePublished({ ...done, publishedAt: new Date().toISOString() })
+    const state: PublishedState = { ...done, publishedAt: new Date().toISOString() }
+    savePublished(state)
     setOutcome(done)
+    setCurrent(null)
     setPhase('done')
   }
 
-  if (!ready) return <main><p className="muted">Loading…</p></main>
+  if (!ready) {
+    return (
+      <main>
+        <Steps current="publish" />
+        <h1>Sign and publish</h1>
+        <div className="skeleton" aria-hidden="true" />
+      </main>
+    )
+  }
 
   const busy = phase === 'signing' || phase === 'publishing' || phase === 'checking' || phase === 'unlock'
+  const updating = current !== null
+  const nextVersion = updating ? current.policy.version + 1 : 1
 
   return (
     <main>
       <Steps current="publish" />
-      <h1>Sign and publish</h1>
+      <h1>{updating ? `Publish version ${nextVersion}` : 'Sign and publish'}</h1>
 
       {phase !== 'done' && (
         <>
-          <p className="muted">
+          <p className="lede">
             You sign here, on this device. We store exactly the bytes you sign, then this page
             downloads them again and checks them.
           </p>
 
+          {updating && (
+            <div className="note info">
+              <b>This is an update.</b>{' '}
+              <span className="small muted">
+                Version {nextVersion} will reference version {current.policy.version} by digest.
+                Version {current.policy.version} stays published and immutable.
+              </span>
+              {changes.length > 0
+                ? (
+                  <ul className="small" style={{ margin: '.5rem 0 0' }}>
+                    {changes.map((c) => <li key={c}>{c}</li>)}
+                  </ul>
+                  )
+                : <div className="small muted" style={{ marginTop: '.35rem' }}>No rule decisions changed; the text or dates may have.</div>}
+            </div>
+          )}
+
           <div className="panel">
             <label htmlFor="handle">Your public address</label>
-            <div className="row" style={{ marginTop: 0, gap: '.3rem' }}>
-              <span className="small muted mono">/u/</span>
+            <div className="input-group">
+              <span className="prefix mono">/u/</span>
               <input id="handle" type="text" value={handle} placeholder="user0001"
-                autoComplete="off" spellCheck={false}
-                onChange={(e) => setHandle(e.target.value.toLowerCase())}
-                style={{ flex: 1, minWidth: '12rem' }} />
+                autoComplete="off" spellCheck={false} readOnly={updating}
+                onChange={(e) => setHandle(e.target.value.toLowerCase())} />
             </div>
-            <p className="small muted">
-              A short name for the page. It is not your identity — your account identifier is derived
-              from your key and cannot be reassigned.
+            <p className="small muted field-hint">
+              {updating
+                ? 'An address, once published, stays with the account that published it.'
+                : 'A short name for the page. It is not your identity — your account identifier is derived from your key and cannot be reassigned.'}
             </p>
 
             {!isUnlocked() && (
@@ -251,19 +363,17 @@ export default function PublishPage () {
                 <label htmlFor="pp">Passphrase</label>
                 <input id="pp" type="password" value={passphrase} autoComplete="current-password"
                   onChange={(e) => setPassphrase(e.target.value)} />
-                <p className="small muted">Needed to unlock your signing key on this device.</p>
+                <p className="small muted field-hint">Needed to unlock your signing key on this device.</p>
               </>
             )}
           </div>
 
           {log.length > 0 && (
-            <div className="panel">
+            <ul className="checks panel small">
               {log.map((l, i) => (
-                <div key={i} className="small" style={{ color: l.ok ? 'var(--ok)' : 'var(--bad)' }}>
-                  {l.ok ? '✓' : '✗'} {l.text}
-                </div>
+                <li key={i} className={l.ok ? '' : 'failed'}>{l.text}</li>
               ))}
-            </div>
+            </ul>
           )}
 
           {error && (
@@ -279,9 +389,14 @@ export default function PublishPage () {
                 : phase === 'publishing' ? 'Publishing…'
                 : phase === 'checking' ? 'Checking what was published…'
                 : phase === 'unlock' ? 'Unlocking…'
-                : 'Sign and publish'}
+                : updating ? `Sign and publish version ${nextVersion}` : 'Sign and publish'}
             </button>
-            <Link href="/author"><button className="secondary">Back to editing</button></Link>
+            <Link href="/author" className="btn secondary">Back to editing</Link>
+            {updating && (
+              <button className="ghost" onClick={() => { setCurrent(null); setError(null); setPhase('done') }}>
+                Cancel update
+              </button>
+            )}
           </div>
         </>
       )}
@@ -312,9 +427,14 @@ export default function PublishPage () {
             Download both files from your page. Verification runs offline and does not contact PRM.
           </p>
 
+          {error && <div className="note bad small">{error}</div>}
+
           <div className="row">
-            <Link href="/notice"><button>Send this to someone</button></Link>
-            <Link href={outcome.canonicalUrl}><button className="secondary">View my public page</button></Link>
+            <Link href="/notice" className="btn">Send this to someone</Link>
+            <Link href={outcome.canonicalUrl} className="btn secondary">View my public page</Link>
+            <button className="ghost" onClick={beginUpdate} disabled={loadingCurrent}>
+              {loadingCurrent ? 'Reading current version…' : `Publish an update (v${outcome.version + 1})`}
+            </button>
           </div>
         </>
       )}

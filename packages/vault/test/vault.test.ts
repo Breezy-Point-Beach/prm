@@ -5,7 +5,8 @@ import {
   createPassphraseVault, openVaultWithPassphrase, openVault, sealVault, rekeyVault,
   deriveVaultKeyFromPassphrase, deriveVaultKeyFromPrf, assertNoSecrets,
   VaultError, WrongPassphraseError,
-  createAccount, restoreAccount, rotateKeys, recoverAccount, seedControlsAccount, currentKeyIndex
+  createAccount, restoreAccount, rotateKeys, recoverAccount, seedControlsAccount, currentKeyIndex,
+  adoptAccount, AccountControlError
 } from '../src/index.js'
 import { verifyKeyEventLog } from '@prm/verify'
 import { deriveAccountKeys, deriveRecoveryKey, digest } from '@prm/crypto'
@@ -376,5 +377,73 @@ describe('WebAuthn adapter fails loudly off-browser', () => {
     expect(await detectVaultTier()).toBe('passphrase')
     await expect(registerPasskey({ userLabel: 'x', userId: new Uint8Array(8) }))
       .rejects.toThrow(/must not/)
+  })
+})
+
+describe('adoptAccount — rejoining a published account from the phrase', () => {
+  const LATER = new Date('2026-11-02T08:30:00Z')
+
+  it('ACCEPTANCE: restoring on a second device, weeks later, reproduces the SAME account id', () => {
+    // The scenario docs/13-mvp.md §5 criterion 7 actually describes: a different browser, a different
+    // day, a different device label. restoreAccount cannot satisfy it — its fresh genesis has a
+    // different digest — and that is the bug this function exists to close.
+    const acct = createAccount({ now: NOW, deviceLabel: 'laptop' })
+    const rebuilt = restoreAccount(acct.backupPhrase, { now: LATER, deviceLabel: 'phone' })
+    expect(rebuilt.accountId).not.toBe(acct.accountId)
+
+    const adopted = adoptAccount({ phrase: acct.backupPhrase, events: [acct.genesis] })
+    expect(adopted.accountId).toBe(acct.accountId)
+    expect(adopted.genesis).toEqual(acct.genesis)
+    expect(adopted.keyIndex).toBe(0)
+    expect(adopted.masterSeed).toEqual(acct.masterSeed)
+    expect(adopted.keys.signing.publicKeyMultibase).toBe(acct.keys.signing.publicKeyMultibase)
+  })
+
+  it('accepts the seed directly, for a client that has already decoded the phrase', () => {
+    const acct = createAccount({ now: NOW })
+    const adopted = adoptAccount({ masterSeed: acct.masterSeed, events: [acct.genesis] })
+    expect(adopted.accountId).toBe(acct.accountId)
+  })
+
+  it('follows rotations: the adopted signing key is the CURRENT one, not the genesis key', () => {
+    const acct = createAccount({ now: NOW })
+    const rotation = rotateKeys({ masterSeed: acct.masterSeed, events: [acct.genesis], now: LATER })
+    const adopted = adoptAccount({ phrase: acct.backupPhrase, events: [rotation, acct.genesis] })
+    expect(adopted.keyIndex).toBe(1)
+    expect(adopted.accountId).toBe(acct.accountId)
+    expect(adopted.keys.signing.publicKeyMultibase).toBe(rotation.keys[0]?.publicKeyMultibase)
+    // Sorted oldest-first regardless of the order supplied.
+    expect(adopted.events.map((e) => e.sequence)).toEqual([0, 1])
+  })
+
+  it("REFUSES a phrase that does not control the log, instead of minting a vault that cannot sign", () => {
+    const acct = createAccount({ now: NOW })
+    const other = createAccount({ now: NOW })
+    expect(() => adoptAccount({ phrase: other.backupPhrase, events: [acct.genesis] }))
+      .toThrow(AccountControlError)
+  })
+
+  it('REFUSES a pre-recovery phrase once the account has been recovered with a new seed', () => {
+    const acct = createAccount({ now: NOW })
+    const fresh = createAccount({ now: LATER })
+    const recovery = recoverAccount({
+      recoverySeed: deriveRecoveryKey(acct.masterSeed).privateKey,
+      newMasterSeed: fresh.masterSeed,
+      events: [acct.genesis],
+      now: LATER
+    })
+    expect(() => adoptAccount({ phrase: acct.backupPhrase, events: [acct.genesis, recovery] }))
+      .toThrow(/recovered with a new seed/)
+    // The new seed does control it, and the identity is unchanged.
+    const adopted = adoptAccount({ masterSeed: fresh.masterSeed, events: [acct.genesis, recovery] })
+    expect(adopted.accountId).toBe(acct.accountId)
+  })
+
+  it('refuses a log with no genesis, and refuses both or neither secret', () => {
+    const acct = createAccount({ now: NOW })
+    expect(() => adoptAccount({ phrase: acct.backupPhrase, events: [] })).toThrow(AccountControlError)
+    expect(() => adoptAccount({ events: [acct.genesis] })).toThrow(/exactly one/)
+    expect(() => adoptAccount({ phrase: acct.backupPhrase, masterSeed: acct.masterSeed, events: [acct.genesis] }))
+      .toThrow(/exactly one/)
   })
 })

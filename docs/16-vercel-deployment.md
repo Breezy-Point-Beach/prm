@@ -159,21 +159,37 @@ that round-trips a PDF and re-verifies the extracted attachment.
 
 ## 10. Security headers
 
+The Content-Security-Policy is set **per request** by `apps/web/proxy.ts`, not statically in
+`next.config.ts`, and every page renders at request time. See `docs/decisions.md` D72–D73 for why —
+in short: Next.js emits inline bootstrap scripts, a static `script-src 'self'` blocks them and leaves
+the page rendered but unhydrated, and the fix that preserves the policy's strictness is a fresh nonce.
+
 ```ts
-// next.config.ts — applied to all routes
+// apps/web/proxy.ts — one nonce per response
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval'",         // Argon2id WASM; NO unsafe-inline, NO unsafe-eval
+  `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'wasm-unsafe-eval'`,  // Argon2id WASM; NO unsafe-inline, NO unsafe-eval
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "connect-src 'self'",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
-  "require-trusted-types-for 'script'"
+  "form-action 'self'"
 ].join('; ')
 ```
+
+Two invariants, both pinned by `apps/web/test/csp.test.ts`:
+
+- **No `'unsafe-eval'` in production.** Schema validation is compiled ahead of time
+  (`packages/schema/scripts/compile-validators.mjs`) precisely so that nothing in the bundle needs it.
+  If a dependency starts compiling code at run time, precompile it; do not relax this line.
+- **No second, static CSP in `next.config.ts`.** It would carry no nonce and override the per-request
+  one — which is exactly how the dead-button regression shipped.
+
+The consequence: pages are served by a function on every request rather than from the edge cache.
+For this application that is the right trade; the HTML is small, the JS chunks are still cached, and
+the alternative is `'unsafe-inline'` beside an unlocked signing key.
 
 Plus: `Strict-Transport-Security: max-age=63072000; includeSubDomains; preload`,
 `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,

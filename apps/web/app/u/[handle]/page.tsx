@@ -69,7 +69,7 @@ export default async function PublicPolicyPage (
 
   return (
     <main>
-      <p className="small muted" style={{ margin: 0 }}>RightsRoot</p>
+      <p className="eyebrow">RightsRoot</p>
       <h1>Policy v{policy.version}</h1>
       <p className="muted small">
         Effective {formatDate(policy.effectiveDate)}

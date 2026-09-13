@@ -51,15 +51,23 @@ export function unlockWithPassphrase (passphrase: string): AccountKeys {
   const vault = getVault()
   if (!vault) throw new Error('No vault on this device.')
   const contents = openVaultWithPassphrase(vault, passphrase)
-  const keys = deriveAccountKeys(contents.masterSeed, 0)
-  unlocked = { masterSeed: contents.masterSeed, keys }
+  return setUnlocked(contents.masterSeed, keyIndexOf(contents.data))
+}
+
+/**
+ * @param keyIndex  Derivation index of the current signing key — 0 for an account that has never
+ *                  rotated. A restored account takes it from its key event log (see restore.ts).
+ */
+export function setUnlocked (masterSeed: Uint8Array, keyIndex = 0): AccountKeys {
+  const keys = deriveAccountKeys(masterSeed, keyIndex)
+  unlocked = { masterSeed, keys }
   return keys
 }
 
-export function setUnlocked (masterSeed: Uint8Array): AccountKeys {
-  const keys = deriveAccountKeys(masterSeed, 0)
-  unlocked = { masterSeed, keys }
-  return keys
+/** The vault records which derivation index its seed currently signs with. Absent means 0. */
+function keyIndexOf (data: Record<string, unknown> | undefined): number {
+  const n = data?.keyIndex
+  return typeof n === 'number' && Number.isInteger(n) && n >= 0 ? n : 0
 }
 
 export function lock (): void {
@@ -109,10 +117,16 @@ export function saveHandle (handle: string): void {
 export function sealAccount (
   masterSeed: Uint8Array,
   passphrase: string,
-  accountId: string
+  accountId: string,
+  keyIndex = 0
 ): EncryptedVault {
   return createPassphraseVault(
-    { masterSeed, accountId, createdAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z') },
+    {
+      masterSeed,
+      accountId,
+      createdAt: new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+      data: { keyIndex }
+    },
     passphrase,
     { label: 'this device' }
   )
@@ -155,6 +169,8 @@ export interface PublishedState {
   policyUrl: string
   canonicalUrl: string
   publishedAt: string
+  /** Needed to publish the next version. Absent on state written before this field existed. */
+  policyChainId?: string
 }
 
 export const getPublished = (): PublishedState | null => read<PublishedState>(KEY.published)

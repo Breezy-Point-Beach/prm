@@ -6,7 +6,7 @@ import {
   alprRules, alprHumanReadable, TEMPLATES, composeHumanReadable, checkProseAlignment,
   stripRulesSummary, renderRulesSummary, normalizeIdentifier, type Rule
 } from '@prm/schema'
-import { hasAccount, getDraft, saveDraft, type PolicyDraftState } from '../../lib/client/session'
+import { hasAccount, getDraft, saveDraft, getPublished, type PolicyDraftState } from '../../lib/client/session'
 import { Steps } from '../../components/Steps'
 import { RulesTable } from '../../components/RulesTable'
 import { Markdown } from '../../components/Markdown'
@@ -39,10 +39,13 @@ export default function AuthorPage () {
   const [draft, setDraft] = useState<PolicyDraftState>(defaultDraft)
   const [tab, setTab] = useState<'human' | 'machine'>('human')
   const [plateError, setPlateError] = useState<string | null>(null)
+  /** Version currently published from this device, if any: the draft is then an update to it. */
+  const [publishedVersion, setPublishedVersion] = useState<number | null>(null)
 
   useEffect(() => {
     if (!hasAccount()) { router.replace('/create'); return }
     setDraft(getDraft() ?? defaultDraft())
+    setPublishedVersion(getPublished()?.version ?? null)
     setReady(true)
   }, [router])
 
@@ -75,19 +78,36 @@ export default function AuthorPage () {
     }
   }
 
-  if (!ready) return <main><p className="muted">Loading…</p></main>
+  if (!ready) {
+    return (
+      <main>
+        <Steps current="author" />
+        <h1>Your policy</h1>
+        <div className="skeleton" aria-hidden="true" />
+      </main>
+    )
+  }
 
   return (
     <main>
       <Steps current="author" />
       <h1>Your policy</h1>
-      <p className="muted">
+      <p className="lede">
         Starting from the California ALPR template. It authorizes the plate scan and the immediate
         hotlist check, and objects to what happens afterwards.
       </p>
+      {publishedVersion !== null && (
+        <div className="note info small">
+          <b>Editing an update to version {publishedVersion}.</b>{' '}
+          <span className="muted">
+            Publishing will create version {publishedVersion + 1}. Version {publishedVersion} stays
+            published and unchanged.
+          </span>
+        </div>
+      )}
 
       <div className="panel">
-        <h3 style={{ marginTop: 0 }}>Vehicle</h3>
+        <h3>Vehicle</h3>
         <label htmlFor="plate">License plate (optional)</label>
         <input
           id="plate" type="text" placeholder="CA 7ABC123" autoComplete="off"
@@ -112,7 +132,7 @@ export default function AuthorPage () {
       <p className="small muted">
         These are what an automated system reads. Change them here, not in the text below.
       </p>
-      <div className="panel" style={{ padding: '.4rem 1.2rem' }}>
+      <div className="panel tight">
         <table>
           <thead><tr><th>Category</th><th>Decision</th></tr></thead>
           <tbody>
@@ -172,15 +192,16 @@ export default function AuthorPage () {
           What a machine will verify
         </button>
       </div>
-      <div className="panel" style={{ marginTop: 0, borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+      <div className="panel attached">
         {tab === 'human'
           ? <Markdown text={preview} />
           : <RulesTable rules={draft.rules} />}
       </div>
 
       <div className="row">
-        <button onClick={() => router.push('/publish')} disabled={plateError !== null}>
-          Review and sign
+        <button onClick={() => router.push(publishedVersion !== null ? '/publish?update=1' : '/publish')}
+          disabled={plateError !== null}>
+          {publishedVersion !== null ? `Review and publish version ${publishedVersion + 1}` : 'Review and sign'}
         </button>
         <button className="secondary" onClick={() => setDraft(defaultDraft())}>
           Reset to template

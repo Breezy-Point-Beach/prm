@@ -8,26 +8,19 @@ import Link from 'next/link'
  */
 export function Footer () {
   return (
-    <footer style={{
-      maxWidth: '46rem', margin: '0 auto', padding: '2rem 1.25rem 3rem',
-      borderTop: '1px solid var(--line)', fontSize: '.82rem'
-    }}>
-      <p className="muted" style={{ marginTop: 0 }}>
+    <footer className="site-footer">
+      <div className="links">
         <Link href="/privacy">Privacy</Link>
-        {' · '}
         <Link href="/terms">Terms</Link>
-        {' · '}
+        <Link href="/restore">Restore</Link>
         <a href="https://rightsroot.org/spec/prm">PRM specification</a>
-        {' · '}
         <a href="https://github.com/Breezy-Point-Beach/prm">Source</a>
-      </p>
-      <p className="muted" style={{ marginBottom: 0 }}>
+      </div>
+      <p>
         No account, no cookies, no analytics. Your signing key never leaves your device — which also
         means we cannot recover it for you.
       </p>
-      <p className="muted" style={{ marginBottom: 0 }}>
-        RightsRoot is operated by Breezy Point Beach LLC. PRM is an open protocol.
-      </p>
+      <p>RightsRoot is operated by Breezy Point Beach LLC. PRM is an open protocol.</p>
     </footer>
   )
 }

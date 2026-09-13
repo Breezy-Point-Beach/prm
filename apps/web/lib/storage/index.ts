@@ -81,13 +81,4 @@ export function __setStorage (storage: Storage | undefined): void {
   singleton = storage
 }
 
-export const HANDLE_PATTERN = /^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])$/
-
-const RESERVED_HANDLES = new Set([
-  'api', 'app', 'admin', 'status', 'log', 'well-known', 'u', 'p', 'create', 'author', 'publish',
-  'about', 'docs', 'verify', 'help', 'settings', 'login', 'signup', 'prm', 'share', 'v'
-])
-
-export function isValidHandle (handle: string): boolean {
-  return HANDLE_PATTERN.test(handle) && !RESERVED_HANDLES.has(handle)
-}
+export { HANDLE_PATTERN, isValidHandle } from '../handle'

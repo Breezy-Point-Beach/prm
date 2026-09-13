@@ -17,7 +17,7 @@
   ],
   "sideEffects": false,
   "scripts": {
-    "generate": "node scripts/inline-schemas.mjs",
+    "generate": "node scripts/inline-schemas.mjs && node scripts/compile-validators.mjs",
     "build": "pnpm generate && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run"

@@ -20,7 +20,7 @@ export const metadata = {
 export default function PrivacyPage () {
   return (
     <main>
-      <p className="small muted" style={{ margin: 0 }}>RightsRoot</p>
+      <p className="eyebrow">RightsRoot</p>
       <h1>Privacy</h1>
       <p className="muted small">Last updated 7 September 2026</p>
 

@@ -77,9 +77,84 @@ export function createAccount (opts: CreateAccountOptions = {}): NewAccount {
   return { backupPhrase, masterSeed, keys, genesis, accountId: deriveAccountId(genesis) }
 }
 
-/** Restore from a backup phrase. Must reproduce the identical account id. */
+/**
+ * Rebuild an account's KEYS from a backup phrase, with a FRESH genesis event.
+ *
+ * This is not the same account. The account id is the digest of the genesis event, and that event
+ * carries a timestamp and a device label, so a genesis rebuilt on another day or another device has a
+ * different digest and a different id — even though the phrase, the seed and every derived key are
+ * identical. Use this only when there is no existing key event log to rejoin (a brand-new account
+ * created from a phrase generated elsewhere).
+ *
+ * To get BACK INTO an account that has already published, use `adoptAccount` with the published log.
+ */
 export function restoreAccount (phrase: string, opts: Omit<CreateAccountOptions, 'phrase'> = {}): NewAccount {
   return createAccount({ ...opts, phrase })
+}
+
+export class AccountControlError extends Error {
+  override name = 'AccountControlError'
+}
+
+export interface AdoptAccountOptions {
+  /** The 24-word backup phrase, or the seed it encodes. Exactly one. */
+  phrase?: string
+  masterSeed?: Uint8Array
+  /** The account's existing key event log, as published or as exported in a .prmproof bundle. */
+  events: KeyEvent[]
+}
+
+export interface AdoptedAccount {
+  masterSeed: Uint8Array
+  keys: AccountKeys
+  /** The ORIGINAL genesis event, verbatim. The account id is derived from this and nothing else. */
+  genesis: KeyEvent
+  accountId: string
+  /** Derivation index of the current signing key: 0 until the first rotation. */
+  keyIndex: number
+  /** The log, oldest first. */
+  events: KeyEvent[]
+}
+
+/**
+ * Rejoin an existing account from its backup phrase and its published key event log.
+ *
+ * This is the recovery path the product promises: "the 24 words are the only way to recover this
+ * account". The phrase reproduces the seed; the LOG supplies the genesis event whose digest IS the
+ * account id. Neither alone is enough — the seed without the log would mint a new identity, and the
+ * log without the seed is public information anyone can download.
+ *
+ * Refuses, rather than guesses, when the seed does not control the log head. A wrong phrase that
+ * happens to pass its checksum, or a phrase from before a recovery event, must not silently produce
+ * a vault that cannot sign for the account it names.
+ */
+export function adoptAccount (opts: AdoptAccountOptions): AdoptedAccount {
+  if ((opts.phrase === undefined) === (opts.masterSeed === undefined)) {
+    throw new AccountControlError('provide exactly one of phrase or masterSeed')
+  }
+  const masterSeed = opts.masterSeed ?? seedFromPhrase(opts.phrase as string)
+
+  const events = [...opts.events].sort((a, b) => a.sequence - b.sequence)
+  const genesis = events[0]
+  if (!genesis || genesis.eventType !== 'genesis' || genesis.sequence !== 0) {
+    throw new AccountControlError('the key event log does not start with a genesis event')
+  }
+
+  const keyIndex = currentKeyIndex(events, masterSeed)
+  if (keyIndex === null) {
+    throw new AccountControlError(
+      'this phrase does not control the account in that key event log. Either the phrase is for a ' +
+      'different account, or the account was recovered with a new seed after this phrase was written down.')
+  }
+
+  return {
+    masterSeed,
+    keys: deriveAccountKeys(masterSeed, keyIndex),
+    genesis,
+    accountId: deriveAccountId(genesis),
+    keyIndex,
+    events
+  }
 }
 
 export interface RotateOptions {
