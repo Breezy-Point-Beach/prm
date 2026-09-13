@@ -11,7 +11,23 @@ const config: NextConfig = {
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'Referrer-Policy', value: 'no-referrer' },
-          { key: 'X-Frame-Options', value: 'DENY' }
+          { key: 'X-Frame-Options', value: 'DENY' },
+          // Signing happens in the browser, so an XSS here is an attacker holding an unlocked key.
+          // No unsafe-inline for scripts; wasm-unsafe-eval is required by Argon2's WASM path.
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'wasm-unsafe-eval'" + (process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''),
+              "style-src 'self' 'unsafe-inline'",
+              "img-src 'self' data: blob:",
+              "connect-src 'self'",
+              "frame-ancestors 'none'",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self'"
+            ].join('; ')
+          }
         ]
       },
       {
