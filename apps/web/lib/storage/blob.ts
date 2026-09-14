@@ -46,6 +46,12 @@ export interface BlobArtifactStoreOptions {
   token?: string
   /** Cache lifetime for immutable artifacts. A year: the content can never change. */
   cacheSeconds?: number
+  /**
+   * Prepended to every object path, e.g. "preview/". Environment isolation (docs/16 §4): a preview
+   * deployment writes under its own prefix and can neither see nor overwrite production objects,
+   * whatever credentials it was given.
+   */
+  pathPrefix?: string
 }
 
 export class BlobArtifactStore implements ArtifactStore {
@@ -53,11 +59,15 @@ export class BlobArtifactStore implements ArtifactStore {
 
   constructor (private readonly opts: BlobArtifactStoreOptions) {}
 
+  private key (kind: ArtifactKind, byteDigest: string): string {
+    return (this.opts.pathPrefix ?? '') + artifactKey(kind, byteDigest)
+  }
+
   async put (kind: ArtifactKind, bytes: Uint8Array, declaredByteDigest: string): Promise<ArtifactRef> {
     if (!byteDigestMatches(bytes, declaredByteDigest)) {
       throw new DigestMismatchError(declaredByteDigest, byteDigestOf(bytes), 'write refused')
     }
-    const pathname = artifactKey(kind, declaredByteDigest)
+    const pathname = this.key(kind, declaredByteDigest)
 
     // Write-once. An existing object at a digest-derived key already holds these exact bytes, so a
     // second write is a no-op rather than an overwrite. allowOverwrite stays false so that a bug
@@ -117,7 +127,7 @@ export class BlobArtifactStore implements ArtifactStore {
     const cached = this.urls.get(byteDigest)
     if (cached) return cached
     for (const kind of ['policy', 'key-event-log'] as const) {
-      const found = await this.head(artifactKey(kind, byteDigest))
+      const found = await this.head(this.key(kind, byteDigest))
       if (found) { this.urls.set(byteDigest, found.url); return found.url }
     }
     return null
@@ -191,6 +201,29 @@ create table if not exists published_policy_log (
 );
 `
 
+/** Every relation the Postgres adapters touch. Kept in one place so namespacing cannot miss one. */
+export const TABLES = ['published_policies', 'published_policy_log', 'log_leaves', 'log_tree_heads', 'log_timestamps'] as const
+
+/**
+ * Rewrite a statement to address prefixed relations: `log_leaves` -> `preview_log_leaves`.
+ *
+ * Applied to every statement, DDL included, so a namespaced store creates and uses its own tables
+ * and can never name a production one. Index and constraint names that embed a table name are
+ * rewritten by the same pass (`published_policies_account`, `log_leaves_pkey`).
+ */
+export function namespaceSql (text: string, tablePrefix: string): string {
+  if (!tablePrefix) return text
+  let out = text
+  for (const table of TABLES) out = out.replace(new RegExp(`\\b${table}`, 'g'), `${tablePrefix}${table}`)
+  return out
+}
+
+/** A SqlQuery that transparently addresses prefixed relations. */
+export function namespaced (sql: SqlQuery, tablePrefix: string): SqlQuery {
+  if (!tablePrefix) return sql
+  return ((text, values) => sql(namespaceSql(text, tablePrefix), values)) as SqlQuery
+}
+
 /**
  * Apply the schema once per process. Every statement is `if not exists`, so this is the same thing
  * scripts/migrate.mjs does, run lazily — a deployment whose migration has not been run yet must not
@@ -211,7 +244,12 @@ export function ensureSchema (sql: SqlQuery): Promise<void> {
 export class PostgresMetadataStore implements MetadataStore {
   constructor (private readonly sql: SqlQuery) {}
 
+  // Every method ensures the schema first (memoised: one round-trip per process). Production's
+  // tables were migrated by hand, which hid that a fresh namespace — a preview's — starts with
+  // nothing; the first query there failed with "relation does not exist".
+
   async publish (record: PolicyRecord): Promise<void> {
+    await ensureSchema(this.sql)
     await this.sql(
       `insert into published_policies
          (handle, version, account_id, policy_chain_id, policy_digest, policy_byte_digest,
@@ -228,24 +266,28 @@ export class PostgresMetadataStore implements MetadataStore {
   }
 
   async currentVersion (handle: string): Promise<PolicyRecord | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 order by version desc limit 1', [handle])
     return rows[0] ? toRecord(rows[0]) : null
   }
 
   async version (handle: string, version: number): Promise<PolicyRecord | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 and version = $2', [handle, version])
     return rows[0] ? toRecord(rows[0]) : null
   }
 
   async versions (handle: string): Promise<PolicyRecord[]> {
+    await ensureSchema(this.sql)
     const rows = await this.sql(
       'select * from published_policies where handle = $1 order by version asc', [handle])
     return rows.map(toRecord)
   }
 
   async handleOwner (handle: string): Promise<string | null> {
+    await ensureSchema(this.sql)
     const rows = await this.sql<{ account_id: string }>(
       'select account_id from published_policies where handle = $1 limit 1', [handle])
     return rows[0]?.account_id ?? null

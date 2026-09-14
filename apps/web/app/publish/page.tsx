@@ -234,7 +234,12 @@ export default function PublishPage () {
           keyEventLogJson: JSON.stringify([genesis])
         })
       })
-      result = await response.json()
+      const text = await response.text()
+      try {
+        result = JSON.parse(text)
+      } catch {
+        throw new Error(`the server answered ${response.status} without a readable reason`)
+      }
     } catch (e) {
       setError(`Could not reach the server: ${(e as Error).message}`)
       setPhase('failed')

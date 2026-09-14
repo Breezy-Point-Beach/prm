@@ -78,8 +78,13 @@ named like a secret, plus code review on `app/(app)/**`.
 
 Every PR gets a preview. Configuration that makes them safe:
 
-- **Separate Neon branch per preview.** The Neon Vercel integration creates a database branch per
-  deployment; use it. Never point a preview at production data.
+- **Previews are confined to their own namespace, by construction.** `storageNamespace()` keys on
+  `VERCEL_ENV`: a preview uses `preview_*` relations and `preview/` object paths, whatever
+  `DATABASE_URL` and `BLOB_READ_WRITE_TOKEN` it was given, and production code never names a preview
+  relation. This is the floor (D79) — it exists because a preview was once handed production
+  credentials and published a test policy into production. A separate Neon branch per preview
+  (the Neon Vercel integration creates one per deployment) is the stronger setup and composes with
+  it; use it too. Never point a preview at production data.
 - **Separate log identity.** Preview sets `NEXT_PUBLIC_LOG_ID=prm-log-preview` and a distinct
   `LOG_SIGNING_KEY_B64`. Assert at boot that the log id matches `VERCEL_ENV`, and refuse to start
   otherwise. A preview appending to the production tree is an unrecoverable corruption.
