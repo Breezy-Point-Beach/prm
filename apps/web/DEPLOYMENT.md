@@ -134,6 +134,26 @@ natural source. Until then the specification URLs inside signed documents
 verification dereferences them, which is why they can be published later without breaking anything
 signed today.
 
+## Removing a handle
+
+Publishing is write-once, so there is no button for this; it is an operator action, and the Terms
+reserve it for impersonation and similar abuse. The script plans first and changes nothing until
+`--apply`:
+
+```
+vercel env pull --environment=production --yes /tmp/prod.env   # DATABASE_URL and BLOB_READ_WRITE_TOKEN
+node scripts/remove-handle.mjs <handle> --env-file /tmp/prod.env            # dry run: prints the plan
+node scripts/remove-handle.mjs <handle> --env-file /tmp/prod.env --apply    # removes it
+rm /tmp/prod.env
+```
+
+It deletes the handle's `published_policies` rows, its `published_policy_log` links, and the
+artifacts those rows point to — except an artifact another handle still references, since objects
+are content-addressed and shared. It cannot touch `log_leaves`, `log_tree_heads`, or
+`log_timestamps`: the transparency log is append-only, a signed tree head already commits to the
+removed policy's leaf, and timestamp tokens over that tree head must keep verifying. The handle
+stops resolving; the leaf stays. Add `--namespace preview_` to act on a preview namespace.
+
 ## Deployment checklist
 
 - [ ] Blob store created, `BLOB_READ_WRITE_TOKEN` set for Production and Preview
