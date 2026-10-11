@@ -11,14 +11,14 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.1.0",
+    "@neondatabase/serverless": "^1.2.0",
     "@prm/crypto": "workspace:*",
     "@prm/notice": "workspace:^",
     "@prm/schema": "workspace:*",
     "@prm/vault": "workspace:*",
     "@prm/verify": "workspace:*",
-    "@vercel/blob": "^2.8.0",
-    "next": "16.3.4",
+    "@vercel/blob": "^2.8.1",
+    "next": "16.4.0",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0"
@@ -28,6 +28,6 @@
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "typescript": "^5.7.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.3"
   }
 }
