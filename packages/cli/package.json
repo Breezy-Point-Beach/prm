@@ -25,9 +25,9 @@
     "@prm/notice": "workspace:*",
     "@prm/schema": "workspace:*",
     "@prm/verify": "workspace:*",
-    "esbuild": "0.25.4",
+    "esbuild": "0.28.2",
     "typescript": "^5.7.2",
-    "vitest": "^5.0.0"
+    "vitest": "^5.0.4"
   },
   "publishConfig": {
     "access": "public"
